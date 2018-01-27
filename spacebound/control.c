@@ -4,8 +4,11 @@
 #include <stdio.h>
 
 #define RED   "\e[0;31m"
+#define GREY  "\e[0;30m"
 #define GREEN "\e[0;32m"
 #define RESET "\e[0m"
+
+#define NUMBER_OF_MODULES 4
 
 typedef struct pin {
 
@@ -24,10 +27,11 @@ typedef struct module {
 
   char * identifier;
   pin  * pins;
+  char n_pins;
 
 } module;
 
-module * BNO, * MPU, * Valve, * FEMTA;
+module ** modules, * BNO, * MPU, * Valve, * FEMTA;
 
 void initialize_pin(pin * initialent, char logical, char physical, short state) {
   initialent -> state    = state;
@@ -45,12 +49,20 @@ void initialize_satellite() {
     printf(RED "a critical error has occured\n" RESET);
     exit(1);
   }
-
+  
   // Get space for modules
   BNO   = malloc(sizeof(module));
   MPU   = malloc(sizeof(module));
   Valve = malloc(sizeof(module));
   FEMTA = malloc(sizeof(module));
+  
+  modules = malloc(NUMBER_OF_MODULES * sizeof(module *));
+
+  // All modules should be grouped together
+  modules[0] = BNO;
+  modules[1] = MPU;
+  modules[2] = Valve;
+  modules[3] = FEMTA;
 
   // Set module identifiers for printing
   BNO   -> identifier = "BNO 055";
@@ -58,11 +70,15 @@ void initialize_satellite() {
   Valve -> identifier = "Valve";
   FEMTA -> identifier = "FEMTA";
 
+  // Set each module's number of pins
+  BNO   -> n_pins = 3;
+  MPU   -> n_pins = 2;
+  Valve -> n_pins = 1;
+  FEMTA -> n_pins = 4;
+
   // Get space for module pin arrays
-  BNO   -> pins = malloc(3 * sizeof(pin));
-  MPU   -> pins = malloc(2 * sizeof(pin));
-  Valve -> pins = malloc(    sizeof(pin));
-  FEMTA -> pins = malloc(4 * sizeof(pin));
+  for (char m = 0; m < NUMBER_OF_MODULES; m++)
+    modules[m] -> pins = malloc((modules[m] -> n_pins) * sizeof(module));
 
   // The BNO has the UART interface
   initialize_pin(&(BNO -> pins[0]), 14,  8, PI_INPUT);   // UART TXD
@@ -85,19 +101,41 @@ void initialize_satellite() {
   printf("\n" GREEN "satellite initialized successfully!" RESET "\n\n");
 }
 
+void print_configuration() {
+
+  printf(GREY "\tlogical   physical   state\n" RESET);
+  for (char m = 0; m < NUMBER_OF_MODULES; m++) {
+    printf(GREY "%s\n" RESET, modules[m] -> identifier);
+    for (char p = 0; p < modules[m] -> n_pins; p++) {
+      if (modules[m] -> pins[p].logical < 10) printf(" ");
+      printf("        %d",   modules[m] -> pins[p].logical);
+      if (modules[m] -> pins[p].physical < 10) printf(" ");
+      printf("        %d",   modules[m] -> pins[p].physical);
+      if (modules[m] -> pins[p].state < 10) printf(" ");
+      printf("        %d\n", modules[m] -> pins[p].state);
+    }
+    printf("\n");
+  }
+}
+
 void terminate_satellite() {
 
-  // Set all output pin voltages to 0
-  gpioWrite(BNO   -> pins[2].logical, 0);
-  gpioWrite(Valve -> pins[0].logical, 0);
-  for (int p = 0; p < 4; p++) gpioWrite(FEMTA -> pins[p].logical, 0);
-
+  // Set all output pins to 0 before exit
+  for (char m = 0; m < NUMBER_OF_MODULES; m++) {
+    for (char p = 0; p < modules[m] -> n_pins; p++) {
+      if (modules[m] -> pins[p].state == PI_OUTPUT) gpioWrite(modules[m] -> pins[p].logical, 0);
+    }
+  }
+  
   gpioTerminate();
 }
+
 
 int main() {
 
   initialize_satellite();
+  print_configuration();
+
   
   terminate_satellite();
   return 0;
