@@ -34,6 +34,8 @@ void initialize_pin(pin * initialent, char logical, char physical, short state) 
   initialent -> logical  = logical;
   initialent -> physical = physical;
 
+  printf("%d\t", initialent -> logical);
+
   initialent -> voltage = 0;
   gpioSetMode(logical, state);
   if (state == PI_OUTPUT) gpioWrite(logical, 0);
@@ -78,9 +80,9 @@ void initialize_satellite() {
   
   // The FEMTA is controlled via pulse width modulation
   initialize_pin(&(FEMTA -> pins[0]), 24, 18, PI_OUTPUT);
-  initialize_pin(&(FEMTA -> pins[1]), 25, 22, PI_OUTPUT);
-  initialize_pin(&(FEMTA -> pins[2]), 27, 13, PI_OUTPUT);
-  initialize_pin(&(FEMTA -> pins[3]), 22, 15, PI_OUTPUT);
+  initialize_pin(&FEMTA -> pins[1]), 25, 22, PI_OUTPUT);
+initialize_pin(&FEMTA -> pins[2]), 27, 13, PI_OUTPUT);
+  initialize_pin(&FEMTA -> pins[3], 22, 15, PI_OUTPUT);
 
   printf("\n" GREEN "satellite initialized successfully!" RESET "\n\n");
 }
@@ -88,10 +90,11 @@ void initialize_satellite() {
 void terminate_satellite() {
 
   // Set all output pin voltages to 0
-  gpioWrite(BNO   -> pins[2].logical, 0);
-  gpioWrite(Valve -> pins[0].logical, 0);
-  for (int p = 0; p < 4; p++) gpioWrite(FEMTA -> pins[p].logical, 0);
+  //gpioWrite(BNO   -> pins[2].logical, 0);
+  //gpioWrite(Valve -> pins[0].logical, 0);
+  //for (int p = 0; p < 4; p++) gpioWrite(FEMTA -> pins[p].logical, 0);
 
+  printf("%d\t", BNO -> pins[2].logical);
   gpioTerminate();
 }
 
