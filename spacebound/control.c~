@@ -1,0 +1,18 @@
+
+
+typedef struct module {
+
+  int logical;
+  int physical;
+  int state;
+  int pwm;
+  
+} module;
+
+
+int main() {
+
+  module * FEMTA = malloc(4 * sizeof(module));
+
+  return 0;
+}
