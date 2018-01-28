@@ -28,7 +28,7 @@ typedef struct module {
   char * identifier;             // The name of the module
   pin  * pins;                   // The pins bound to the module
   char n_pins;                   // The number of pins bound to the module
-
+  
 } module;
 
 module ** modules, * BNO, * MPU, * Valve, * FEMTA;
