@@ -1,4 +1,5 @@
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <pigpio.h>
 #include <stdio.h>
@@ -9,6 +10,14 @@
 #define RESET "\e[0m"
 
 #define NUMBER_OF_MODULES 4
+
+
+#define MPU9250_ADDRESS 0x68
+#define I2C_STATE 2
+#define UART_STATE 3
+
+
+
 
 typedef struct pin {
 
@@ -23,15 +32,30 @@ typedef struct pin {
   
 } pin;
 
-typedef struct module {
+typedef struct I2C {
 
+  unsigned char i2c_address;
+  short * registers;
+  
+} I2C;
+
+typedef struct module {
+  
   char * identifier;             // The name of the module
   pin  * pins;                   // The pins bound to the module
   char n_pins;                   // The number of pins bound to the module
+
+  I2C * i2c;
   
 } module;
 
 module ** modules, * BNO, * MPU, * Valve, * FEMTA;
+
+bool initialize_i2c(module * initialent) {
+  initialent -> i2c = malloc(sizeof(I2C));
+  initialent -> i2c -> i2c_address = i2cOpen(1, MPU9250_ADDRESS, 0);
+  return i2cReadByteData(initialent -> i2c -> i2c_address, 0) >= 0;
+}
 
 void initialize_pin(pin * initialent, char logical, char physical, short state) {
   initialent -> state    = state;
@@ -39,7 +63,7 @@ void initialize_pin(pin * initialent, char logical, char physical, short state) 
   initialent -> physical = physical;
 
   initialent -> voltage = 0;
-  gpioSetMode(logical, state);
+  if (state == PI_OUTPUT || state == PI_INPUT) gpioSetMode(logical, state);
   if (state == PI_OUTPUT) gpioWrite(logical, 0);
 }
 
@@ -83,9 +107,9 @@ void initialize_satellite() {
   initialize_pin(&(BNO -> pins[2]), 23, 16, PI_OUTPUT);
 
   // The MPU has the I2C interface
-  initialize_pin(&(MPU -> pins[0]),  2,  3, PI_INPUT);   // I2C SDA
-  initialize_pin(&(MPU -> pins[1]),  3,  5, PI_INPUT);   // I2C SCL
-
+  initialize_pin(&(MPU -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
+  initialize_pin(&(MPU -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
+  
   // The Valve is controlled via digital states
   initialize_pin(&(Valve -> pins[0]), 17, 11, PI_OUTPUT);
   
@@ -95,7 +119,18 @@ void initialize_satellite() {
   initialize_pin(&(FEMTA -> pins[2]), 27, 13, PI_OUTPUT);
   initialize_pin(&(FEMTA -> pins[3]), 22, 15, PI_OUTPUT);
 
-  printf("\n" GREEN "satellite initialized successfully!" RESET "\n\n");
+  // Set up the interfaces
+  bool i2c_success  = initialize_i2c(MPU);
+  //bool uart_success = initialize_uart(BNO);
+
+  // print information to the user
+  printf(GREY "\nInitializing interfaces\n\n" RESET);
+  if (i2c_success) printf(GREEN "\tI2C\tSUCCESS\n" RESET);
+  else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
+
+  printf("\n");
+  if (!(i2c_success)) return;
+  printf(GREEN "\nsatellite initialized successfully!" RESET "\n\n");
 }
 
 void print_configuration() {
@@ -109,8 +144,13 @@ void print_configuration() {
       printf("        %d",   modules[m] -> pins[p].logical);
       if (modules[m] -> pins[p].physical < 10) printf(" ");
       printf("        %d",   modules[m] -> pins[p].physical);
-      if (modules[m] -> pins[p].state < 10) printf(" ");
-      printf("        %d\n", modules[m] -> pins[p].state);
+
+      // print out the human-readable state
+      printf("         ");
+      if      (modules[m] -> pins[p].state == PI_INPUT)  printf("Input");
+      else if (modules[m] -> pins[p].state == PI_OUTPUT) printf("Output");
+      else if (modules[m] -> pins[p].state == I2C_STATE) printf("I2C");
+      printf("\n");
     }
     printf("\n");
   }
