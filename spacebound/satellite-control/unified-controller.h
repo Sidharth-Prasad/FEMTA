@@ -1,5 +1,5 @@
-#ifndef HEADER_GAURD_FOR_COMPILER_UNIT
-#define HEADER_GAURD_FOR_COMPILER_UNIT
+#ifndef HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_CONTROLLER
+#define HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_CONTROLLER
 
 typedef struct pin {
 
@@ -14,19 +14,8 @@ typedef struct pin {
 
 } pin;
 
-typedef struct I2C {
-
-  unsigned char i2c_address;
-  short * registers;
-
-} I2C;
-
-typedef struct UART {
-
-  unsigned char UART_address;
-
-} UART;
-
+typedef struct I2C I2C;          // Forward declaration
+typedef struct UART UART;        // Forward declaration
 typedef struct module {
 
   char * identifier;             // The name of the module
@@ -40,4 +29,6 @@ typedef struct module {
 
 module ** modules, * BNO, * MPU, * Valve, * FEMTA;
 
+#include "i2c-interface.h"       // Promise fulfilled for the compiler
+#include "UART-interface.h"      // Promise fulfilled for the compiler
 #endif

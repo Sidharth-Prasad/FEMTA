@@ -5,6 +5,8 @@
 #include <stdio.h>
 
 #include "unified-controller.h"
+#include "i2c-interface.h"
+#include "UART-interface.h"
 
 #define RED   "\e[0;31m"
 #define GREY  "\e[0;35m" //30
@@ -14,18 +16,10 @@
 #define NUMBER_OF_MODULES 4
 
 
-#define MPU9250_ADDRESS 0x68
+//#define MPU9250_ADDRESS 0x68
 #define I2C_STATE 2
 #define UART_STATE 3
 
-
-
-
-bool initialize_i2c(module * initialent) {
-  initialent -> i2c = malloc(sizeof(I2C));
-  initialent -> i2c -> i2c_address = i2cOpen(1, MPU9250_ADDRESS, 0);
-  return i2cReadByteData(initialent -> i2c -> i2c_address, 0) >= 0;
-}
 
 void initialize_pin(pin * initialent, char logical, char physical, short state) {
   initialent -> state    = state;

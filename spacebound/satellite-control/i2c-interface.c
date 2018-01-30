@@ -1,6 +1,12 @@
 
 #include <time.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <pigpio.h>
+#include <stdbool.h>
+
+#include "unified-controller.h"
+#include "i2c-interface.h"
 
 #define SMPLRT_DIV       0x19
 #define CONFIG           0x1A
@@ -22,6 +28,12 @@
 #define ZA_OFFSET_H      0x7D
 
 
+bool initialize_i2c(module * initialent) {
+  initialent -> i2c = malloc(sizeof(I2C));
+  initialent -> i2c -> i2c_address = i2cOpen(1, MPU9250_ADDRESS, 0);
+  return i2cReadByteData(initialent -> i2c -> i2c_address, 0) >= 0;
+}
+
 
 void nano_sleep(long duration) {
   struct timespec delay, result;
@@ -29,7 +41,7 @@ void nano_sleep(long duration) {
   delay.tv_nsec = duration;
   nanosleep(&delay, &result);
 }
-
+/*
 void initMPU9250() {
   
   // Initialize MPU9250 device
@@ -218,3 +230,4 @@ void calibrateMPU9250(float * dest1, float * dest2)
   dest2[2] = (float)accel_bias[2]/(float)accelsensitivity;
 }
   
+*/
