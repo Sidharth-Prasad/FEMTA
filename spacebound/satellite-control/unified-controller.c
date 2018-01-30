@@ -4,8 +4,10 @@
 #include <pigpio.h>
 #include <stdio.h>
 
+#include "unified-controller.h"
+
 #define RED   "\e[0;31m"
-#define GREY  "\e[0;30m"
+#define GREY  "\e[0;35m" //30
 #define GREEN "\e[0;32m"
 #define RESET "\e[0m"
 
@@ -18,38 +20,6 @@
 
 
 
-
-typedef struct pin {
-
-  char state;                    // The input output state of the pin
-  char logical;                  // The logical broadcom number of the pin
-  char physical;                 // The physical pin number on the board
-  
-  union {
-    char voltage;                // The voltage when not under pulse width modulation
-    unsigned char duty_cycle;    // The duty cycle for pulse width modulation
-  };
-  
-} pin;
-
-typedef struct I2C {
-
-  unsigned char i2c_address;
-  short * registers;
-  
-} I2C;
-
-typedef struct module {
-  
-  char * identifier;             // The name of the module
-  pin  * pins;                   // The pins bound to the module
-  char n_pins;                   // The number of pins bound to the module
-
-  I2C * i2c;
-  
-} module;
-
-module ** modules, * BNO, * MPU, * Valve, * FEMTA;
 
 bool initialize_i2c(module * initialent) {
   initialent -> i2c = malloc(sizeof(I2C));
@@ -206,6 +176,8 @@ void set_pwm(pin * p, unsigned char duty_cycle) {
   p -> duty_cycle = duty_cycle;
   gpioPWM(p -> logical, p -> duty_cycle);
 }
+
+
 
 int main() {
 
