@@ -1,5 +1,6 @@
 
 #include <stdbool.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <pigpio.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 #include "unified-controller.h"
 #include "i2c-interface.h"
 #include "UART-interface.h"
+#include "temperature-monitoring.h"
 
 #define RED   "\e[0;31m"
 #define GREY  "\e[0;35m" //30
@@ -86,14 +88,18 @@ void initialize_satellite() {
   // Set up the interfaces
   bool i2c_success  = initialize_i2c(MPU);
   //bool uart_success = initialize_uart(BNO);
-
+  bool thermal_success = initialize_temperature_monitoring("./logs/cpu-temperature-log.txt");
+  
   // print information to the user
   printf(GREY "\nInitializing interfaces\n\n" RESET);
   if (i2c_success) printf(GREEN "\tI2C\tSUCCESS\n" RESET);
   else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
 
   printf("\n");
-  if (!(i2c_success)) return;
+  if (!(i2c_success && thermal_success)) {
+    printf( RED "\nsatellite failed to initialize" RESET "\n\n");
+    return;
+  }
   printf(GREEN "\nsatellite initialized successfully!" RESET "\n\n");
 }
 
@@ -130,6 +136,7 @@ void terminate_satellite() {
   }
   
   gpioTerminate();
+  terminate_temperature_monitoring();
 }
 
 void check_if_writeable(pin * p) {

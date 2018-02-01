@@ -229,5 +229,4 @@ void calibrateMPU9250(float * dest1, float * dest2)
   dest2[1] = (float)accel_bias[1]/(float)accelsensitivity;
   dest2[2] = (float)accel_bias[2]/(float)accelsensitivity;
 }
-  
 */
