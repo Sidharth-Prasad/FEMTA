@@ -5,11 +5,16 @@ typedef struct I2C {
 
   unsigned char i2c_address;
   short * registers;
+
+  // Read Functions
+  void  (* gyros)(float * axes);
   float (* temperature)();
+  
 
 } I2C;
 
 bool initialize_i2c(module * initialent);
+void printStartupConstants(char * offset);
 
 module * i2c_device;
 

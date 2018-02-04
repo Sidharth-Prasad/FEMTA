@@ -47,7 +47,7 @@ bool initialize_temperature_monitoring(char * log_filename) {
   
   // Successful initialization, open log file for recording temperature data
   cpu_temperature_log_file = fopen(log_filename, "a");
-  fprintf(cpu_temperature_log_file, "\nRecording temperature\nCPU\tBNO\n");
+  fprintf(cpu_temperature_log_file, "\nRecording temperature\nCPU\t%s\n", i2c_device -> identifier);
   
   return true;
 }

@@ -9,17 +9,11 @@
 #include "i2c-interface.h"
 #include "UART-interface.h"
 #include "temperature-monitoring.h"
-
-#define RED    "\e[0;31m"
-#define GREY   "\e[0;30m"
-#define GREEN  "\e[0;32m"
-#define PURPLE "\e[0;35m"
-#define RESET  "\e[0m"
+#include "colors.h"
 
 #define NUMBER_OF_MODULES 4
 
 
-//#define MPU9250_ADDRESS 0x68
 #define I2C_STATE 2
 #define UART_STATE 3
 
@@ -95,7 +89,10 @@ void initialize_satellite() {
   printf(GREY "\nInitializing satellite\n\n" RESET);
   if (thermal_success) printf(GREEN "\tCPU\tSPAWNED\n" RESET);
   else printf(RED "\tI2C\tFAILURE\t\tUnable to read/log CPU temperature data\n" RESET);
-  if (i2c_success) printf(GREEN "\tI2C\tSUCCESS\n" RESET);
+  if (i2c_success) {
+    printf(GREEN "\tI2C\tSUCCESS\n" RESET);
+    printStartupConstants("\t\t");
+  }
   else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
 
   printf("\n");
@@ -188,6 +185,15 @@ int main() {
   initialize_satellite();
   print_configuration();
 
+  float data[3] = {0, 0, 0};
+  
+  for (int i = 0; i < 10; i++) {
+
+    MPU -> i2c -> gyros(data);
+    printf("\r%f\t%f\t%f", data[0], data[1], data[2]);
+    
+    sleep(1);
+  }
   
   terminate_satellite();
   return 0;

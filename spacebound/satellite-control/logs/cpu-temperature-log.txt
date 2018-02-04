@@ -713,3 +713,184 @@ CPU	BNO
 34.166	24.001
 33.628	24.016
 33.628	23.989
+
+Recording temperature
+CPU	BNO
+33.628	23.786
+33.089	23.860
+
+Recording temperature
+CPU	BNO
+33.628	23.845
+
+Recording temperature
+CPU	MPU 9250
+34.166	24.055
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.328
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.498
+
+Recording temperature
+CPU	MPU 9250
+35.242	24.376
+
+Recording temperature
+CPU	MPU 9250
+34.166	24.367
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.558
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.609
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.624
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.678
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.750
+
+Recording temperature
+CPU	MPU 9250
+35.242	24.777
+
+Recording temperature
+CPU	MPU 9250
+34.166	24.759
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.765
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.750
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.738
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.618
+
+Recording temperature
+CPU	MPU 9250
+34.166	24.681
+
+Recording temperature
+CPU	MPU 9250
+34.166	24.666
+
+Recording temperature
+CPU	MPU 9250
+34.166	24.672
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.690
+
+Recording temperature
+CPU	MPU 9250
+35.242	24.711
+
+Recording temperature
+CPU	MPU 9250
+34.166	24.633
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.681
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.660
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.681
+
+Recording temperature
+CPU	MPU 9250
+35.242	24.645
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.639
+
+Recording temperature
+CPU	MPU 9250
+36.856	24.597
+
+Recording temperature
+CPU	MPU 9250
+36.318	24.705
+
+Recording temperature
+CPU	MPU 9250
+36.856	24.696
+
+Recording temperature
+CPU	MPU 9250
+36.856	24.651
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.705
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.642
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.669
+
+Recording temperature
+CPU	MPU 9250
+34.704	24.504
+
+Recording temperature
+CPU	MPU 9250
+35.242	24.235
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.256
+35.780	24.244
+34.704	24.238
+35.780	24.265
+35.780	24.244
+35.242	24.241
+34.704	24.238
+34.704	24.238
+35.242	24.247
+34.704	24.226
+34.704	24.229
+
+Recording temperature
+CPU	MPU 9250
+35.780	24.304
+35.780	24.289
+34.704	24.253
+34.704	24.247
+35.780	24.250
+35.242	24.253
+35.780	24.244
+34.704	24.283
+34.704	24.256
+34.704	24.235
+34.704	24.298
