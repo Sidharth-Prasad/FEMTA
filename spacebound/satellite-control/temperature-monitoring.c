@@ -1,8 +1,13 @@
+#include <inttypes.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "unified-controller.h"
+#include "i2c-interface.h"
 
 FILE * cpu_temperature_log_file;
 pthread_t cpu_temperature_thread;   // the 
@@ -16,7 +21,8 @@ void * read_cpu_temperature() {
   while (!termination_signal) {
     input_stream = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
     fscanf(input_stream, "%lf", &temperature);
-    fprintf(cpu_temperature_log_file, "Temperature:\t%6.3f °C.\n", temperature / 1000);
+    fprintf(cpu_temperature_log_file, "%6.3f\t", temperature / 1000);
+    fprintf(cpu_temperature_log_file, "%6.3f\n", (i2c_device -> i2c -> temperature)());
     fflush(stdout);
     fclose(input_stream);
     sleep(1);
@@ -41,7 +47,7 @@ bool initialize_temperature_monitoring(char * log_filename) {
   
   // Successful initialization, open log file for recording temperature data
   cpu_temperature_log_file = fopen(log_filename, "a");
-  fprintf(cpu_temperature_log_file, "\nRecording temperature\n");
+  fprintf(cpu_temperature_log_file, "\nRecording temperature\nCPU\tBNO\n");
   
   return true;
 }

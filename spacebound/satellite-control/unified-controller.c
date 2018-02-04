@@ -10,10 +10,11 @@
 #include "UART-interface.h"
 #include "temperature-monitoring.h"
 
-#define RED   "\e[0;31m"
-#define GREY  "\e[0;35m" //30
-#define GREEN "\e[0;32m"
-#define RESET "\e[0m"
+#define RED    "\e[0;31m"
+#define GREY   "\e[0;30m"
+#define GREEN  "\e[0;32m"
+#define PURPLE "\e[0;35m"
+#define RESET  "\e[0m"
 
 #define NUMBER_OF_MODULES 4
 
@@ -91,7 +92,9 @@ void initialize_satellite() {
   bool thermal_success = initialize_temperature_monitoring("./logs/cpu-temperature-log.txt");
   
   // print information to the user
-  printf(GREY "\nInitializing interfaces\n\n" RESET);
+  printf(GREY "\nInitializing satellite\n\n" RESET);
+  if (thermal_success) printf(GREEN "\tCPU\tSPAWNED\n" RESET);
+  else printf(RED "\tI2C\tFAILURE\t\tUnable to read/log CPU temperature data\n" RESET);
   if (i2c_success) printf(GREEN "\tI2C\tSUCCESS\n" RESET);
   else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
 
@@ -185,7 +188,6 @@ int main() {
   initialize_satellite();
   print_configuration();
 
-  
   
   terminate_satellite();
   return 0;
