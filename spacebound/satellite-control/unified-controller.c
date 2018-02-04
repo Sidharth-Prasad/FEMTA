@@ -189,6 +189,7 @@ int main() {
   
   for (int i = 0; i < 10; i++) {
 
+    //MPU -> i2c -> accelerometers(data);
     MPU -> i2c -> gyros(data);
     printf("\r%f\t%f\t%f", data[0], data[1], data[2]);
     

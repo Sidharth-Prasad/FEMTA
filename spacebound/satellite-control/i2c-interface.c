@@ -19,6 +19,7 @@
 #define I2C_MST_CTRL     0x24
 #define INT_PIN_CFG      0x37
 #define INT_ENABLE       0x38
+#define ACCEL_XOUT_H     0x3B
 #define TEMP_OUT_H       0x41
 #define TEMP_OUT_L       0x42
 #define GYRO_XOUT_H      0x43
@@ -100,6 +101,20 @@ void readGyroData(float * axes) {
   gyroCount[2] = ((int16_t) rawData[4] << 8) | rawData[5];
 
   for (int8_t i = 0; i < 3; i++) axes[i] = (float) gyroCount[i] * gRes;
+  //for (int8_t i = 0; i < 3; i++) axes[i] = (float) gyroCount[i] * gRes - gyroBias[i];
+  //for (int8_t i = 0; i < 3; i++) axes[i] = ((float) gyroCount[i] - gyroBias[i]) * gRes;
+}
+
+void readAccelData(float * axes) {
+  uint8_t rawData[6];  // x/y/z accel register data stored here
+  int16_t accelCount[3];
+  readBytes(ACCEL_XOUT_H, 6, &rawData[0]);  // Read the six raw data registers into data array
+  accelCount[0] = ((int16_t) rawData[0] << 8) | rawData[1];  // Turn the MSB and LSB into a signed 16-bit value
+  accelCount[1] = ((int16_t) rawData[2] << 8) | rawData[3];
+  accelCount[2] = ((int16_t) rawData[4] << 8) | rawData[5];
+
+  //for (int8_t i = 0; i < 3; i++) axes[i] = (float) (accelCount[i]-accelBias[i]) * aRes;
+  for (int8_t i = 0; i < 3; i++) axes[i] = (float) accelCount[i] * aRes - accelBias[i];
 }
 
 void nano_sleep(long duration) {
@@ -113,29 +128,25 @@ void initMPU9250() {
   
   // Initialize MPU9250 device
   // wake up device
-  //~~~writeByte(MPU9250_ADDRESS, PWR_MGMT_1, 0x00); // Clear sleep mode bit (6), enable all sensors
-  i2cWriteByteData(i2c_device -> i2c -> i2c_address, PWR_MGMT_1, 0x00);
+  i2cWriteByteData(i2c_device -> i2c -> i2c_address, PWR_MGMT_1, 0x00);   // Clear sleep mode bit (6), enable all sensors
   nano_sleep(100000000); // Delay 100 ms for PLL to get established on x-axis gyro; should check for PLL ready interrupt
   
   // get stable time source, setting source to be PLL with x-axis gyroscope reference, bits 2:0 = 001
-  //~~~writeByte(MPU9250_ADDRESS, PWR_MGMT_1, 0x01); 
   i2cWriteByteData(i2c_device -> i2c -> i2c_address, PWR_MGMT_1, 0x01);
+  nano_sleep(200000000);
   
   // Configure Gyro and Accelerometer
   // Disable FSYNC and set accelerometer and gyro bandwidth to 44 and 42 Hz, respectively;
   // DLPF_CFG = bits 2:0 = 010; this sets the sample rate at 1 kHz for both
   // Maximum delay is 4.9 ms which is just over a 200 Hz maximum rate
-  //~~~writeByte(MPU9250_ADDRESS, CONFIG, 0x03);
   i2cWriteByteData(i2c_device -> i2c -> i2c_address, CONFIG, 0x03);
   
   // Set sample rate = gyroscope output rate/(1 + SMPLRT_DIV)
-  //~~~writeByte(MPU9250_ADDRESS, SMPLRT_DIV, 0x04);  // Use a 200 Hz rate; the same rate set in CONFIG above
-  i2cWriteByteData(i2c_device -> i2c -> i2c_address, SMPLRT_DIV, 0x04);
+  i2cWriteByteData(i2c_device -> i2c -> i2c_address, SMPLRT_DIV, 0x04);   // 200 Hz; same as rate in CONFIG above
   
   // Set gyroscope full scale range
   // Range selects FS_SEL and AFS_SEL are 0 - 3, so 2-bit values are left-shifted into positions 4:3
-  //~~~uint8_t c = readByte(MPU9250_ADDRESS, GYRO_CONFIG); // get current GYRO_CONFIG register value
-  uint8_t c = i2cReadByteData(i2c_device -> i2c -> i2c_address, GYRO_CONFIG);
+  uint8_t c = i2cReadByteData(i2c_device -> i2c -> i2c_address, GYRO_CONFIG);   // get GYRO_CONFIG register value
   // c = c & ~0xE0; // Clear self-test bits [7:5]
   c = c & ~0x02; // Clear Fchoice bits [1:0]
   c = c & ~0x18; // Clear AFS bits [4:3]
@@ -143,29 +154,24 @@ void initMPU9250() {
   c = c | 0 << 3;//!?!?!?
 
   // c =| 0x00; // Set Fchoice for the gyro to 11 by writing its inverse to bits 1:0 of GYRO_CONFIG
-  //~~~writeByte(MPU9250_ADDRESS, GYRO_CONFIG, c ); // Write new GYRO_CONFIG value to register
-  i2cWriteByteData(i2c_device -> i2c -> i2c_address, GYRO_CONFIG, c);
+  i2cWriteByteData(i2c_device -> i2c -> i2c_address, GYRO_CONFIG, c);   // Write new GYRO_CONFIG value to register
   
   // Set accelerometer full-scale range configuration
-  //~~~c = readByte(MPU9250_ADDRESS, ACCEL_CONFIG); // get current ACCEL_CONFIG register value
-  c = i2cReadByteData(i2c_device -> i2c -> i2c_address, ACCEL_CONFIG);
+  c = i2cReadByteData(i2c_device -> i2c -> i2c_address, ACCEL_CONFIG);   // get ACCEL_CONFIG register value
   // c = c & ~0xE0; // Clear self-test bits [7:5]
   c = c & ~0x18;  // Clear AFS bits [4:3]
   //~~~c = c | Ascale << 3; // Set full scale range for the accelerometer
   c = c | 0 << 3;//!?!?!?
 
-  //~~~writeByte(MPU9250_ADDRESS, ACCEL_CONFIG, c); // Write new ACCEL_CONFIG register value
-  i2cWriteByteData(i2c_device -> i2c -> i2c_address, ACCEL_CONFIG, c);
+  i2cWriteByteData(i2c_device -> i2c -> i2c_address, ACCEL_CONFIG, c);   // Wrute new ACCEL_CONFIG register value
   
   // Set accelerometer sample rate configuration
   // It is possible to get a 4 kHz sample rate from the accelerometer by choosing 1 for
   // accel_fchoice_b bit [3]; in this case the bandwidth is 1.13 kHz
-  //~~~c = readByte(MPU9250_ADDRESS, ACCEL_CONFIG2); // get current ACCEL_CONFIG2 register value
-  c = i2cReadByteData(i2c_device -> i2c -> i2c_address, ACCEL_CONFIG2);
+  c = i2cReadByteData(i2c_device -> i2c -> i2c_address, ACCEL_CONFIG2);   // get ACCEL_CONFIG 2 register value
   c = c & ~0x0F; // Clear accel_fchoice_b (bit 3) and A_DLPFG (bits [2:0])
   c = c | 0x03;  // Set accelerometer rate to 1 kHz and bandwidth to 41 Hz
-  //~~~writeByte(MPU9250_ADDRESS, ACCEL_CONFIG2, c); // Write new ACCEL_CONFIG2 register value
-  i2cWriteByteData(i2c_device -> i2c -> i2c_address, ACCEL_CONFIG2, c);
+  i2cWriteByteData(i2c_device -> i2c -> i2c_address, ACCEL_CONFIG2, c);   // Write new ACCEL_CONFIG 2 register value
   
   // The accelerometer, gyro, and thermometer are set to 1 kHz sample rates,
   // but all these rates are further reduced by a factor of 5 to 200 Hz because of the SMPLRT_DIV setting
@@ -175,6 +181,7 @@ void initMPU9250() {
   // can join the I2C bus and all can be controlled by the Arduino as master
   i2cWriteByteData(i2c_device -> i2c -> i2c_address, INT_PIN_CFG, 0x22);
   i2cWriteByteData(i2c_device -> i2c -> i2c_address, INT_ENABLE,  0x01);   // Enable data ready (bit 0) interrupt
+  nano_sleep(100000000);
 }
 
 void resetMPU9250() {
@@ -320,8 +327,12 @@ bool initialize_i2c(module * initialent) {
   initialent -> i2c -> i2c_address = i2cOpen(1, MPU9250_ADDRESS, 0);
   if (i2cReadByteData(initialent -> i2c -> i2c_address, 0) >= 0) {
     i2c_device = initialent;
-    i2c_device -> i2c -> gyros = &readGyroData;          // Set the gyro function pointer
-    i2c_device -> i2c -> temperature = &readTempData;   // Set the temperature function pointer
+
+    // Set function pointers
+    i2c_device -> i2c -> gyros = &readGyroData;
+    i2c_device -> i2c -> temperature = &readTempData;
+    i2c_device -> i2c -> accelerometers = &readAccelData;
+
     calibrateMPU9250(gyroBias, accelBias);
     initMPU9250();
     return true;

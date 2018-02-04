@@ -8,8 +8,8 @@ typedef struct I2C {
 
   // Read Functions
   void  (* gyros)(float * axes);
+  void  (* accelerometers)(float * axes);
   float (* temperature)();
-  
 
 } I2C;
 
