@@ -63,8 +63,8 @@ void initialize_satellite() {
     modules[m] -> pins = malloc((modules[m] -> n_pins) * sizeof(module));
 
   // The BNO has the UART interface
-  initialize_pin(&(BNO -> pins[0]), 14,  8, PI_INPUT);   // UART TXD
-  initialize_pin(&(BNO -> pins[1]), 15, 10, PI_INPUT);   // UART RXD
+  initialize_pin(&(BNO -> pins[0]), 14,  8, UART_STATE);   // UART TXD
+  initialize_pin(&(BNO -> pins[1]), 15, 10, UART_STATE);   // UART RXD
   initialize_pin(&(BNO -> pins[2]), 23, 16, PI_OUTPUT);
 
   // The MPU has the I2C interface
@@ -84,6 +84,12 @@ void initialize_satellite() {
   bool i2c_success  = initialize_i2c(MPU);
   bool serial_success = initialize_UART(BNO);
   bool thermal_success = initialize_temperature_monitoring("./logs/cpu-temperature-log.txt");
+
+  // Set each module's initialization state
+  BNO   -> initialized = false;//serial_success;
+  MPU   -> initialized = i2c_success;
+  Valve -> initialized = true;
+  FEMTA -> initialized = true;
   
   // print information to the user
   printf(GREY "\nInitializing satellite\n\n" RESET);
@@ -100,10 +106,10 @@ void initialize_satellite() {
   
   printf("\n");
   if (!(i2c_success && thermal_success && serial_success)) {
-    printf( RED "\nsatellite failed to initialize" RESET "\n\n");
+    printf( RED "\nSatellite failed to initialize" RESET "\n\n");
     return;
   }
-  printf(GREEN "\nsatellite initialized successfully!" RESET "\n\n");
+  printf(GREEN "\nSatellite initialized successfully!" RESET "\n\n");
 }
 
 void print_configuration() {
@@ -120,10 +126,12 @@ void print_configuration() {
 
       // print out the human-readable state
       printf("         ");
-      if      (modules[m] -> pins[p].state == PI_INPUT)  printf("Input");
-      else if (modules[m] -> pins[p].state == PI_OUTPUT) printf("Output");
-      else if (modules[m] -> pins[p].state == I2C_STATE) printf("I2C");
-      printf("\n");
+      if (modules[m] -> initialized == false) printf(RED);
+      if      (modules[m] -> pins[p].state == PI_INPUT)   printf(RESET "Input" );
+      else if (modules[m] -> pins[p].state == PI_OUTPUT)  printf(RESET "Output");
+      else if (modules[m] -> pins[p].state == I2C_STATE)  printf(      "I2C"   );
+      else if (modules[m] -> pins[p].state == UART_STATE) printf(      "UART"  );
+      printf(RESET "\n");
     }
     printf("\n");
   }
@@ -190,7 +198,7 @@ int main() {
 
   float data[3] = {0, 0, 0};
   
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 8; i++) {
 
     MPU -> i2c -> accelerometers(data);
     //MPU -> i2c -> gyros(data);

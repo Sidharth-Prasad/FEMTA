@@ -2,7 +2,7 @@
 #define HEADER_GAURD_FOR_COMPILER_UNIT_COLORS
 
 #define RED    "\e[0;31m"
-#define GREY   "\e[0;30m"
+#define GREY   "\e[0;35m"//30
 #define BLUE   "\e[0;34m"
 #define GREEN  "\e[0;32m"
 #define PURPLE "\e[0;35m"

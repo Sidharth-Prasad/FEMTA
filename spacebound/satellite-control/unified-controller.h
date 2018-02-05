@@ -25,6 +25,8 @@ typedef struct module {
   I2C * i2c;
   UART * uart;
 
+  bool initialized;
+
 } module;
 
 module ** modules, * BNO, * MPU, * Valve, * FEMTA;

@@ -11,7 +11,7 @@
 #include "colors.h"
 
 FILE * cpu_temperature_log_file;
-pthread_t cpu_temperature_thread;   // the 
+pthread_t cpu_temperature_thread;
 bool      termination_signal;       // used to terminate child thread
 
 void * read_cpu_temperature() {
@@ -23,7 +23,7 @@ void * read_cpu_temperature() {
     input_stream = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
     fscanf(input_stream, "%lf", &temperature);
     fprintf(cpu_temperature_log_file, "%6.3f\t", temperature / 1000);
-    fprintf(cpu_temperature_log_file, "%6.3f\t", (i2c_device -> i2c -> temperature)());
+    fprintf(cpu_temperature_log_file, "%6.3f\t", (i2c_device    -> i2c  -> temperature)());
     fprintf(cpu_temperature_log_file, "%6.3f\n", (serial_device -> uart -> temperature)());
     fflush(stdout);
     fclose(input_stream);
