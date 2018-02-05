@@ -8,6 +8,7 @@
 
 #include "unified-controller.h"
 #include "i2c-interface.h"
+#include "colors.h"
 
 FILE * cpu_temperature_log_file;
 pthread_t cpu_temperature_thread;   // the 
@@ -22,7 +23,8 @@ void * read_cpu_temperature() {
     input_stream = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
     fscanf(input_stream, "%lf", &temperature);
     fprintf(cpu_temperature_log_file, "%6.3f\t", temperature / 1000);
-    fprintf(cpu_temperature_log_file, "%6.3f\n", (i2c_device -> i2c -> temperature)());
+    fprintf(cpu_temperature_log_file, "%6.3f\t", (i2c_device -> i2c -> temperature)());
+    fprintf(cpu_temperature_log_file, "%6.3f\n", (serial_device -> uart -> temperature)());
     fflush(stdout);
     fclose(input_stream);
     sleep(1);
@@ -47,7 +49,7 @@ bool initialize_temperature_monitoring(char * log_filename) {
   
   // Successful initialization, open log file for recording temperature data
   cpu_temperature_log_file = fopen(log_filename, "a");
-  fprintf(cpu_temperature_log_file, "\nRecording temperature\nCPU\t%s\n", i2c_device -> identifier);
+  fprintf(cpu_temperature_log_file, RED "\nRecording temperature\nCPU\tMPU\tBNO\n" RESET);
   
   return true;
 }
@@ -56,15 +58,3 @@ void terminate_temperature_monitoring() {
   termination_signal = true;
   fclose(cpu_temperature_log_file);
 }
-
-/*
-int main() {
-
-  initialize_temperature_monitoring("output-temps.txt");
-  sleep(60);
-  terminate_temperature_monitoring();
-  sleep(1);
-  return 0;
-}
-*/
-

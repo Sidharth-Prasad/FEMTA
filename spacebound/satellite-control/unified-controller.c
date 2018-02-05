@@ -82,7 +82,7 @@ void initialize_satellite() {
 
   // Set up the interfaces
   bool i2c_success  = initialize_i2c(MPU);
-  //bool uart_success = initialize_uart(BNO);
+  bool serial_success = initialize_UART(BNO);
   bool thermal_success = initialize_temperature_monitoring("./logs/cpu-temperature-log.txt");
   
   // print information to the user
@@ -95,8 +95,11 @@ void initialize_satellite() {
   }
   else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
 
+  
+  printf(RED "\tUART\tOFFLINE\t" RESET);
+  
   printf("\n");
-  if (!(i2c_success && thermal_success)) {
+  if (!(i2c_success && thermal_success && serial_success)) {
     printf( RED "\nsatellite failed to initialize" RESET "\n\n");
     return;
   }
@@ -189,13 +192,14 @@ int main() {
   
   for (int i = 0; i < 10; i++) {
 
-    //MPU -> i2c -> accelerometers(data);
-    MPU -> i2c -> gyros(data);
+    MPU -> i2c -> accelerometers(data);
+    //MPU -> i2c -> gyros(data);
     printf("\r%f\t%f\t%f", data[0], data[1], data[2]);
     
     sleep(1);
   }
-  
+
+  printf("\n");
   terminate_satellite();
   return 0;
 }

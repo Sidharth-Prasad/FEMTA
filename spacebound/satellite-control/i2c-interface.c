@@ -1,4 +1,14 @@
 
+/**
+ * The following program is a C port of the code located at
+ * https://github.com/kriswiner/MPU9250/blob/master/MPU9250_MS5637_AHRS_t3.ino.
+ *
+ * Alterations have been made by Noah Franks to integrate the file into the FEMTA Cubesat
+ * program. Additional code exists for specific use within FEMTA's project requirments,
+ * but many of the functions can be copied as they are over to future projects involving 
+ * communication with the MPU 9250 over I2C.
+ */
+
 #include <time.h>
 #include <stdio.h>
 #include <stdint.h>
