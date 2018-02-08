@@ -197,16 +197,17 @@ int main() {
   print_configuration();
 
   float data[3] = {0, 0, 0};
+
   
   for (int i = 0; i < 8; i++) {
-
+    /*
     MPU -> i2c -> accelerometers(data);
     //MPU -> i2c -> gyros(data);
     printf("\r%f\t%f\t%f", data[0], data[1], data[2]);
-    
+    */
     sleep(1);
   }
-
+  
   printf("\n");
   terminate_satellite();
   return 0;
