@@ -81,8 +81,8 @@ int main()
   endwin();
 }
 
-void print_in_middle(WINDOW *win, int starty, int startx, int width, char *string, chtype color)
-{int length, x, y;
+void print_in_middle(WINDOW *win, int starty, int startx, int width, char *string, chtype color) {
+  int length, x, y;
   float temp;
 
   if(win == NULL)
