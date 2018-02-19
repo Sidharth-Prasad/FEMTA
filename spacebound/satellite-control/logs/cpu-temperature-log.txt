@@ -491,3 +491,7 @@ CPU	MPU	BNO
 32.552	24.007	-0.000
 32.552	24.004	-0.000
 32.552	23.992	-0.000
+[0;31m
+Recording temperature
+CPU	MPU	BNO
+[0m33.089	
