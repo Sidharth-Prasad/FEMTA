@@ -1,14 +1,18 @@
 
+// System libraries
 #include <stdbool.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <pigpio.h>
+#include <unistd.h>
 #include <stdio.h>
 
+// Program headers, in compilation order
 #include "unified-controller.h"
 #include "i2c-interface.h"
 #include "UART-interface.h"
 #include "temperature-monitoring.h"
+#include "graphics.h"
 #include "colors.h"
 
 #define NUMBER_OF_MODULES 4
@@ -81,15 +85,16 @@ void initialize_satellite() {
   initialize_pin(&(FEMTA -> pins[3]), 22, 15, PI_OUTPUT);
 
   // Set up the interfaces
-  bool i2c_success  = initialize_i2c(MPU);
+  bool i2c_success    = initialize_i2c(MPU);
   bool serial_success = initialize_UART(BNO);
-  bool thermal_success = initialize_temperature_monitoring("./logs/cpu-temperature-log.txt");
 
   // Set each module's initialization state
   BNO   -> initialized = false;//serial_success;
   MPU   -> initialized = i2c_success;
   Valve -> initialized = true;
   FEMTA -> initialized = true;
+
+  bool thermal_success = initialize_temperature_monitoring();
   
   // print information to the user
   printf(GREY "\nInitializing satellite\n\n" RESET);
@@ -195,11 +200,12 @@ int main() {
 
   initialize_satellite();
   print_configuration();
-
-  float data[3] = {0, 0, 0};
-
   
-  for (int i = 0; i < 8; i++) {
+  initialize_graphics();
+
+  //float data[3] = {0, 0, 0};
+
+  for (int i = 0; i < 16; i++) {
     /*
     MPU -> i2c -> accelerometers(data);
     //MPU -> i2c -> gyros(data);
@@ -207,6 +213,8 @@ int main() {
     */
     sleep(1);
   }
+
+  terminate_graphics();
   
   printf("\n");
   terminate_satellite();

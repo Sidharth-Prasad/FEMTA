@@ -9,9 +9,12 @@ int main() {
 
   FILE *temperatureFile;
   double T;
+
+  FILE * outfile;// = fopen("./log.txt", "w");
   
   for (;;) {
 
+    outfile = fopen("./log.txt", "a");
     temperatureFile = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
 
     // Upon failure
@@ -21,11 +24,13 @@ int main() {
     }
 
     fscanf(temperatureFile, "%lf", &T);
-    printf("\rTemperature: %6.3f °C.", T / 1000);
+    printf("%6.3f\n", T / 1000);
+    fprintf(outfile, "%6.3f\n", T / 1000);
     fflush(stdout);
 
     fclose(temperatureFile);
-
+    fclose(outfile);
+    
     sleep(1);
   }
 

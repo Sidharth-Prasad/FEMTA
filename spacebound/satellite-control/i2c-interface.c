@@ -333,10 +333,11 @@ void calibrateMPU9250(float * dest1, float * dest2)
 
 
 bool initialize_i2c(module * initialent) {
+  i2c_device = initialent;
   initialent -> i2c = malloc(sizeof(I2C));
   initialent -> i2c -> i2c_address = i2cOpen(1, MPU9250_ADDRESS, 0);
   if (i2cReadByteData(initialent -> i2c -> i2c_address, 0) >= 0) {
-    i2c_device = initialent;
+    //i2c_device = initialent;
 
     // Set function pointers
     i2c_device -> i2c -> gyros = &readGyroData;

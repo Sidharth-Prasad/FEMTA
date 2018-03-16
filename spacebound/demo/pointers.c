@@ -1,5 +1,5 @@
 
-//compile using gcc -o example pointers.c
+//compile using gcc -o pointer pointers.c
 
 #include <stdbool.h>
 #include <stdlib.h>
