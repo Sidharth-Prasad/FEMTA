@@ -1,8 +1,11 @@
 #ifndef HEADER_GAURD_FOR_COMPILER_UNIT_GRAPHICS
 #define HEADER_GAURD_FOR_COMPILER_UNIT_GRAPHICS
 
+#include <stdbool.h>
 #include <curses.h>
 #include <menu.h>
+
+#include "linked-list.h"
 
 typedef struct View {
 
@@ -15,6 +18,18 @@ typedef struct View {
   unsigned char outer_height;
   
 } View;
+
+typedef struct Plot {
+
+  char * name;
+  
+  List ** lists;
+  unsigned char number_of_lists;
+  float min_value;
+  float max_value;
+  bool has_data;
+  
+} Plot;
 
 typedef struct print_view {
 
@@ -29,6 +44,8 @@ typedef struct print_view {
 typedef struct graph_view {
 
   View * view;
+  unsigned char vertical_tick_marks;
+  unsigned char horizontal_tick_marks;
   
 } graph_view;
 
@@ -41,5 +58,10 @@ typedef struct setup_view {
 void initialize_graphics();
 void terminate_graphics();
 void print(unsigned char window_number, char * string, unsigned char color);
+
+void graph_plot(Plot * plot);
+void plot_add_value(Plot * plot, List * list, Node * node);
+
+unsigned char number_of_data_points_plottable;
 
 #endif

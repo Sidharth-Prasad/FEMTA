@@ -18,6 +18,8 @@
 #define NUMBER_OF_GRAPH_VIEWS 1
 #define NUMBER_OF_SETUP_VIEWS 1
 
+bool ready_to_graph = false;
+
 void print_window_title();
 
 print_view ** print_views;
@@ -168,6 +170,7 @@ void initialize_graphics() {
   // Draw a printf window
   view = print_views[2] -> view;
   view -> outer_width  = COLS - setup_views[0] -> view -> outer_width - print_views[1] -> view -> outer_width + 2;
+  view -> outer_width += COLS % 2; // HERERERE
   view -> outer_height = print_views[1] -> view -> outer_height;
   view -> inner_width  = view -> outer_width  - 2;
   view -> inner_height = view -> outer_height - 4;
@@ -209,13 +212,19 @@ void initialize_graphics() {
   //mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_PLUS);
   mvwaddch(view -> window, view -> outer_height - 1, view -> outer_width - 1, ACS_BTEE);
 
-  print_window_title(view -> window, 1, 0, view -> outer_width, "Real-time Graphs", COLOR_PAIR(7));
+  print_window_title(view -> window, 1, 0, view -> outer_width, "Temperatures v.s. Time", COLOR_PAIR(7));
   mvwaddch(view -> window, 2, 0, ACS_LTEE);
   mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
   mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_RTEE);
 
   refresh();
   wrefresh(view -> window);
+
+  
+  // Let everyone know
+  number_of_data_points_plottable = view -> inner_width - 2 - 6;
+  graph_views[0] -> vertical_tick_marks = 7;
+  graph_views[0] -> horizontal_tick_marks = 8;
 
 
   // Final window corrections
@@ -229,6 +238,7 @@ void initialize_graphics() {
 
   refresh();
   wrefresh(print_views[2] -> view -> window);
+  ready_to_graph = true;
 }
 
 void terminate_graphics() {
@@ -246,7 +256,7 @@ void print_window_title(WINDOW *win, int starty, int startx, int width, char *st
   if (width == 0)  width = 80;
 
   length = strlen(string);
-  temp = (width - length)/ 2;
+  temp = (width - length) / 2;
   x = startx + (int) temp;
   wattron(win, color);
   mvwprintw(win, y, x, "%s", string);
@@ -256,4 +266,89 @@ void print_window_title(WINDOW *win, int starty, int startx, int width, char *st
 
 void print(unsigned char window_number, char * string, unsigned char color) {
   
+}
+
+
+void plot_add_value(Plot * plot, List * list, Node * node) {
+
+  // track extrema
+  if (plot -> has_data) {
+    if (node -> fvalue < plot -> min_value) plot -> min_value = node -> fvalue;
+    if (node -> fvalue > plot -> max_value) plot -> max_value = node -> fvalue;
+  }
+
+  // first datum
+  else {
+    plot -> min_value = node -> fvalue;
+    plot -> max_value = node -> fvalue;
+    plot -> has_data = true;
+  }
+  list_insert(list, node);
+}
+
+void graph_plot(Plot * plot) {
+  
+  if (!ready_to_graph) return;   // Ensure race condition doesn't slaughter the terminal
+  if (plot -> max_value == plot -> min_value) return;
+  for (int l = 0; l < plot -> number_of_lists; l++) {
+    plot -> lists[l] -> number_of_elements_limit = number_of_data_points_plottable;
+  }
+  
+  graph_view * graph = graph_views[0];
+  View * view = graph -> view;
+  
+  int y_axis_position = view -> inner_width - 1 - plot -> lists[0] -> number_of_elements;
+  if (y_axis_position < 7) y_axis_position = 7;
+
+  // Clear the screen
+  for (unsigned char r = 0; r < view -> inner_height; r++) {
+    for (unsigned char c = 0; c < view -> inner_width; c++) {
+      mvwprintw(view -> window, r + 3, c + 1, " ");
+    }
+  }
+  
+  mvwvline(view -> window, 3, y_axis_position, ACS_VLINE, view -> inner_height);
+  
+  float vertical_interval = (float) view -> inner_height / graph -> vertical_tick_marks;
+
+  float vertical_range = plot -> max_value - plot -> min_value;
+  float vertical_scale = (float) view -> inner_height / vertical_range;   // Single vertical space
+  
+  for (unsigned char c = 0; c < graph -> vertical_tick_marks; c++) {
+    
+    mvwprintw(view -> window,
+	      view -> inner_height - c * vertical_interval + 2,
+	      y_axis_position - 5, "%.2f",
+	      plot -> min_value + vertical_range * ((float) c / graph -> vertical_tick_marks));
+    
+    mvwaddch(view -> window,
+	     view -> inner_height - c * vertical_interval + 2,
+	     y_axis_position,
+	     ACS_PLUS);
+  }
+  
+  int graph_color = 2;
+  for (unsigned char l = 0; l < plot -> number_of_lists; l++) {
+    wattron(view -> window, COLOR_PAIR(graph_color));
+    List * list = plot -> lists[l];
+    Node * node = list -> head;
+    int horizontal_position = view -> inner_width;
+    float p_height = view -> inner_height - view -> inner_height * (node -> fvalue - plot -> min_value) / vertical_range + 2;
+    if (p_height < 3) p_height = 3;
+    mvwprintw(view -> window, p_height, horizontal_position--, "#");
+    for (node = node -> next; node != list -> head; node = node -> next) {
+      p_height = view -> inner_height - view -> inner_height * (node -> fvalue - plot -> min_value) / vertical_range + 2;
+      if (p_height < 3) p_height = 3;
+      mvwprintw(view -> window, p_height, horizontal_position--, "#");
+    }
+    wattroff(view -> window, COLOR_PAIR(graph_color++));
+  }
+  
+  // draw x-axis
+  if (plot -> min_value < 0) {
+    mvwhline(view -> window, 12, 2, ACS_HLINE, view -> inner_width - 2);
+  }
+
+  refresh();
+  wrefresh(view -> window);
 }

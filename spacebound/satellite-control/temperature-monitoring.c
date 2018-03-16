@@ -8,6 +8,8 @@
 
 #include "unified-controller.h"
 #include "i2c-interface.h"
+#include "linked-list.h"
+#include "graphics.h"
 #include "colors.h"
 
 FILE * cpu_temperature_log_file;
@@ -16,21 +18,51 @@ pthread_t cpu_temperature_thread;
 bool      termination_signal;       // used to terminate child thread
 int values_read = 0;
 
+Plot * temperature_plot = NULL;
+
 void * read_cpu_temperature() {
 
   FILE * input_stream = NULL;
   double temperature  = 0.0;
-  
+
+  if (temperature_plot == NULL) {
+    temperature_plot = malloc(sizeof(Plot));
+    temperature_plot -> number_of_lists = 1 + (i2c_device -> initialized) + (serial_device -> initialized);
+    temperature_plot -> lists = malloc(temperature_plot -> number_of_lists * sizeof(List *));
+    temperature_plot -> has_data = false;
+    for (int l = 0; l < temperature_plot -> number_of_lists; l++) {
+      temperature_plot -> lists[l] = create_list(number_of_data_points_plottable);   // Might not have been set
+    }
+  }
+	 
   while (!termination_signal) {
     input_stream = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
     cpu_temperature_log_file = fopen(temperature_log_filename, "a");
     fscanf(input_stream, "%lf", &temperature);
     fprintf(cpu_temperature_log_file, "%d\t", values_read++);
+
+    // CPU temperature record
     fprintf(cpu_temperature_log_file, "%6.3f\t", temperature / 1000);
-    if (i2c_device    -> initialized) fprintf(cpu_temperature_log_file, "%6.3f\t", (i2c_device    -> i2c  -> temperature)());
-    if (serial_device -> initialized) fprintf(cpu_temperature_log_file, "%6.3f\t", (serial_device -> uart -> temperature)());
+    plot_add_value(temperature_plot, temperature_plot -> lists[0], create_fnode(temperature / 1000));
+    
+    // I2C temperature record
+    if (i2c_device    -> initialized) {
+      float value = (i2c_device    -> i2c  -> temperature)();
+      fprintf(cpu_temperature_log_file, "%6.3f\t", value);
+      plot_add_value(temperature_plot, temperature_plot -> lists[1], create_fnode(value));
+    }
+
+    // Serial temperature record
+    if (serial_device -> initialized) {
+      float value = (serial_device -> uart -> temperature)();
+      fprintf(cpu_temperature_log_file, "%6.3f\t", value);
+      plot_add_value(temperature_plot, temperature_plot -> lists[2], create_fnode(value));
+    }
     fprintf(cpu_temperature_log_file, "\n");
     fflush(stdout);
+
+    graph_plot(temperature_plot);
+    
     fclose(cpu_temperature_log_file);
     fclose(input_stream);
     sleep(1);

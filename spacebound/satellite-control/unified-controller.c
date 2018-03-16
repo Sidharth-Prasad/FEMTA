@@ -203,20 +203,11 @@ int main() {
   
   initialize_graphics();
 
-  //float data[3] = {0, 0, 0};
-
-  for (int i = 0; i < 16; i++) {
-    /*
-    MPU -> i2c -> accelerometers(data);
-    //MPU -> i2c -> gyros(data);
-    printf("\r%f\t%f\t%f", data[0], data[1], data[2]);
-    */
-    sleep(1);
-  }
-
-  terminate_graphics();
+  unsigned char input;
+  input = getc(stdin);
   
   printf("\n");
   terminate_satellite();
+  terminate_graphics();
   return 0;
 }
