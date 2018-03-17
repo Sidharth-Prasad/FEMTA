@@ -14,10 +14,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <pigpio.h>
+#include <pthread.h>
 #include <stdbool.h>
 
 #include "unified-controller.h"
 #include "i2c-interface.h"
+#include "linked-list.h"
+#include "graphics.h"
 #include "colors.h"
 
 #define SMPLRT_DIV       0x19
@@ -42,6 +45,13 @@
 #define XA_OFFSET_H      0x77
 #define YA_OFFSET_H      0x7A
 #define ZA_OFFSET_H      0x7D
+
+FILE * mpu_log_file;
+char * mpu_log_file_name = "./logs/mpu-log.txt";
+pthread_t mpu_thread;
+bool mpu_termination_signal;       // used to terminate child thread
+int mpu_values_read = 0;
+
 
 float gyroBias[3]  = {0, 0, 0};   // Gyro bias calculated at startup
 float accelBias[3] = {0, 0, 0};   // Accel bias calculated at startup
@@ -132,6 +142,43 @@ void nano_sleep(long duration) {
   delay.tv_sec = 0;
   delay.tv_nsec = duration;
   nanosleep(&delay, &result);
+}
+
+void * log_mpu_data() {
+
+  while (!mpu_termination_signal) {
+
+    mpu_log_file = fopen(mpu_log_file_name, "a");
+
+    float log_data[50][6];
+    
+    for (unsigned char i = 0; i < 50; i++) {
+      
+      readGyroData(log_data[i]);
+      readAccelData(log_data[i] + 3);
+
+      fprintf(mpu_log_file, "%d\t", mpu_values_read++);
+      for (unsigned char f = 0; f < 6; f++) {
+	fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
+      }
+      for (unsigned char f = 0; f < 3; f++) {
+	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_fnode(log_data[i][f]));
+	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_fnode(log_data[i][f + 3]));
+      }
+      
+      fprintf(mpu_log_file, "\n");
+
+      graph_plot(mpu_gyro_plot);
+      graph_plot(mpu_acel_plot);
+      nano_sleep(100000000);
+    }
+    
+    fflush(stdout);
+
+    //graph_plot(mpu_gyro_plot);
+    
+    fclose(mpu_log_file);
+  }
 }
 
 void initMPU9250() {
@@ -336,6 +383,12 @@ bool initialize_i2c(module * initialent) {
   i2c_device = initialent;
   initialent -> i2c = malloc(sizeof(I2C));
   initialent -> i2c -> i2c_address = i2cOpen(1, MPU9250_ADDRESS, 0);
+
+  // Graphics memory allocation
+  mpu_gyro_plot = create_plot("    MPU Gyro Axes v.s. Time    ", 3);
+  mpu_acel_plot = create_plot("MPU Acelerometer Axes v.s. Time", 3);
+  mpu_magn_plot = create_plot("MPU Magnetometer Axes v.s. Time", 3);
+
   if (i2cReadByteData(initialent -> i2c -> i2c_address, 0) >= 0) {
     //i2c_device = initialent;
 
@@ -346,7 +399,21 @@ bool initialize_i2c(module * initialent) {
 
     calibrateMPU9250(gyroBias, accelBias);
     initMPU9250();
+
+    // Successful initialization, open log file for recording temperature data
+    mpu_log_file = fopen(mpu_log_file_name, "a");
+    fprintf(mpu_log_file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\n" RESET);
+    fclose(mpu_log_file);
+
+    // Spawn a logging thread
+    mpu_termination_signal = false;
+    pthread_create(&mpu_thread, NULL, log_mpu_data, NULL);
+    
     return true;
   }
   return false;
+}
+
+void terminate_mpu_logging() {
+  mpu_termination_signal = true;
 }

@@ -153,6 +153,7 @@ void terminate_satellite() {
   
   gpioTerminate();
   terminate_temperature_monitoring();
+  terminate_mpu_logging();
 }
 
 void check_if_writeable(pin * p) {
@@ -194,8 +195,6 @@ void set_pwm(pin * p, unsigned char duty_cycle) {
   gpioPWM(p -> logical, p -> duty_cycle);
 }
 
-
-
 int main() {
 
   initialize_satellite();
@@ -203,8 +202,19 @@ int main() {
   
   initialize_graphics();
 
+  //graph_owner = temperature_plot;
+  //graph_owner = mpu_gyro_plot;
+  unsigned char owner_index = 0;
+  Plot * potential_owners[3] = {temperature_plot, mpu_gyro_plot, mpu_acel_plot};
+
+  graph_owner = potential_owners[owner_index];
+  
   unsigned char input;
-  input = getc(stdin);
+  while (input = getc(stdin) != 'q') {
+    owner_index++;
+    if (owner_index > 2) owner_index = 0;
+    graph_owner = potential_owners[owner_index];
+  }
   
   printf("\n");
   terminate_satellite();

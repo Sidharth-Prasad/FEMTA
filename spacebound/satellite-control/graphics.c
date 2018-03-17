@@ -226,7 +226,6 @@ void initialize_graphics() {
   graph_views[0] -> vertical_tick_marks = 7;
   graph_views[0] -> horizontal_tick_marks = 8;
 
-
   // Final window corrections
   mvwaddch(print_views[0] -> view -> window, 0, 0, ACS_LTEE);
   mvwaddch(print_views[0] -> view -> window, 2, 0, ACS_LTEE);
@@ -264,13 +263,26 @@ void print_window_title(WINDOW *win, int starty, int startx, int width, char *st
   refresh();
 }
 
+Plot * create_plot(char * name, unsigned char number_of_lists) {
+
+  Plot * plot = malloc(sizeof(Plot));
+  plot -> name = name;
+  plot -> has_data = false;
+  plot -> number_of_lists = number_of_lists;
+  plot -> lists = malloc(number_of_lists * sizeof(Plot *));
+  
+  for (unsigned char l = 0; l < number_of_lists; l++) {
+    plot -> lists[l] = create_list(number_of_data_points_plottable);
+  }
+  return plot;
+}
+
 void print(unsigned char window_number, char * string, unsigned char color) {
   
 }
 
-
 void plot_add_value(Plot * plot, List * list, Node * node) {
-
+  
   // track extrema
   if (plot -> has_data) {
     if (node -> fvalue < plot -> min_value) plot -> min_value = node -> fvalue;
@@ -279,6 +291,15 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
 
   // first datum
   else {
+    
+    // The graphics library might not be finished initializing at this point
+    while (number_of_data_points_plottable == 0);   // Spin lock threads until library is set up
+
+    // Update all lists in the plot to the initialized value
+    for (unsigned char l = 0; l < plot -> number_of_lists; l++) {
+      plot -> lists[l] -> number_of_elements_limit = number_of_data_points_plottable;
+    }
+
     plot -> min_value = node -> fvalue;
     plot -> max_value = node -> fvalue;
     plot -> has_data = true;
@@ -288,14 +309,15 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
 
 void graph_plot(Plot * plot) {
   
-  if (!ready_to_graph) return;   // Ensure race condition doesn't slaughter the terminal
-  if (plot -> max_value == plot -> min_value) return;
-  for (int l = 0; l < plot -> number_of_lists; l++) {
-    plot -> lists[l] -> number_of_elements_limit = number_of_data_points_plottable;
-  }
+  if (!ready_to_graph) return;                          // Ensure race condition doesn't slaughter the terminal
+  if (plot -> max_value == plot -> min_value) return;   // Can't plot uniform data
+  if (plot != graph_owner) return;                      // If not owner, don't plot
   
   graph_view * graph = graph_views[0];
   View * view = graph -> view;
+
+  //printf("%s", plot -> name);
+  print_window_title(view -> window, 1, 0, view -> outer_width, plot -> name, COLOR_PAIR(2)); 
   
   int y_axis_position = view -> inner_width - 1 - plot -> lists[0] -> number_of_elements;
   if (y_axis_position < 7) y_axis_position = 7;
@@ -335,19 +357,31 @@ void graph_plot(Plot * plot) {
     int horizontal_position = view -> inner_width;
     float p_height = view -> inner_height - view -> inner_height * (node -> fvalue - plot -> min_value) / vertical_range + 2;
     if (p_height < 3) p_height = 3;
-    mvwprintw(view -> window, p_height, horizontal_position--, "#");
+    mvwprintw(view -> window, p_height, horizontal_position--, "-");
     for (node = node -> next; node != list -> head; node = node -> next) {
       p_height = view -> inner_height - view -> inner_height * (node -> fvalue - plot -> min_value) / vertical_range + 2;
       if (p_height < 3) p_height = 3;
-      mvwprintw(view -> window, p_height, horizontal_position--, "#");
+      mvwprintw(view -> window, p_height, horizontal_position--, "-");
     }
     wattroff(view -> window, COLOR_PAIR(graph_color++));
   }
   
   // draw x-axis
+  float x_axis_position = view -> inner_height - view -> inner_height * (0.0 - plot -> min_value) / vertical_range + 2;
   if (plot -> min_value < 0) {
-    mvwhline(view -> window, 12, 2, ACS_HLINE, view -> inner_width - 2);
+    mvwhline(view -> window, x_axis_position, 2, ACS_HLINE, view -> inner_width - 2);
   }
+
+  // draw x-axis tick marks
+  int horizontal_interval = (number_of_data_points_plottable) / graph -> horizontal_tick_marks;
+  
+  for (unsigned char h = 0; h < graph -> horizontal_tick_marks; h++) {
+    int tick_position = view -> inner_width - number_of_data_points_plottable - 1 + h * horizontal_interval;
+    if (tick_position < y_axis_position) continue;
+    mvwaddch(view -> window, x_axis_position, tick_position, ACS_PLUS);
+  }
+
+  mvwaddch(view -> window, x_axis_position, y_axis_position, ACS_PLUS);
 
   refresh();
   wrefresh(view -> window);

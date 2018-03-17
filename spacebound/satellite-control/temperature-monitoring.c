@@ -8,6 +8,7 @@
 
 #include "unified-controller.h"
 #include "i2c-interface.h"
+#include "temperature-monitoring.h"
 #include "linked-list.h"
 #include "graphics.h"
 #include "colors.h"
@@ -15,10 +16,10 @@
 FILE * cpu_temperature_log_file;
 char * temperature_log_filename = "./logs/cpu-temperature-log.txt";
 pthread_t cpu_temperature_thread;
-bool      termination_signal;       // used to terminate child thread
+bool termination_signal;       // used to terminate child thread
 int values_read = 0;
 
-Plot * temperature_plot = NULL;
+//Plot * temperature_plot = NULL;
 
 void * read_cpu_temperature() {
 
@@ -27,6 +28,7 @@ void * read_cpu_temperature() {
 
   if (temperature_plot == NULL) {
     temperature_plot = malloc(sizeof(Plot));
+    temperature_plot -> name = "     Temperatures v.s. Time     ";
     temperature_plot -> number_of_lists = 1 + (i2c_device -> initialized) + (serial_device -> initialized);
     temperature_plot -> lists = malloc(temperature_plot -> number_of_lists * sizeof(List *));
     temperature_plot -> has_data = false;
@@ -72,6 +74,8 @@ void * read_cpu_temperature() {
 
 bool initialize_temperature_monitoring() {
 
+  temperature_plot = NULL;
+  
   // Attempt to read temperature to make sure sensor works
   FILE * input_stream = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
 
