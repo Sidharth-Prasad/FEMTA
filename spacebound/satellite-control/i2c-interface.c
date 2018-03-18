@@ -62,6 +62,7 @@ float gyroBias[3]  = {0, 0, 0};   // Gyro bias calculated at startup
 float accelBias[3] = {0, 0, 0};   // Accel bias calculated at startup
 float magBias[3] = {0, 0, 0};     // Magn bias calculated at startup
 
+float magScale[3] = {1, 1, 1};        // Needs calibration to make sense
 float magCalibration[3] = {0, 0, 0};  // Factory mag calibration and mag bias
 
 enum Ascale {
@@ -164,12 +165,13 @@ void readMagData(float * axes) {
     readBytes(i2c_device -> i2c -> i2c_slave_address, AK8963_XOUT_L, 7, &rawData[0]);
     uint8_t c = rawData[6]; // End data read by reading ST2 register
     if(!(c & 0x08)) { // Check if magnetic sensor overflow set, if not then report data
-      destination[0] = ((int16_t)rawData[1] << 8) | rawData[0] ;  // Turn the MSB and LSB into a signed 16-bit value
-      destination[1] = ((int16_t)rawData[3] << 8) | rawData[2] ;  // Data stored as little Endian
-      destination[2] = ((int16_t)rawData[5] << 8) | rawData[4] ;
+      magCount[0] = ((int16_t) rawData[1] << 8) | rawData[0] ;  // Turn the MSB and LSB into a signed 16-bit value
+      magCount[1] = ((int16_t) rawData[3] << 8) | rawData[2] ;  // Data stored as little Endian
+      magCount[2] = ((int16_t) rawData[5] << 8) | rawData[4] ;
     }
   }
 
+  // Without calibration, this could be problematic
   for (int8_t i = 0; i < 3; i++) axes[i] = ((float) magCount[i] * mRes * magCalibration[i] - magBias[i]) * magScale[i];
 }
 
