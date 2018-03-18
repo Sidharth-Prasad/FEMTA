@@ -205,14 +205,14 @@ int main() {
   //graph_owner = temperature_plot;
   //graph_owner = mpu_gyro_plot;
   unsigned char owner_index = 0;
-  Plot * potential_owners[3] = {temperature_plot, mpu_gyro_plot, mpu_acel_plot};
+  Plot * potential_owners[4] = {temperature_plot, mpu_gyro_plot, mpu_acel_plot, mpu_magn_plot};
 
   graph_owner = potential_owners[owner_index];
   
   unsigned char input;
   while (input = getc(stdin) != 'q') {
     owner_index++;
-    if (owner_index > 2) owner_index = 0;
+    if (owner_index > 3) owner_index = 0;
     graph_owner = potential_owners[owner_index];
   }
   

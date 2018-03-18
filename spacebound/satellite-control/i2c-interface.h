@@ -6,11 +6,14 @@
 typedef struct I2C {
 
   unsigned char i2c_address;
+  unsigned char i2c_slave_address;
+  
   short * registers;
 
   // Read Functions
   void  (* gyros)(float * axes);
   void  (* accelerometers)(float * axes);
+  void  (* magnetometers)(float * axes);
   float (* temperature)();
 
 } I2C;

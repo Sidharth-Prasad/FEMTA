@@ -23,6 +23,11 @@
 #include "graphics.h"
 #include "colors.h"
 
+#define AK8963_ST1       0x02
+#define AK8963_XOUT_L    0x03
+#define AK8963_CNTL      0x0A
+#define AK8963_ADDRESS   0x0C
+#define AK8963_ASAX      0x10
 #define SMPLRT_DIV       0x19
 #define CONFIG           0x1A
 #define GYRO_CONFIG      0x1B
@@ -55,6 +60,9 @@ int mpu_values_read = 0;
 
 float gyroBias[3]  = {0, 0, 0};   // Gyro bias calculated at startup
 float accelBias[3] = {0, 0, 0};   // Accel bias calculated at startup
+float magBias[3] = {0, 0, 0};     // Magn bias calculated at startup
+
+float magCalibration[3] = {0, 0, 0};  // Factory mag calibration and mag bias
 
 enum Ascale {
   AFS_2G = 0,
@@ -70,13 +78,22 @@ enum Gscale {
   GFS_2000DPS
 };
 
+enum Mscale {
+  MFS_14BITS = 0, // 0.6 mG per LSB
+  MFS_16BITS      // 0.15 mG per LSB
+};
+
 uint8_t Ascale = AFS_2G;
 uint8_t Gscale = GFS_250DPS;
+uint8_t Mscale = MFS_16BITS;   // Choose either 14 or 16-bit magnetometer mode
+
+uint8_t Mmode = 0x02; // 0x02 for 8 Hz, 0x06 for 100 Hz continuous magnetometer data read
 
 float aRes = 2.0   / 32768.0;
 float gRes = 250.0 / 32768.0;
+float mRes = 10. * 4912. / 32760.0; // higher resolution milliGauss scale
 
-
+bool newMagData = false;
 
 void printBias(char * offset, char axis, float value) {
   printf(DIM "%s\t%c: " UNDIM BLUE, offset, axis);
@@ -96,11 +113,11 @@ void printStartupConstants(char * offset) {
   printBias(offset, 'Z', accelBias[2]);
 }
 
-void readBytes(uint8_t location, uint8_t number, uint8_t * data) {
+void readBytes(uint8_t address, uint8_t location, uint8_t number, uint8_t * data) {
 
   // Read the bytes sequentially, writing them to the data array
   for (uint8_t offset = 0; offset < number; offset++) {
-    data[offset] = i2cReadByteData(i2c_device -> i2c -> i2c_address, location + offset);
+    data[offset] = i2cReadByteData(address, location + offset);
   }
 }
 
@@ -115,7 +132,7 @@ float readTempData() {
 void readGyroData(float * axes) {
   uint8_t rawData[6];  // x/y/z gyro register data stored here
   int16_t gyroCount[3];
-  readBytes(GYRO_XOUT_H, 6, &rawData[0]);  // Read the 6 raw data registers sequentially into data array
+  readBytes(i2c_device -> i2c -> i2c_address, GYRO_XOUT_H, 6, &rawData[0]);  // Read the 6 data registers into data array
   gyroCount[0] = ((int16_t) rawData[0] << 8) | rawData[1];  // Turn the MSB and LSB into a signed 16-bit value
   gyroCount[1] = ((int16_t) rawData[2] << 8) | rawData[3];
   gyroCount[2] = ((int16_t) rawData[4] << 8) | rawData[5];
@@ -128,13 +145,32 @@ void readGyroData(float * axes) {
 void readAccelData(float * axes) {
   uint8_t rawData[6];  // x/y/z accel register data stored here
   int16_t accelCount[3];
-  readBytes(ACCEL_XOUT_H, 6, &rawData[0]);  // Read the six raw data registers into data array
+  readBytes(i2c_device -> i2c -> i2c_address, ACCEL_XOUT_H, 6, &rawData[0]);  // Read the 6 data registers into data array
   accelCount[0] = ((int16_t) rawData[0] << 8) | rawData[1];  // Turn the MSB and LSB into a signed 16-bit value
   accelCount[1] = ((int16_t) rawData[2] << 8) | rawData[3];
   accelCount[2] = ((int16_t) rawData[4] << 8) | rawData[5];
 
   //for (int8_t i = 0; i < 3; i++) axes[i] = (float) (accelCount[i]-accelBias[i]) * aRes;
   for (int8_t i = 0; i < 3; i++) axes[i] = (float) accelCount[i] * aRes - accelBias[i];
+}
+
+void readMagData(float * axes) {
+  
+  uint8_t rawData[7];  // x y z gyro register data, ST2 register stored here, must read ST2 at end of data acquisition
+  int16_t magCount[3];
+  newMagData = (i2cReadByteData(i2c_device -> i2c -> i2c_slave_address, AK8963_ST1) & 0x01);
+  if (newMagData == true) { // wait for magnetometer data ready bit to be set
+    // Read the 6 raw data and ST2 registers sequentially into the data array
+    readBytes(i2c_device -> i2c -> i2c_slave_address, AK8963_XOUT_L, 7, &rawData[0]);
+    uint8_t c = rawData[6]; // End data read by reading ST2 register
+    if(!(c & 0x08)) { // Check if magnetic sensor overflow set, if not then report data
+      destination[0] = ((int16_t)rawData[1] << 8) | rawData[0] ;  // Turn the MSB and LSB into a signed 16-bit value
+      destination[1] = ((int16_t)rawData[3] << 8) | rawData[2] ;  // Data stored as little Endian
+      destination[2] = ((int16_t)rawData[5] << 8) | rawData[4] ;
+    }
+  }
+
+  for (int8_t i = 0; i < 3; i++) axes[i] = ((float) magCount[i] * mRes * magCalibration[i] - magBias[i]) * magScale[i];
 }
 
 void nano_sleep(long duration) {
@@ -150,13 +186,14 @@ void * log_mpu_data() {
 
     mpu_log_file = fopen(mpu_log_file_name, "a");
 
-    float log_data[50][6];
+    float log_data[50][9];
     
     for (unsigned char i = 0; i < 50; i++) {
       
       readGyroData(log_data[i]);
       readAccelData(log_data[i] + 3);
-
+      readMagData(log_data[i] + 6);
+      
       fprintf(mpu_log_file, "%d\t", mpu_values_read++);
       for (unsigned char f = 0; f < 6; f++) {
 	fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
@@ -164,12 +201,14 @@ void * log_mpu_data() {
       for (unsigned char f = 0; f < 3; f++) {
 	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_fnode(log_data[i][f]));
 	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_fnode(log_data[i][f + 3]));
+	plot_add_value(mpu_magn_plot, mpu_magn_plot -> lists[f], create_fnode(log_data[i][f + 6]));
       }
       
       fprintf(mpu_log_file, "\n");
 
       graph_plot(mpu_gyro_plot);
       graph_plot(mpu_acel_plot);
+      graph_plot(mpu_magn_plot);
       nano_sleep(100000000);
     }
     
@@ -250,8 +289,8 @@ void resetMPU9250() {
 
 // Function which accumulates gyro and accelerometer data after device initialization. It calculates the average
 // of the at-rest readings and then loads the resulting offsets into accelerometer and gyro bias registers.
-void calibrateMPU9250(float * dest1, float * dest2)
-{
+void calibrateMPU9250(float * dest1, float * dest2) {
+  
   uint8_t data[12]; // data array to hold accelerometer and gyro x, y, z, data
   uint16_t ii, packet_count, fifo_count;
   int32_t gyro_bias[3] = {0, 0, 0}, accel_bias[3] = {0, 0, 0};
@@ -291,13 +330,13 @@ void calibrateMPU9250(float * dest1, float * dest2)
 
   // At end of sample accumulation, turn off FIFO sensor read
   i2cWriteByteData(i2c_device -> i2c -> i2c_address, FIFO_EN, 0x00);   // Disable sensors for FIFO
-  readBytes(FIFO_COUNTH, 2, &data[0]); // read FIFO sample count
+  readBytes(i2c_device -> i2c -> i2c_address, FIFO_COUNTH, 2, &data[0]); // read FIFO sample count
   fifo_count = ((uint16_t) data[0] << 8) | data[1];
   packet_count = fifo_count / 12;// How many sets of full gyro and accelerometer data for averaging
 
   for (ii = 0; ii < packet_count; ii++) {
     int16_t accel_temp[3] = {0, 0, 0}, gyro_temp[3] = {0, 0, 0};
-    readBytes(FIFO_R_W, 12, &data[0]); // read data for averaging
+    readBytes(i2c_device -> i2c -> i2c_address, FIFO_R_W, 12, &data[0]); // read data for averaging
     
     accel_temp[0] = (int16_t) (((int16_t) data[0]  << 8) | data[1] );  // Form signed 16-bit integer for each sample
     accel_temp[1] = (int16_t) (((int16_t) data[2]  << 8) | data[3] );
@@ -343,11 +382,11 @@ void calibrateMPU9250(float * dest1, float * dest2)
   // the accelerometer biases calculated above must be divided by 8.
 
   int32_t accel_bias_reg[3] = {0, 0, 0}; // A place to hold the factory accelerometer trim biases
-  readBytes(XA_OFFSET_H, 2, &data[0]); // Read factory accelerometer trim values
+  readBytes(i2c_device -> i2c -> i2c_address, XA_OFFSET_H, 2, &data[0]); // Read factory accelerometer trim values
   accel_bias_reg[0] = (int16_t) ((int16_t)data[0] << 8) | data[1];
-  readBytes(YA_OFFSET_H, 2, &data[0]);
+  readBytes(i2c_device -> i2c -> i2c_address, YA_OFFSET_H, 2, &data[0]);
   accel_bias_reg[1] = (int16_t) ((int16_t)data[0] << 8) | data[1];
-  readBytes(ZA_OFFSET_H, 2, &data[0]);
+  readBytes(i2c_device -> i2c -> i2c_address, ZA_OFFSET_H, 2, &data[0]);
   accel_bias_reg[2] = (int16_t) ((int16_t)data[0] << 8) | data[1];
 
   uint32_t mask = 1uL; // Define mask for temperature compensation bit 0 of lower byte of accelerometer bias registers
@@ -378,12 +417,36 @@ void calibrateMPU9250(float * dest1, float * dest2)
   dest2[2] = (float) accel_bias[2] / (float) accelsensitivity;
 }
 
+void initAK8963(float * destination) {
+  
+  // First extract the factory calibration for each magnetometer axis
+  uint8_t rawData[3];  // x/y/z gyro calibration data stored here
+  i2cWriteByteData(i2c_device -> i2c -> i2c_slave_address, AK8963_CNTL, 0x00); // Power down magnetometer
+  nano_sleep(10000000);
+  i2cWriteByteData(i2c_device -> i2c -> i2c_slave_address, AK8963_CNTL, 0x0F); // Enter Fuse ROM access mode
+  nano_sleep(10000000);
+  
+  // Read the x, y, and z-axis calibration values
+  readBytes(i2c_device -> i2c -> i2c_slave_address, AK8963_ASAX, 3, &rawData[0]);
+  destination[0] =  (float)(rawData[0] - 128)/256. + 1.;   // Return x-axis sensitivity adjustment values, etc.
+  destination[1] =  (float)(rawData[1] - 128)/256. + 1.;
+  destination[2] =  (float)(rawData[2] - 128)/256. + 1.;
+  i2cWriteByteData(i2c_device -> i2c -> i2c_slave_address, AK8963_CNTL, 0x00); // Power down magnetometer
+  nano_sleep(10000000);
+  // Configure the magnetometer for continuous read and highest resolution
+  // set Mscale bit 4 to 1 (0) to enable 16 (14) bit resolution in CNTL register,
+  // and enable continuous mode data acquisition Mmode (bits [3:0]), 0010 for 8 Hz and 0110 for 100 Hz sample rates
+  // Set magnetometer data resolution and samle ODR
+  i2cWriteByteData(i2c_device -> i2c -> i2c_slave_address, AK8963_CNTL, Mscale << 4 | Mmode);
+  nano_sleep(10000000);
+}
 
 bool initialize_i2c(module * initialent) {
   i2c_device = initialent;
   initialent -> i2c = malloc(sizeof(I2C));
-  initialent -> i2c -> i2c_address = i2cOpen(1, MPU9250_ADDRESS, 0);
-
+  initialent -> i2c -> i2c_address       = i2cOpen(1, MPU9250_ADDRESS, 0);
+  initialent -> i2c -> i2c_slave_address = i2cOpen(1,  AK8963_ADDRESS, 0);
+  
   // Graphics memory allocation
   mpu_gyro_plot = create_plot("    MPU Gyro Axes v.s. Time    ", 3);
   mpu_acel_plot = create_plot("MPU Acelerometer Axes v.s. Time", 3);
@@ -400,6 +463,8 @@ bool initialize_i2c(module * initialent) {
     calibrateMPU9250(gyroBias, accelBias);
     initMPU9250();
 
+    initAK8963(magCalibration);
+    
     // Successful initialization, open log file for recording temperature data
     mpu_log_file = fopen(mpu_log_file_name, "a");
     fprintf(mpu_log_file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\n" RESET);
