@@ -10,7 +10,7 @@
 // Program headers, in compilation order
 #include "unified-controller.h"
 #include "i2c-interface.h"
-#include "UART-interface.h"
+#include "serial-interface.h"
 #include "temperature-monitoring.h"
 #include "graphics.h"
 #include "colors.h"
@@ -89,7 +89,7 @@ void initialize_satellite() {
   bool serial_success = initialize_UART(BNO);
 
   // Set each module's initialization state
-  BNO   -> initialized = false;//serial_success;
+  BNO   -> initialized = serial_success;
   MPU   -> initialized = i2c_success;
   Valve -> initialized = true;
   FEMTA -> initialized = true;
@@ -98,16 +98,17 @@ void initialize_satellite() {
   
   // print information to the user
   printf(GREY "\nInitializing satellite\n\n" RESET);
-  if (thermal_success) printf(GREEN "\tCPU\tSPAWNED\n" RESET);
+  if (thermal_success) printf(GREEN "\tCPU\tSUCCESS\tSPAWNED\n" RESET);
   else printf(RED "\tI2C\tFAILURE\t\tUnable to read/log CPU temperature data\n" RESET);
+
   if (i2c_success) {
-    printf(GREEN "\tI2C\tSUCCESS\n" RESET);
+    printf(GREEN "\tI2C\tSUCCESS\tSPAWNED\n" RESET);
     printStartupConstants("\t\t");
   }
   else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
 
-  
-  printf(RED "\tUART\tOFFLINE\t" RESET);
+  if (serial_success) printf(GREEN "\tUART\tSUCCESS\tSPAWNED\n" RESET);
+  else                printf(RED   "\tUART\tOFFLINE\t" RESET);
   
   printf("\n");
   if (!(i2c_success && thermal_success && serial_success)) {
@@ -115,6 +116,7 @@ void initialize_satellite() {
     return;
   }
   printf(GREEN "\nSatellite initialized successfully!" RESET "\n\n");
+  print(0, "Satellite initialized successfully!", 0);
 }
 
 void print_configuration() {
@@ -131,7 +133,8 @@ void print_configuration() {
 
       // print out the human-readable state
       printf("         ");
-      if (modules[m] -> initialized == false) printf(RED);
+      if (modules[m] -> initialized == false) printf(RED  );
+      else                                    printf(GREEN);
       if      (modules[m] -> pins[p].state == PI_INPUT)   printf(RESET "Input" );
       else if (modules[m] -> pins[p].state == PI_OUTPUT)  printf(RESET "Output");
       else if (modules[m] -> pins[p].state == I2C_STATE)  printf(      "I2C"   );
@@ -151,9 +154,10 @@ void terminate_satellite() {
     }
   }
   
-  gpioTerminate();
   terminate_temperature_monitoring();
   terminate_mpu_logging();
+  terminate_bno_logging();
+  gpioTerminate();
 }
 
 void check_if_writeable(pin * p) {
@@ -185,7 +189,7 @@ void set_voltage(pin * p, char voltage) {
 
   check_if_writeable(p);
   p -> voltage = voltage;
-  gpioWrite(p -> logical, p -> voltage);
+  gpioWrite(p -> logical, (p -> voltage > 0));
 }
 
 void set_pwm(pin * p, unsigned char duty_cycle) {
@@ -209,11 +213,71 @@ int main() {
 
   graph_owner = potential_owners[owner_index];
   
-  unsigned char input;
-  while (input = getc(stdin) != 'q') {
-    owner_index++;
-    if (owner_index > 3) owner_index = 0;
-    graph_owner = potential_owners[owner_index];
+  char input;
+  bool user_input = true;
+  bool manual_mode = false;
+  while (user_input) {
+
+    input = getc(stdin);
+
+    if (manual_mode) {
+      switch (input) {
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+
+	; // Epsilon
+	
+	char number = input - '0';   // The actual number pressed
+
+	// Flip pwm from one extrema to another
+	if ((FEMTA -> pins + number) -> duty_cycle) set_pwm(FEMTA -> pins + number, 0);
+	else                                      set_pwm(FEMTA -> pins + number, 255);
+	
+	update_state_graphic(18 + number, ((FEMTA -> pins + number) -> duty_cycle > 0));
+	break;
+      case 'v':
+
+	// Flip valve voltage
+	Valve -> pins -> voltage = !Valve -> pins -> voltage;
+	set_voltage(Valve -> pins, Valve -> pins -> voltage);
+	update_state_graphic(15, Valve -> pins -> voltage);
+	break;
+      }
+    }
+    
+    switch (input) {
+      
+    case 'c':
+      owner_index++;
+      if (owner_index > 3) owner_index = 0;
+      graph_owner = potential_owners[owner_index];
+      break;
+
+    case 'm':
+      erase_print_window(1);
+      print(1, "b: back", 0);
+      print(1, "v: valve", 0);
+      print(1, "0: FEMTA 0", 0);
+      print(1, "1: FEMTA 1", 0);
+      print(1, "2: FEMTA 2", 0);
+      print(1, "3: FEMTA 3", 0);
+      manual_mode = true;
+      break;
+
+    case 'b':
+      if (manual_mode) manual_mode = false;
+      erase_print_window(1);
+      print(1, "c: cycle graphs", 0);
+      print(1, "m: manual control", 0);
+      print(1, "q: quit", 0);
+      break;
+      
+    case 'q':
+      user_input = false;
+      break;
+    }
   }
   
   printf("\n");

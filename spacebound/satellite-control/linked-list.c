@@ -8,12 +8,20 @@
 Node * create_inode(int value) {
   Node * node = malloc(sizeof(Node));
   node -> ivalue = value;
+  node -> svalue = NULL;
   return node;
 }
 
 Node * create_fnode(float value) {
   Node * node = malloc(sizeof(Node));
   node -> fvalue = value;
+  node -> svalue = NULL;
+  return node;
+}
+
+Node * create_snode(char * value) {
+  Node * node = malloc(sizeof(Node));
+  node -> svalue = value;
   return node;
 }
 
@@ -50,8 +58,11 @@ void list_insert(List * list, Node * node) {
   // Limit has been reached
   list -> head -> prev -> ivalue = node -> ivalue;
   list -> head -> prev -> fvalue = node -> fvalue;
+  list -> head -> prev -> svalue = node -> svalue;
   list -> head = list -> head -> prev;
-  free(node);
+
+  // Dispense of the node
+  free(node);   // Note: I may need to do free() on the char * depending on my printing implementation
 }
 
 /*

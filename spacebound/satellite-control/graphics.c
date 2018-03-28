@@ -1,7 +1,9 @@
 
-#include <pigpio.h>
+
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+#include <pigpio.h>
 #include <curses.h>
 #include <menu.h>
 
@@ -45,7 +47,7 @@ void initialize_graphics() {
   init_pair(5, COLOR_YELLOW,  -1);
   init_pair(6, COLOR_BLUE,  -1);
   init_pair(7, COLOR_CYAN,  -1);
-  
+  init_pair(8, COLOR_BLACK, COLOR_YELLOW);
 
   // General memory allocation
   print_views = malloc(NUMBER_OF_PRINT_VIEWS * sizeof(print_view *));
@@ -140,7 +142,7 @@ void initialize_graphics() {
   mvwaddch(view -> window, 2, 0, ACS_LTEE);
   mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
   mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_RTEE);
-
+  
   refresh();
   wrefresh(view -> window);
 
@@ -152,17 +154,19 @@ void initialize_graphics() {
   view -> inner_width  = view -> outer_width  - 2;
   view -> inner_height = view -> outer_height - 4;
 
+  print_views[1] -> number_of_lines = view -> inner_height;
+
   view -> window = newwin(view -> outer_height, view -> outer_width, 0, 0);
   box(view -> window, 0, 0);
   mvwaddch(view -> window, 0, view -> outer_width - 1, ACS_TTEE);
   mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_PLUS);
   mvwaddch(view -> window, view -> outer_height - 1, view -> outer_width - 1, ACS_RTEE);
 
-  print_window_title(view -> window, 1, 0, view -> outer_width, "System log", COLOR_PAIR(3));
+  print_window_title(view -> window, 1, 0, view -> outer_width, "Controls", COLOR_PAIR(5));
   mvwaddch(view -> window, 2, 0, ACS_LTEE);
   mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
   mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_RTEE);
-
+  
   refresh();
   wrefresh(view -> window);
 
@@ -220,6 +224,10 @@ void initialize_graphics() {
   refresh();
   wrefresh(view -> window);
 
+  // Instantiate printing lists of the proper sizes
+  for (uint8_t p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) {
+    print_views[p] -> lines = create_list(print_views[p] -> view -> inner_height);
+  }
   
   // Let everyone know
   number_of_data_points_plottable = view -> inner_width - 2 - 6;
@@ -232,12 +240,31 @@ void initialize_graphics() {
 
   refresh();
   wrefresh(print_views[0] -> view -> window);
-
+  
   mvwaddch(print_views[2] -> view -> window, print_views[2] -> view -> outer_height - 1, 0, ACS_BTEE);
-
+  
   refresh();
   wrefresh(print_views[2] -> view -> window);
   ready_to_graph = true;
+  
+  print(2, "CPU   SPAWNED   SUCCESS", 2);
+  
+  if (i2c_device -> initialized)    print(2, "I2C   SPAWNED   SUCCESS", 2);
+  else                              print(2, "I2C   FAILURE"          , 4);
+  
+  if (serial_device -> initialized) print(2, "UART  SPAWNED   SUCCESS", 2);
+  else                              print(2, "UART  FAILURE"          , 4);
+
+  print(0, "Results will be printed here", 0);
+  print(1, "c: cycle graphs", 0);
+  print(1, "m: manual control", 0);
+  print(1, "q: quit", 0);
+  
+  //print(2, "The universe appears flat :)", 2);
+  
+  // Debug
+  //print(0, "Run with valgrind for sad mode :(", 0);
+  
 }
 
 void terminate_graphics() {
@@ -277,8 +304,64 @@ Plot * create_plot(char * name, unsigned char number_of_lists) {
   return plot;
 }
 
+void clear_print_window(unsigned char window_number) {
+
+  // Space buffer
+  unsigned char line_length = print_views[window_number] -> view -> inner_width - 2;
+  char spaces[line_length + 1];
+  for (unsigned char x = 0; x < line_length; x++) spaces[x] = ' ';
+  spaces[line_length] = '\0';
+
+  // Print buffer over lines
+  for (unsigned char l = 0; l < print_views[window_number] -> number_of_lines; l++) {
+    mvwprintw(print_views[window_number] -> view -> window, 3 + l, 2, "%s", spaces);
+  }
+}
+
 void print(unsigned char window_number, char * string, unsigned char color) {
+
+  if (window_number >= NUMBER_OF_PRINT_VIEWS) return;   // Ensure print view exists
+  if (!ready_to_graph) return;
+
+  clear_print_window(window_number);
   
+  print_view * printer = print_views[window_number];
+
+  int chars_to_print = printer -> view -> inner_width - 2;
+  if (strlen(string) < chars_to_print) chars_to_print = strlen(string);
+  
+  list_insert(printer -> lines, create_snode(string));
+
+  wattron(printer -> view -> window, COLOR_PAIR(color));
+  Node * node = printer -> lines -> head;
+  int i = 0;
+  
+  for (node = node -> prev; node != printer -> lines -> head; node = node -> prev, i++) {
+    mvwprintw(printer -> view -> window, 3 + i, 2, "%s", node -> svalue);
+  }
+  mvwprintw(printer -> view -> window, 3 + i, 2, "%s", node -> svalue);
+  wattroff(printer -> view -> window, COLOR_PAIR(color));
+  
+  refresh();
+  wrefresh(printer -> view -> window);
+}
+
+void erase_print_window(unsigned char window_number) {
+  for (unsigned char l = 0; l < print_views[window_number] -> number_of_lines; l++) {
+    print(window_number, "", 0);
+  }
+}
+
+void update_state_graphic(unsigned char line, bool state) {
+  
+  if (state) wattron(setup_views[0] -> view -> window, COLOR_PAIR(8));
+
+  mvwprintw(setup_views[0] -> view -> window, line, 33, "Output");
+  
+  if (state) wattroff(setup_views[0] -> view -> window, COLOR_PAIR(8));
+
+  refresh();
+  wrefresh(setup_views[0] -> view -> window);
 }
 
 void plot_add_value(Plot * plot, List * list, Node * node) {

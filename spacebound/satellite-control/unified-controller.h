@@ -31,6 +31,8 @@ typedef struct module {
 
 module ** modules, * BNO, * MPU, * Valve, * FEMTA;
 
+void set_voltage(pin * p, char voltage);
+
 #include "i2c-interface.h"       // Promise fulfilled for the compiler
-#include "UART-interface.h"      // Promise fulfilled for the compiler
+#include "serial-interface.h"      // Promise fulfilled for the compiler
 #endif

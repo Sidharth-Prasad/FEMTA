@@ -21,6 +21,7 @@
 #include "i2c-interface.h"
 #include "linked-list.h"
 #include "graphics.h"
+#include "timing.h"
 #include "colors.h"
 
 #define AK8963_ST1       0x02
@@ -175,13 +176,6 @@ void readMagData(float * axes) {
   for (int8_t i = 0; i < 3; i++) axes[i] = ((float) magCount[i] * mRes * magCalibration[i] - magBias[i]) * magScale[i];
 }
 
-void nano_sleep(long duration) {
-  struct timespec delay, result;
-  delay.tv_sec = 0;
-  delay.tv_nsec = duration;
-  nanosleep(&delay, &result);
-}
-
 void * log_mpu_data() {
 
   while (!mpu_termination_signal) {
@@ -197,7 +191,7 @@ void * log_mpu_data() {
       readMagData(log_data[i] + 6);
       
       fprintf(mpu_log_file, "%d\t", mpu_values_read++);
-      for (unsigned char f = 0; f < 6; f++) {
+      for (unsigned char f = 0; f < 9; f++) {
 	fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
       }
       for (unsigned char f = 0; f < 3; f++) {
@@ -454,6 +448,7 @@ bool initialize_i2c(module * initialent) {
   mpu_acel_plot = create_plot("MPU Acelerometer Axes v.s. Time", 3);
   mpu_magn_plot = create_plot("MPU Magnetometer Axes v.s. Time", 3);
 
+  // Connection established
   if (i2cReadByteData(initialent -> i2c -> i2c_address, 0) >= 0) {
     //i2c_device = initialent;
 

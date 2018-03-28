@@ -8,8 +8,12 @@ typedef struct Node {
   Node * next;
   Node * prev;
 
-  int ivalue;
-  float fvalue;
+  union {
+    int   ivalue;
+    float fvalue;
+  };
+    
+  char * svalue;
   
 } Node;
 
@@ -23,6 +27,7 @@ typedef struct List {
 
 Node * create_inode(int value);
 Node * create_fnode(float value);
+Node * create_snode(char * value);
 List * create_list(unsigned int limit);
 void list_insert(List * list, Node * node);
 

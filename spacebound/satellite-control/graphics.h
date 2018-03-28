@@ -35,6 +35,8 @@ typedef struct print_view {
 
   View * view;
 
+  List * lines;
+
   unsigned char number_lines_printed;
   unsigned char current_view_line;
   unsigned char number_of_lines;
@@ -58,6 +60,9 @@ typedef struct setup_view {
 void initialize_graphics();
 void terminate_graphics();
 void print(unsigned char window_number, char * string, unsigned char color);
+void clear_print_window(unsigned char window_number);
+void erase_print_window(unsigned char window_number);
+void update_state_graphic(unsigned char line, bool state);
 
 void graph_plot(Plot * plot);
 void plot_add_value(Plot * plot, List * list, Node * node);
