@@ -227,6 +227,7 @@ void initialize_graphics() {
   // Instantiate printing lists of the proper sizes
   for (uint8_t p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) {
     print_views[p] -> lines = create_list(print_views[p] -> view -> inner_height);
+    print_views[p] -> colors = create_list(print_views[p] -> view -> inner_height);
   }
   
   // Let everyone know
@@ -331,16 +332,22 @@ void print(unsigned char window_number, char * string, unsigned char color) {
   if (strlen(string) < chars_to_print) chars_to_print = strlen(string);
   
   list_insert(printer -> lines, create_snode(string));
+  list_insert(printer -> colors, create_inode(color));
 
-  wattron(printer -> view -> window, COLOR_PAIR(color));
-  Node * node = printer -> lines -> head;
+  //wattron(printer -> view -> window, COLOR_PAIR(color));
+  Node * node = printer -> lines -> head -> prev;
+  Node * lcolor = printer -> colors -> head -> prev;
   int i = 0;
   
-  for (node = node -> prev; node != printer -> lines -> head; node = node -> prev, i++) {
+  for (; node != printer -> lines -> head; node = node -> prev, lcolor = lcolor -> prev, i++) {
+    wattron(printer -> view -> window, COLOR_PAIR(lcolor -> ivalue));
     mvwprintw(printer -> view -> window, 3 + i, 2, "%s", node -> svalue);
+    wattroff(printer -> view -> window, COLOR_PAIR(lcolor -> ivalue));
   }
+  wattron(printer -> view -> window, COLOR_PAIR(lcolor -> ivalue));
   mvwprintw(printer -> view -> window, 3 + i, 2, "%s", node -> svalue);
-  wattroff(printer -> view -> window, COLOR_PAIR(color));
+  wattroff(printer -> view -> window, COLOR_PAIR(lcolor -> ivalue));
+  //wattroff(printer -> view -> window, COLOR_PAIR(color));
   
   refresh();
   wrefresh(printer -> view -> window);

@@ -11,6 +11,8 @@ int main() {
   double T;
 
   FILE * outfile;// = fopen("./log.txt", "w");
+
+  int seconds = 0;
   
   for (;;) {
 
@@ -24,13 +26,13 @@ int main() {
     }
 
     fscanf(temperatureFile, "%lf", &T);
-    printf("%6.3f\n", T / 1000);
+    printf("%6.3f\t%d\n", T / 1000, seconds++);
     fprintf(outfile, "%6.3f\n", T / 1000);
     fflush(stdout);
 
     fclose(temperatureFile);
     fclose(outfile);
-    
+
     sleep(1);
   }
 

@@ -36,6 +36,7 @@ typedef struct print_view {
   View * view;
 
   List * lines;
+  List * colors;
 
   unsigned char number_lines_printed;
   unsigned char current_view_line;

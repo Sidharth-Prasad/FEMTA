@@ -191,9 +191,7 @@ void * log_mpu_data() {
       readMagData(log_data[i] + 6);
       
       fprintf(mpu_log_file, "%d\t", mpu_values_read++);
-      for (unsigned char f = 0; f < 9; f++) {
-	fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
-      }
+      for (unsigned char f = 0; f < 9; f++) fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
       for (unsigned char f = 0; f < 3; f++) {
 	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_fnode(log_data[i][f]));
 	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_fnode(log_data[i][f + 3]));
@@ -460,7 +458,7 @@ bool initialize_i2c(module * initialent) {
     calibrateMPU9250(gyroBias, accelBias);
     initMPU9250();
 
-    initAK8963(magCalibration);
+   initAK8963(magCalibration);
     
     // Successful initialization, open log file for recording temperature data
     mpu_log_file = fopen(mpu_log_file_name, "a");

@@ -208,8 +208,16 @@ int main() {
 
   //graph_owner = temperature_plot;
   //graph_owner = mpu_gyro_plot;
-  unsigned char owner_index = 0;
-  Plot * potential_owners[4] = {temperature_plot, mpu_gyro_plot, mpu_acel_plot, mpu_magn_plot};
+  unsigned char owner_index = 6;
+  Plot * potential_owners[7] = {
+    temperature_plot,
+    mpu_gyro_plot,
+    bno_gyro_plot,
+    mpu_acel_plot,
+    bno_acel_plot,
+    mpu_magn_plot,
+    bno_magn_plot,
+  };
 
   graph_owner = potential_owners[owner_index];
   
