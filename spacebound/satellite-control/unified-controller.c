@@ -209,6 +209,7 @@ int main() {
   //graph_owner = temperature_plot;
   //graph_owner = mpu_gyro_plot;
   unsigned char owner_index = 6;
+  unsigned char max_owner_index = 6;
   Plot * potential_owners[7] = {
     temperature_plot,
     mpu_gyro_plot,
@@ -259,7 +260,7 @@ int main() {
       
     case 'c':
       owner_index++;
-      if (owner_index > 3) owner_index = 0;
+      if (owner_index > max_owner_index) owner_index = 0;
       graph_owner = potential_owners[owner_index];
       break;
 

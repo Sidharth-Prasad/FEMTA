@@ -7,6 +7,7 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <sched.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <pigpio.h>
@@ -34,13 +35,21 @@
 #define BNO055_SYS_TRIGGER_ADDR      0x3F
 #define BNO055_ID                    0xA0
 
-
 FILE * bno_log_file;
 char * bno_log_file_name = "./logs/bno-log.txt";
 pthread_t bno_thread;
 bool bno_termination_signal;
 int bno_values_read = 0;
 
+bool wait_for_bytes(int length) {
+
+  int attempts = 0;
+  while (serDataAvailable(serial_device -> uart -> serial_handle) < length) {
+    if (attempts++ > 2048) return false;
+    //sched_yield();
+  }
+  return true;
+}
 
 void write_byte(uint8_t handle, int8_t address, int8_t data, bool ack) {
 
@@ -91,19 +100,22 @@ void read_bytes(unsigned char handle, signed char address, signed char * buffer,
   
     serWrite(handle, command, 4);
   
-    while (serDataAvailable(handle) < 2);
+    //while (serDataAvailable(handle) < 2);
+    wait_for_bytes(2);//
     int8_t response[2];
     int read_success = serRead(handle, response, 2);
     
     //if (!(response[0] == 0xEE && response[1] == 0x07)) {
     //if (response[0] == 0xBB && response[1] == length) {
-    
-	while (serDataAvailable(handle) < length);
-	serRead(handle, buffer, length);
 
-	return;
-	//}
-	//}
+    bool can_read = wait_for_bytes(length);//
+    //while (serDataAvailable(handle) < length);
+    if (can_read) {
+      serRead(handle, buffer, length);
+      return;
+    }
+    //}
+    //}
   }
 }
 
@@ -134,7 +146,22 @@ void read_serial_magnetometers(float * axes) {
   }
 }
 
-void read_serial_accelerometers(float * axes) {
+void read_serial_raccel(float * axes) {
+  int length = 6;
+  int8_t rawData[length];
+  for (int i = 0; i < length; i++) rawData[i] = 0;
+  
+  read_bytes(serial_device -> uart -> serial_handle, BNO055_MAG_DATA_X_LSB_ADDR, rawData, length);
+  
+  axes[3];
+  for (int i = 0; i < length; i += 2) {
+    int entry = ((rawData[i + 1] << 8) | rawData[i]);
+    if (entry > 32767) entry -= 65536;
+    axes[i / 2] = entry / 16.0;
+  }
+}
+
+void read_serial_laccel(float * axes) {
   
 }
 
@@ -193,7 +220,8 @@ bool initialize_UART(module * initialent) {
   nano_sleep(650000000);
   
   serial_device -> uart -> serial_handle = serOpen("/dev/ttyAMA0", 115200, 0);
-
+  //serial_device -> uart -> serial_handle = serOpen("/dev/ttyAMA0", 230400, 0);
+  
   write_byte(serial_device -> uart -> serial_handle, BNO055_PAGE_ID_ADDR, 0x00, false);
   serial_set_mode(OPERATION_MODE_CONFIG);
   nano_sleep(30000000);
