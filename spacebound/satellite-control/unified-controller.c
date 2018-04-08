@@ -201,12 +201,19 @@ void set_pwm(pin * p, unsigned char duty_cycle) {
 
 int main() {
 
+  printf("0\n");
+  
   initialize_satellite();
+
+  printf("1\n");
   print_configuration();
+
+  printf("1\n");
   
   initialize_graphics();
 
-
+  printf("2\n");
+  
   Plot * all_possible_owners[8] = {
     temperature_plot,
     mpu_gyro_plot,
@@ -218,36 +225,25 @@ int main() {
     bno_magn_plot,
   };
 
-  List owner_index_list = create_list();
+  List * owner_index_list = create_list(8);
 
   // Temperature plot no matter what
-  list_insert(&owner_index_list, create_inode(0));
+  list_insert(owner_index_list, create_inode(0));
 
   // Add MPU plots
   if (MPU -> initialized) {
-    for (char p = 1; p <= 3; p++) list_insert(&owner_index_list, create_inode(p));
+    for (char p = 1; p <= 3; p++) list_insert(owner_index_list, create_inode(p));
   }
 
   // Add BNO plots
   if (BNO -> initialized) {
-    for (char p = 4; p <= 7; p++) list_insert(&owner_index_list, create_inode(p));
+    for (char p = 4; p <= 7; p++) list_insert(owner_index_list, create_inode(p));
   }
 
-  Node * owner = owner_index_list.head;
-	      
-  unsigned char owner_index = 6;
-  unsigned char max_owner_index = 6;
-  Plot * potential_owners[7] = {
-    temperature_plot,
-    mpu_gyro_plot,
-    bno_gyro_plot,
-    mpu_acel_plot,
-    bno_acel_plot,
-    mpu_magn_plot,
-    bno_magn_plot,
-  };
-
-  graph_owner = potential_owners[owner_index];
+  printf("Here0");
+  
+  Node * graph_owner_index_node = owner_index_list -> head;
+  graph_owner = all_possible_owners[graph_owner_index_node -> ivalue];
   
   char input;
   bool user_input = true;
@@ -286,9 +282,8 @@ int main() {
     switch (input) {
       
     case 'c':
-      owner_index++;
-      if (owner_index > max_owner_index) owner_index = 0;
-      graph_owner = potential_owners[owner_index];
+      graph_owner_index_node = graph_owner_index_node -> next;
+      graph_owner = all_possible_owners[graph_owner_index_node -> ivalue];
       break;
 
     case 'm':
