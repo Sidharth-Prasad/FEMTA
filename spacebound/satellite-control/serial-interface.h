@@ -19,6 +19,7 @@ module * serial_device;
 
 Plot * bno_gyro_plot;
 Plot * bno_acel_plot;
+Plot * bno_lina_plot;
 Plot * bno_magn_plot;
 
 #endif

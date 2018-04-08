@@ -22,18 +22,22 @@
 #include "colors.h"
 
 
-#define POWER_MODE_NORMAL            0x00
-#define OPERATION_MODE_CONFIG        0x00
-#define BNO055_CHIP_ID_ADDR          0x00
-#define BNO055_PAGE_ID_ADDR          0x07
-#define BNO055_ACCEL_DATA_X_LSB_ADDR 0x08
-#define OPERATION_MODE_NDOF          0x0C
-#define BNO055_MAG_DATA_X_LSB_ADDR   0x0E
-#define BNO055_TEMP_ADDR             0x34
-#define BNO055_OPR_MODE_ADDR         0x3D
-#define BNO055_PWR_MODE_ADDR         0x3E
-#define BNO055_SYS_TRIGGER_ADDR      0x3F
-#define BNO055_ID                    0xA0
+#define POWER_MODE_NORMAL                   0x00
+#define OPERATION_MODE_CONFIG               0x00
+#define BNO055_CHIP_ID_ADDR                 0x00
+#define BNO055_PAGE_ID_ADDR                 0x07
+#define BNO055_ACCEL_DATA_X_LSB_ADDR        0x08
+#define OPERATION_MODE_NDOF                 0x0C
+#define BNO055_MAG_DATA_X_LSB_ADDR          0x0E
+#define BNO055_GYRO_DATA_X_LSB_ADDR         0x14
+#define BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR 0x28
+#define BNO055_TEMP_ADDR                    0x34
+#define BNO055_OPR_MODE_ADDR                0x3D
+#define BNO055_PWR_MODE_ADDR                0x3E
+#define BNO055_SYS_TRIGGER_ADDR             0x3F
+#define BNO055_ID                           0xA0
+
+#define PI 3.1415926535897
 
 FILE * bno_log_file;
 char * bno_log_file_name = "./logs/bno-log.txt";
@@ -108,20 +112,20 @@ void read_bytes(unsigned char handle, signed char address, signed char * buffer,
     //if (!(response[0] == 0xEE && response[1] == 0x07)) {
     //if (response[0] == 0xBB && response[1] == length) {
 
-    bool can_read = wait_for_bytes(length);//
-    //while (serDataAvailable(handle) < length);
-    if (can_read) {
-      serRead(handle, buffer, length);
-      return;
+	bool can_read = wait_for_bytes(length);//
+	//while (serDataAvailable(handle) < length);
+	if (can_read) {
+	  serRead(handle, buffer, length);
+	  return;
+	  //	}
+	  //}
     }
-    //}
-    //}
   }
 }
 
 float readSerialTempData() {
 
-  //Short this
+  // Short this
   return 0.0;
   
   int8_t rawData[1] = {0x00,};
@@ -131,42 +135,38 @@ float readSerialTempData() {
   return (float) rawData[0];
 }
 
-void read_serial_magnetometers(float * axes) {
+void retrieve_data(float * axes, uint8_t address, float scalar) {
   int length = 6;
   int8_t rawData[length];
-  for (int i = 0; i < length; i++) rawData[i] = 0;
-  
-  read_bytes(serial_device -> uart -> serial_handle, BNO055_MAG_DATA_X_LSB_ADDR, rawData, length);
-  
-  axes[3];
+
+  read_bytes(serial_device -> uart -> serial_handle, address, rawData, length);
+
   for (int i = 0; i < length; i += 2) {
     int entry = ((rawData[i + 1] << 8) | rawData[i]);
     if (entry > 32767) entry -= 65536;
-    axes[i / 2] = entry / 16.0;
+    axes[i / 2] = entry * scalar;
   }
 }
 
-void read_serial_raccel(float * axes) {
-  int length = 6;
-  int8_t rawData[length];
-  for (int i = 0; i < length; i++) rawData[i] = 0;
-  
-  read_bytes(serial_device -> uart -> serial_handle, BNO055_MAG_DATA_X_LSB_ADDR, rawData, length);
-  
-  axes[3];
-  for (int i = 0; i < length; i += 2) {
-    int entry = ((rawData[i + 1] << 8) | rawData[i]);
-    if (entry > 32767) entry -= 65536;
-    axes[i / 2] = entry / 16.0;
-  }
+
+// Read the tri-axial gyroscope data
+void read_serial_gyro(float * axes) {
+  retrieve_data(axes, BNO055_GYRO_DATA_X_LSB_ADDR, 1 / (900 * PI / 180));
 }
 
-void read_serial_laccel(float * axes) {
-  
+// Read the tri-axial magnetometer data
+void read_serial_magn(float * axes) {
+  retrieve_data(axes, BNO055_MAG_DATA_X_LSB_ADDR, 1 / 16.0);
 }
 
-void read_serial_gyroscopes(float * axes) {
+// Read the tri-axial rotational accelerometer data
+void read_serial_rota(float * axes) {
+  retrieve_data(axes, BNO055_ACCEL_DATA_X_LSB_ADDR, 1 / 100.0);
+}
 
+// Read the tri-axial linear accelerometer data
+void read_serial_lina(float * axes) {
+  retrieve_data(axes, BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR, 1 / 100.0);
 }
 
 void * log_bno_data() {
@@ -175,35 +175,36 @@ void * log_bno_data() {
 
     bno_log_file = fopen(bno_log_file_name, "a");
 
-    float log_data[50][9];
+    float log_data[50][12];
 
     for (uint8_t i = 0; i < 50; i++) {
 
-      read_serial_gyroscopes(log_data[i]);
-      read_serial_accelerometers(log_data[i] + 3);
-      read_serial_magnetometers(log_data[i] + 6);
-
+      read_serial_gyro(log_data[i]    );
+      read_serial_rota(log_data[i] + 3);
+      read_serial_lina(log_data[i] + 6);
+      read_serial_magn(log_data[i] + 9);
+      
       fprintf(bno_log_file, "%d\t", bno_values_read++);
-      for (uint8_t f = 0; f < 9; f++) fprintf(bno_log_file, "%.3f\t", log_data[i][f]);
+      for (uint8_t f = 0; f < 12; f++) fprintf(bno_log_file, "%.3f\t", log_data[i][f]);
       for (uint8_t f = 0; f < 3; f++) {
 	plot_add_value(bno_gyro_plot, bno_gyro_plot -> lists[f], create_fnode(log_data[i][f    ]));
 	plot_add_value(bno_acel_plot, bno_acel_plot -> lists[f], create_fnode(log_data[i][f + 3]));
-	plot_add_value(bno_magn_plot, bno_magn_plot -> lists[f], create_fnode(log_data[i][f + 6]));
+	plot_add_value(bno_lina_plot, bno_lina_plot -> lists[f], create_fnode(log_data[i][f + 6]));
+	plot_add_value(bno_magn_plot, bno_magn_plot -> lists[f], create_fnode(log_data[i][f + 9]));
       }
 
       fprintf(bno_log_file, "\n");
 
       graph_plot(bno_gyro_plot);
       graph_plot(bno_acel_plot);
+      graph_plot(bno_lina_plot);
       graph_plot(bno_magn_plot);
       nano_sleep(100000000);
     }
 
     fflush(stdout);
     fclose(bno_log_file);
-    
   }
-  
 }
 
 
@@ -247,11 +248,12 @@ bool initialize_UART(module * initialent) {
   
   // Graphics memory allocation
   bno_gyro_plot = create_plot("    BNO Gyro Axes v.s. Time    ", 3);
-  bno_acel_plot = create_plot("BNO Acelerometer Axes v.s. Time", 3);
+  bno_acel_plot = create_plot("BNO Rotational Accels v.s. Time", 3);
+  bno_lina_plot = create_plot("  BNO Linear Accels v.s. Time  ", 3);
   bno_magn_plot = create_plot("BNO Magnetometer Axes v.s. Time", 3);  
 
   bno_log_file = fopen(bno_log_file_name, "a");
-  fprintf(bno_log_file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAce lz\tMagn x\tMagn y\tMagn z\n" RESET);
+  fprintf(bno_log_file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tLina x\tLina y\tLina z\tMagn x\tMagn y\tMagn z\n" RESET);
   fclose(bno_log_file);
 
   bno_termination_signal = false;
