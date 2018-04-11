@@ -257,9 +257,9 @@ void initialize_graphics() {
   else                              print(2, "UART  FAILURE"          , 4);
 
   print(0, "Results will be printed here", 0);
-  print(1, "c: cycle graphs", 0);
-  print(1, "m: manual control", 0);
-  print(1, "q: quit", 0);
+  print(1, "c: cycle graphs"             , 0);
+  print(1, "m: manual control"           , 0);
+  print(1, "q: quit"                     , 0);
   
   //print(2, "The universe appears flat :)", 2);
   
@@ -320,7 +320,7 @@ void clear_print_window(unsigned char window_number) {
 }
 
 void print(unsigned char window_number, char * string, unsigned char color) {
-
+  
   if (window_number >= NUMBER_OF_PRINT_VIEWS) return;   // Ensure print view exists
   if (!ready_to_graph) return;
 

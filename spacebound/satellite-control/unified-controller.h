@@ -26,6 +26,7 @@ typedef struct module {
   UART * uart;
 
   bool initialized;
+  bool loaded;
 
 } module;
 

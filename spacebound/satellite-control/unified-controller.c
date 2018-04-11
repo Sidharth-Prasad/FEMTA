@@ -43,7 +43,8 @@ void initialize_satellite() {
   // Get space for modules
   modules = malloc(NUMBER_OF_MODULES * sizeof(module *));
   for (char m = 0; m < NUMBER_OF_MODULES; m++) modules[m] = malloc(sizeof(module));
-
+  for (char m = 0; m < NUMBER_OF_MODULES; m++) modules[m] -> loaded = false;
+  
   // All modules should be grouped together
   BNO   = modules[0];
   MPU   = modules[1];
@@ -89,7 +90,7 @@ void initialize_satellite() {
   bool serial_success = initialize_UART(BNO);
 
   // Set each module's initialization state
-  BNO   -> initialized = serial_success;
+  BNO   -> initialized = false; //serial_success
   MPU   -> initialized = i2c_success;
   Valve -> initialized = true;
   FEMTA -> initialized = true;
@@ -107,8 +108,9 @@ void initialize_satellite() {
   }
   else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
 
-  if (serial_success) printf(GREEN "\tBNO\tSUCCESS\tSPAWNED\n" RESET);
-  else                printf(RED   "\tBNO\tOFFLINE\t" RESET);
+  // Serial_success is a highly falible indicator. It's a long story.
+  if (BNO -> initialized) printf(GREEN "\tBNO\tSUCCESS\tSPAWNED\n" RESET);
+  else                    printf(RED   "\tBNO\tOFFLINE\t" RESET);
   
   printf("\n");
   if (!(i2c_success && thermal_success && serial_success)) {
@@ -200,19 +202,11 @@ void set_pwm(pin * p, unsigned char duty_cycle) {
 }
 
 int main() {
-
-  printf("0\n");
   
   initialize_satellite();
-
-  printf("1\n");
   print_configuration();
-
-  printf("1\n");
   
   initialize_graphics();
-
-  printf("2\n");
   
   Plot * all_possible_owners[8] = {
     temperature_plot,
@@ -229,18 +223,6 @@ int main() {
 
   // Temperature plot no matter what
   list_insert(owner_index_list, create_inode(0));
-
-  // Add MPU plots
-  if (MPU -> initialized) {
-    for (char p = 1; p <= 3; p++) list_insert(owner_index_list, create_inode(p));
-  }
-
-  // Add BNO plots
-  if (BNO -> initialized) {
-    for (char p = 4; p <= 7; p++) list_insert(owner_index_list, create_inode(p));
-  }
-
-  printf("Here0");
   
   Node * graph_owner_index_node = owner_index_list -> head;
   graph_owner = all_possible_owners[graph_owner_index_node -> ivalue];
@@ -249,20 +231,20 @@ int main() {
   bool user_input = true;
   bool manual_mode = false;
   while (user_input) {
-
+    
     input = getc(stdin);
-
+    
     if (manual_mode) {
       switch (input) {
       case '0':
       case '1':
       case '2':
       case '3':
-
+	
 	; // Epsilon
 	
 	char number = input - '0';   // The actual number pressed
-
+	
 	// Flip pwm from one extrema to another
 	if ((FEMTA -> pins + number) -> duty_cycle) set_pwm(FEMTA -> pins + number, 0);
 	else                                      set_pwm(FEMTA -> pins + number, 255);
@@ -270,7 +252,7 @@ int main() {
 	update_state_graphic(18 + number, ((FEMTA -> pins + number) -> duty_cycle > 0));
 	break;
       case 'v':
-
+	
 	// Flip valve voltage
 	Valve -> pins -> voltage = !Valve -> pins -> voltage;
 	set_voltage(Valve -> pins, Valve -> pins -> voltage);
@@ -282,6 +264,19 @@ int main() {
     switch (input) {
       
     case 'c':
+
+      // Add MPU plots
+      if (MPU -> initialized && !MPU -> loaded) {
+	for (char p = 1; p <= 3; p++) list_insert(owner_index_list, create_inode(p));
+	MPU -> loaded = true;
+      }
+
+      // Add BNO plots
+      if (BNO -> initialized && !BNO -> loaded) {
+	for (char p = 4; p <= 7; p++) list_insert(owner_index_list, create_inode(p));
+	BNO -> loaded = true;
+      }
+      
       graph_owner_index_node = graph_owner_index_node -> next;
       graph_owner = all_possible_owners[graph_owner_index_node -> ivalue];
       break;

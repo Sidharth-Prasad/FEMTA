@@ -5,7 +5,7 @@
 
 typedef struct UART {
 
-  unsigned char serial_handle;
+  signed char serial_handle;
 
   // Read Functions
   float (* temperature)();

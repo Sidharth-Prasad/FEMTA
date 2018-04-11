@@ -69,7 +69,7 @@ void write_byte(uint8_t handle, int8_t address, int8_t data, bool ack) {
   
   for (int attempt = 0; attempt < max_attempts; attempt++) {
 
-    serWrite(handle, command, 5);
+    int write_status = serWrite(handle, command, 5);
 
     if (!ack) return;
 
@@ -169,8 +169,33 @@ void read_serial_lina(float * axes) {
   retrieve_data(axes, BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR, 1 / 100.0);
 }
 
-void * log_bno_data() {
+void * log_bno_data() {  
 
+  write_byte(serial_device -> uart -> serial_handle, BNO055_PAGE_ID_ADDR, 0x00, false);
+  serial_set_mode(OPERATION_MODE_CONFIG);
+  nano_sleep(30000000);
+
+  write_byte(serial_device -> uart -> serial_handle, BNO055_PAGE_ID_ADDR, 0, true);
+
+  // Reset the BNO-055
+  set_voltage(serial_device -> pins + 2, 0);
+  nano_sleep(10000000);
+  set_voltage(serial_device -> pins + 2, 1);
+  nano_sleep(650000000);
+  
+  write_byte(serial_device -> uart -> serial_handle, BNO055_PWR_MODE_ADDR,    POWER_MODE_NORMAL, true);
+  write_byte(serial_device -> uart -> serial_handle, BNO055_SYS_TRIGGER_ADDR, 0x00,              true);
+
+  serial_set_mode(OPERATION_MODE_NDOF);
+  nano_sleep(30000000);
+  
+  write_byte(serial_device -> uart -> serial_handle, BNO055_CHIP_ID_ADDR, 0, true);
+
+  if (serial_device -> uart -> serial_handle < 0) exit(1);
+
+  // Success if communications have made it this far
+  BNO -> initialized = true;
+  
   while (!bno_termination_signal) {
 
     bno_log_file = fopen(bno_log_file_name, "a");
@@ -223,29 +248,8 @@ bool initialize_UART(module * initialent) {
   serial_device -> uart -> serial_handle = serOpen("/dev/ttyAMA0", 115200, 0);
   //serial_device -> uart -> serial_handle = serOpen("/dev/ttyAMA0", 230400, 0);
   
-  write_byte(serial_device -> uart -> serial_handle, BNO055_PAGE_ID_ADDR, 0x00, false);
-  serial_set_mode(OPERATION_MODE_CONFIG);
-  nano_sleep(30000000);
-
-  write_byte(serial_device -> uart -> serial_handle, BNO055_PAGE_ID_ADDR, 0, true);
-
-  // Reset the BNO-055
-  set_voltage(serial_device -> pins + 2, 0);
-  nano_sleep(10000000);
-  set_voltage(serial_device -> pins + 2, 1);
-  nano_sleep(650000000);
-
-  write_byte(serial_device -> uart -> serial_handle, BNO055_PWR_MODE_ADDR,    POWER_MODE_NORMAL, true);
-  write_byte(serial_device -> uart -> serial_handle, BNO055_SYS_TRIGGER_ADDR, 0x00,              true);
-
-  serial_set_mode(OPERATION_MODE_NDOF);
-  nano_sleep(30000000);
-  
-  write_byte(serial_device -> uart -> serial_handle, BNO055_CHIP_ID_ADDR, 0, true);
-  
-  
   if (serial_device -> uart -> serial_handle < 0) return false;
-  
+
   // Graphics memory allocation
   bno_gyro_plot = create_plot("    BNO Gyro Axes v.s. Time    ", 3);
   bno_acel_plot = create_plot("BNO Rotational Accels v.s. Time", 3);
