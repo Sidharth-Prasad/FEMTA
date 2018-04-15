@@ -14,6 +14,14 @@ Although all programs conform to the GNU 1989/1990 standard, Noah (who is writin
 
 In all seriousness, code should be aesthetic. Remember, "If you don't have time to do it right the first time, how will you have time to do it right the second?" Although this is hard to achieve and I definately need to improve, I really do think that, for the context of this software, writing such that it's easy to read and understand is more important than using a 'standard' number of spaces or banning C style pointer casting. Also it's the 21'st centery, your editor will deal with tabs vs spaces.  
 
+## Emacs
+If you aren't using Emacs, please reconsider, for it is one of the most beautiful programs ever written and serves as an all purpose terminal text editor. The following formats need or are greatly improved by the editor.
+
+-.emacs, the configuration format. This is typically located at ~/.emacs, if it exists.
+-.org, the organization format. Requires org mode.
+-.md, the markdown format. Install the following packege via .emacs and the meta command line.
+![](markdown_elisp.png)
+
 
 ## With great power comes great responsability
 Upon access to the cubesat's code and association with the sudoers group, you will have full permissions to do everything from shooting yourself in the foot to malicious activities. As is intuitive, no system is fully secure, and it's often the people you trust rather than the systems in place that makes the difference. [Reflections on Trusting Trust][1]. Just because you *can* do something doesn't mean that you *should*. Please do not copy the contents of the pi's SD card for personal use. Likewise please keep track of where the pi is at all times. Sensitive information is present, from the mail server to my PAL connection, so please be responsible. Tony had his Pi hacked while on the university network; malicious individuals do exist. Whatever you do, DO NOT PORT FORWARD THE PI UNLESS YOU KNOW EXACTLY WHAT YOU ARE DOING. 
@@ -23,8 +31,7 @@ Upon access to the cubesat's code and association with the sudoers group, you wi
 
 ## The subdirectories are as follows
 ### [meetings][2]
-Contains a meeting log of the .org format, which is an Emacs format. If you aren't using Emacs, please reconsider, for it is one of the most beautiful programs ever written and serves as an all purpose terminal text editor.
-
+Contains a meeting log of the .org format, which is an Emacs format.
 ### [physical][3]
 Contains hardware tests, pinout information, sample python BNO code, and Steven Peguia's C# serial code (which Noah has ported to C).
 
