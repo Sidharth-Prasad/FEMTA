@@ -248,15 +248,25 @@ void initialize_graphics() {
   wrefresh(print_views[2] -> view -> window);
   ready_to_graph = true;
   
-  print(2, "CPU   SPAWNED   SUCCESS", 2);
+  //print(2, "CPU   SPAWNED   SUCCESS", 2);
+
+  print(2, "        CPU    SPAWNED   SUCCESS", 2);
+  print(2, "        I2C    SPAWNED   SUCCESS", 2);
+  print(2, "        UART   SPAWNED   SUCCESS", 2);
   
+  /*
   if (i2c_device -> initialized)    print(2, "I2C   SPAWNED   SUCCESS", 2);
   else                              print(2, "I2C   FAILURE"          , 4);
   
   if (serial_device -> initialized) print(2, "UART  SPAWNED   SUCCESS", 2);
-  else                              print(2, "UART  FAILURE"          , 4);
+  else                              print(2, "UART  FAILURE"          , 4);*/
 
-  print(0, "Results will be printed here", 0);
+  print(0, "5 Threads are running", 0);
+  print(0, "  - BNO is being sampled at 100 Hz", 0);
+  print(0, "  - MPU is being sampled at 100 Hz", 0);
+  print(0, "  - CPU is being sampled at 1 Hz", 0);
+  print(0, "Logging 3 files asynchronously", 0);
+  print(0, "The OS is running 21 threads", 0);
   print(1, "c: cycle graphs"             , 0);
   print(1, "m: manual control"           , 0);
   print(1, "q: quit"                     , 0);
@@ -389,7 +399,7 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
     for (unsigned char l = 0; l < plot -> number_of_lists; l++) {
       plot -> lists[l] -> number_of_elements_limit = number_of_data_points_plottable;
     }
-
+    
     plot -> min_value = node -> fvalue;
     plot -> max_value = node -> fvalue;
     plot -> has_data = true;

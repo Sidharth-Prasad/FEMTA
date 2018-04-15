@@ -90,7 +90,7 @@ void initialize_satellite() {
   bool serial_success = initialize_UART(BNO);
 
   // Set each module's initialization state
-  BNO   -> initialized = false; //serial_success
+  BNO   -> initialized = true; //serial_success
   MPU   -> initialized = i2c_success;
   Valve -> initialized = true;
   FEMTA -> initialized = true;
@@ -265,16 +265,16 @@ int main() {
       
     case 'c':
 
-      // Add MPU plots
-      if (MPU -> initialized && !MPU -> loaded) {
-	for (char p = 1; p <= 3; p++) list_insert(owner_index_list, create_inode(p));
-	MPU -> loaded = true;
-      }
-
       // Add BNO plots
       if (BNO -> initialized && !BNO -> loaded) {
 	for (char p = 4; p <= 7; p++) list_insert(owner_index_list, create_inode(p));
 	BNO -> loaded = true;
+      }
+
+      // Add MPU plots
+      if (MPU -> initialized && !MPU -> loaded) {
+	for (char p = 1; p <= 3; p++) list_insert(owner_index_list, create_inode(p));
+	MPU -> loaded = true;
       }
       
       graph_owner_index_node = graph_owner_index_node -> next;
