@@ -22,6 +22,7 @@
 #include "linked-list.h"
 #include "graphics.h"
 #include "timing.h"
+#include "logger.h"
 #include "colors.h"
 
 #define AK8963_ST1       0x02
@@ -57,7 +58,6 @@ char * mpu_log_file_name = "./logs/mpu-log.txt";
 pthread_t mpu_thread;
 bool mpu_termination_signal;       // used to terminate child thread
 int mpu_values_read = 0;
-
 
 float gyroBias[3]  = {0, 0, 0};   // Gyro bias calculated at startup
 float accelBias[3] = {0, 0, 0};   // Accel bias calculated at startup
@@ -178,6 +178,8 @@ void readMagData(float * axes) {
 
 void * log_mpu_data() {
 
+  mpu_logger = create_logger(mpu_log_file_name);
+  
   while (!mpu_termination_signal) {
 
     mpu_log_file = fopen(mpu_log_file_name, "a");
@@ -191,6 +193,7 @@ void * log_mpu_data() {
       readMagData(log_data[i] + 6);
       
       fprintf(mpu_log_file, "%d\t", mpu_values_read++);
+      mpu_logger -> values_read = mpu_values_read;
       for (unsigned char f = 0; f < 9; f++) fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
       for (unsigned char f = 0; f < 3; f++) {
 	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_fnode(log_data[i][f]));
@@ -451,8 +454,8 @@ bool initialize_i2c(module * initialent) {
     //i2c_device = initialent;
 
     // Set function pointers
-    i2c_device -> i2c -> gyros = &readGyroData;
-    i2c_device -> i2c -> temperature = &readTempData;
+    i2c_device -> i2c -> gyros          = &readGyroData;
+    i2c_device -> i2c -> temperature    = &readTempData;
     i2c_device -> i2c -> accelerometers = &readAccelData;
 
     calibrateMPU9250(gyroBias, accelBias);

@@ -13,10 +13,10 @@
 #include "serial-interface.h"
 #include "temperature-monitoring.h"
 #include "graphics.h"
+#include "logger.h"
 #include "colors.h"
 
 #define NUMBER_OF_MODULES 4
-
 
 #define I2C_STATE 2
 #define UART_STATE 3
@@ -202,6 +202,15 @@ void set_pwm(pin * p, unsigned char duty_cycle) {
 }
 
 int main() {
+
+  time_t start_time = time(NULL);
+
+  // Create the control logger
+  Logger * logger = create_logger("./logs/control-log.txt");
+  logger -> open(logger);
+  fprintf(logger -> file,
+	  YELLOW "\nRecording Control Data\nDevice\tDevice State\tMPU Measures\tBNO Measures\tSystem Time\n" RESET);
+  logger -> close(logger);
   
   initialize_satellite();
   print_configuration();
@@ -243,13 +252,22 @@ int main() {
 	
 	; // Epsilon
 	
-	char number = input - '0';   // The actual number pressed
+	char number = input - '0';    // The actual number pressed 
 	
 	// Flip pwm from one extrema to another
 	if ((FEMTA -> pins + number) -> duty_cycle) set_pwm(FEMTA -> pins + number, 0);
-	else                                      set_pwm(FEMTA -> pins + number, 255);
-	
+	else                                        set_pwm(FEMTA -> pins + number, 255);
+
+	// Show state change to user
 	update_state_graphic(18 + number, ((FEMTA -> pins + number) -> duty_cycle > 0));
+
+	// Log this manual command
+	logger -> open(logger);
+	fprintf(logger -> file, "FEMTA %d\t%d\t%d\t%d\t%d\n",
+		number, (FEMTA -> pins + number) -> duty_cycle,
+		mpu_logger -> values_read, bno_logger -> values_read, time(NULL) - start_time);
+	logger -> close(logger);
+
 	break;
       case 'v':
 	
@@ -257,6 +275,13 @@ int main() {
 	Valve -> pins -> voltage = !Valve -> pins -> voltage;
 	set_voltage(Valve -> pins, Valve -> pins -> voltage);
 	update_state_graphic(15, Valve -> pins -> voltage);
+
+	// Log this manual command
+	logger -> open(logger);
+	fprintf(logger -> file, "Valve\t%d\t%d\t%d\t%d\n",
+		Valve -> pins -> voltage, mpu_logger -> values_read, bno_logger -> values_read, time(NULL) - start_time);
+	logger -> close(logger);
+	
 	break;
       }
     }
@@ -305,9 +330,16 @@ int main() {
       break;
     }
   }
-  
+
   printf("\n");
+
   terminate_satellite();
   terminate_graphics();
+  
+  logger -> open(logger);
+  fprintf(logger -> file, YELLOW "\nTerminated gracefully at time %d seconds" RESET "\n\n", time(NULL) - start_time);
+  logger -> close(logger);
+  logger -> destroy(logger);
+  
   return 0;
 }

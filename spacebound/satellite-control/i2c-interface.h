@@ -2,6 +2,7 @@
 #define HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_I2C_INTERFACE
 
 #include "graphics.h"
+#include "logger.h"
 
 typedef struct I2C {
 
@@ -26,5 +27,7 @@ module * i2c_device;
 Plot * mpu_gyro_plot;
 Plot * mpu_acel_plot;
 Plot * mpu_magn_plot;
+
+Logger * mpu_logger;
 
 #endif

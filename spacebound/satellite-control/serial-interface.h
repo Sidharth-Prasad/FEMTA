@@ -2,6 +2,7 @@
 #define HEADER_GAURD_FOR_COMPILER_UNIT_UART_INTERFACE
 
 #include "graphics.h"
+#include "logger.h"
 
 typedef struct UART {
 
@@ -21,5 +22,7 @@ Plot * bno_gyro_plot;
 Plot * bno_acel_plot;
 Plot * bno_lina_plot;
 Plot * bno_magn_plot;
+
+Logger * bno_logger;
 
 #endif

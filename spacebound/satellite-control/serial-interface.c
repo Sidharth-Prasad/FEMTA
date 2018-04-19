@@ -19,6 +19,7 @@
 #include "linked-list.h"
 #include "graphics.h"
 #include "timing.h"
+#include "logger.h"
 #include "colors.h"
 
 
@@ -195,6 +196,8 @@ void * log_bno_data() {
 
   // Success if communications have made it this far
   BNO -> initialized = true;
+
+  bno_logger = create_logger(bno_log_file_name);
   
   while (!bno_termination_signal) {
 
@@ -210,6 +213,7 @@ void * log_bno_data() {
       read_serial_magn(log_data[i] + 9);
       
       fprintf(bno_log_file, "%d\t", bno_values_read++);
+      bno_logger -> values_read = bno_values_read;
       for (uint8_t f = 0; f < 12; f++) fprintf(bno_log_file, "%.3f\t", log_data[i][f]);
       for (uint8_t f = 0; f < 3; f++) {
 	plot_add_value(bno_gyro_plot, bno_gyro_plot -> lists[f], create_fnode(log_data[i][f    ]));
