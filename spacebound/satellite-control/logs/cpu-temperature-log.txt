@@ -11603,3 +11603,53 @@ TIME	CPU	MPU	BNO
 13	43.312	
 14	43.312	
 15	43.312	
+[0;31m
+Recording temperature
+TIME	CPU	MPU	BNO
+[0m0	39.546	
+1	40.622	
+2	41.160	
+[0;31m
+Recording temperature
+TIME	CPU	MPU	BNO
+[0m0	39.546	
+1	40.084	
+[0;31m
+Recording temperature
+TIME	CPU	MPU	BNO
+[0m0	40.084	
+1	41.160	
+2	41.698	
+[0;31m
+Recording temperature
+TIME	CPU	MPU	BNO
+[0m0	40.084	
+[0;31m
+Recording temperature
+TIME	CPU	MPU	BNO
+[0m0	40.622	
+1	41.698	
+[0;31m
+Recording temperature
+TIME	CPU	MPU	BNO
+[0m0	40.084	
+1	41.160	
+2	41.160	
+3	42.236	
+4	42.774	
+5	42.774	
+6	42.236	
+7	43.312	
+8	42.774	
+9	43.312	
+10	43.312	
+11	43.312	
+12	43.312	
+13	43.312	
+14	43.850	
+15	44.388	
+16	44.388	
+17	44.388	
+18	44.388	
+19	44.926	
+20	44.388	
