@@ -242,6 +242,9 @@ int main() {
   while (user_input) {
     
     input = getc(stdin);
+
+    int mpu_reads = 0;
+    int bno_reads = 0;	
     
     if (manual_mode) {
       switch (input) {
@@ -263,9 +266,10 @@ int main() {
 
 	// Log this manual command
 	logger -> open(logger);
+	if (mpu_logger) mpu_reads = mpu_logger -> values_read;
+	if (bno_logger) bno_reads = bno_logger -> values_read;
 	fprintf(logger -> file, "FEMTA %d\t%d\t%d\t%d\t%d\n",
-		number, (FEMTA -> pins + number) -> duty_cycle,
-		mpu_logger -> values_read, bno_logger -> values_read, time(NULL) - start_time);
+		number, (FEMTA -> pins + number) -> duty_cycle, mpu_reads, bno_reads, time(NULL) - start_time);
 	logger -> close(logger);
 
 	break;
@@ -278,8 +282,10 @@ int main() {
 
 	// Log this manual command
 	logger -> open(logger);
+	if (mpu_logger) mpu_reads = mpu_logger -> values_read;
+	if (bno_logger) bno_reads = bno_logger -> values_read;
 	fprintf(logger -> file, "Valve\t%d\t%d\t%d\t%d\n",
-		Valve -> pins -> voltage, mpu_logger -> values_read, bno_logger -> values_read, time(NULL) - start_time);
+		Valve -> pins -> voltage, mpu_reads, bno_reads, time(NULL) - start_time);
 	logger -> close(logger);
 	
 	break;
