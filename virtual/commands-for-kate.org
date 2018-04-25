@@ -1,0 +1,20 @@
+* ssh kate@<ip address>
+* ifconfig 
+** gives the ip address
+* ./rerun.sh
+** runs the cubesat system
+** q to quit
+* tail logs/<log-name>
+** shows the contents of a log file
+* ls
+** List the folder's contents
+* sudo reboot 0
+* sudo shutdown 0
+** DO NOT RUN WHILE IN THE CHAMBER
+* htop
+** Lists the CPU processes
+** q to quit
+* command shift plus
+** Increases the screen size
+* command D
+** splits the screen vertically
