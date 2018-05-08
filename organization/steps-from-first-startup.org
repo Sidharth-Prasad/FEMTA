@@ -59,10 +59,10 @@
 ** this removes bluetooth, which is necessary for our serial configuration to work
 ** More info here https://hallard.me/enable-serial-port-on-raspberry-pi/
 * sudo emacs ssmtp.conf
-** alter the mailhub
+** alter the following
+*** root=FEMTAdirect@gmail.com
 *** mailhub=smtp.gmail.com:587
 ** append the following to the end
-*** root=FEMTAdirect@gmail.com
 *** AuthUser=FEMTAdirect@gmail.com
 *** AuthPass=thissatelliteisonitswaytospace
 *** FromLineOverride=YES
@@ -74,4 +74,7 @@
 *** 0,20,40 * * * * /home/noah/FEMTA/spacebound/bash-scripts/email.sh
 *** 0 17,23 * * * sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y
 * sudo apt install tmux
-* 
+* sudo emacs /etc/ssh/sshd_config
+** Append AllowUsers noah kate
+** This white lists everyone but the default user pi
+*** This ensures bots on the internet won't know a username for the satellite
