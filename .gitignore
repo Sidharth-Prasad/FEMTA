@@ -2,4 +2,5 @@
 \#*
 ./FEMTA/spacebound/logs/*
 ./FEMTA/spacebound/satellite-control/logs
+./FEMTA/spacebound/satellite-control/unified-controller
 *log.txt

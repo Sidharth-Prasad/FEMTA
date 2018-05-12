@@ -1,0 +1,280 @@
+
+* Due
+** MA 416 [1/4]
+*** DONE Last Hw
+*** TODO Practice problems
+*** TODO Practice homework
+*** TODO Take final on Saturday
+** MA 351 [1/4]
+*** DONE Last Hw
+*** TODO Practice exam 1
+*** TODO Practice exam 2
+*** TODO Take final on Tuesday
+** CS 252 [2/4]
+*** DONE Finish Programming
+*** DONE Present on Friday
+*** TODO Practice Questions
+*** TODO Take final on Thursday
+** ECON 461 [3/6]
+*** DONE Email Mazur
+*** DONE Email students
+*** DONE Pickup student midterms 
+*** TODO Get Paid
+*** TODO Proctor final on Friday
+*** TODO Grade final
+** CS 373 [2/3]
+*** DONE Meet with Hamza
+*** DONE Kaggle competition
+*** TODO Take midterm on Tuesday
+** AAE 490 [4/6]
+*** DONE Prepare for Wednesday
+*** DONE Create slides for Wednesday
+*** DONE Work with Kate on experiment
+*** DONE Prepare slides
+*** TODO Practice slides
+*** TODO Present slides on Monday
+
+* Apr 16
+** CS 252
+***
+
+* Apr 13
+** CS 373
+*** Discriminative - label but cannot generate new points
+*** Online - continuous learning, no batches required
+
+* Apr 11
+** CS 373
+*** Perceptron convergence theorem - after seeing 1/gamma^2, the algorithm will converge
+*** Globally optimal on the training set is certain, cause no error will be incurred at completion
+*** But with new data, different models will perform differently
+** CS 252
+***
+
+* Apr 9
+** CS 373
+*** Sanity check - Perceptron needs (n + 1)^3 parameters
+*** Sanity check - Smooth in NB, the sum makes in unnecessary to worry about in Perceptron
+** CS 252
+*** Normalization organizes the database to reduce duplications
+*** Primary Key - minimal set of attributes that uniquely specify a row
+*** Foreign Key - reference to a primary key in another table
+*** Commands
+**** SELECT * FROM Books; - all rows from Books table
+**** SELECT Price, Title FROM Books; - all rows from Books table, showing only the Price and Title columns
+**** SELECT * FROM Books WHERE Title NOT LIKE "%n_x%"; - all rows from books, limiting rows based on the regex
+
+* Apr 6
+** CS 373
+*** Voted Perceptro
+**** Take all hypotheses considered and perform a weighted vote on how long they survived
+**** Significant issues with computational complexities
+
+* Apr 4
+** CS 373
+** FEMTA
+** CS 252
+*** TCP uses variable timing
+**** timer = RTT + 4 * RTTSTDDEV
+**** ACK's are continuous
+**** Duplicate ACK's signify packet loss
+
+* Apr 2
+** CS 373
+*** Naive Bayes is part of a large family of baysian models.
+**** It has the name naive because it's the simplest
+**** We don't care about denominator since it's the same for all outputs C_k
+**** The relative sizes are what matter
+**** Offline - the algorithm updates with batches of data
+*** Perceptron
+**** Online - updates as new data is recieved
+** CS 252
+*** internet2 - the academic high-speed internet
+*** arp - get's mac addresses
+** FEMTA
+
+* Mar 30
+** Naive Bayes
+*** Probabilistic Classifier  y_MAP = argmax_y P(x1, x2, ... xn | y) P(y)
+**** Data likelihood = P(x1, ..., xn | y)
+***** Overfitting is garunteed without simplifying assumptions
+***** We don't have every permutation of each datum in our training set
+*** Conditional Independence
+**** Assume feature probabilities are independent given the label P(x_i, x_i-1 ; y_j)
+**** Functions like XOR pose a problem, since conditional independence does not hold
+*** Feature engineering
+**** Bigrams could be used instead of words to help with limiting the assumption of conditional independence
+**** Likelihood function - allows us to determine unknown parameters based on outcomes
+***** Not a probability function
+*** Zero counts are a problem
+**** If an attribute value does not occure, we assign a zero probability
+***** Smoothing can help fix this - Laplace correction is one form of this
+*** Numerical Stability is a problem
+**** .5^2000 = 0 according to float arithmetic
+
+** CS 252
+*** Internet Protocol Suite
+**** Commonly TCP/IP
+
+* Mar 28
+** FEMTA
+*** Look over Steven's initialization code
+*** Doxygen - Generates HTML-like comments for complex programs
+
+* Mar 26
+** CS 252
+*** Monitor
+
+* Mar 23
+** CS 252
+*** Threads allow servers to use less overhead, as fork() requires far more work than pthread_create()
+*** Keeping threads around using pools reduces the overhead even more
+*** Mutex on accept() can force ordering of thread accept
+
+* Mar 21
+** CS 373
+*** Generative Learning Algorithm
+**** Both input and output probabilities are taken into account
+**** Slower to learn, but more expressive
+*** Classification
+**** Decision boundry is classified, with labels clasified on each side of the boundry
+**** input is a set of attributes
+**** Perceptrons use hyperplane decision boundries
+**** Decision Trees include axis-parallel decision boundries
+***** Model/Hypothesis Space - All possible trees that can be made
+***** Scoring Function - Entropy at the leaf level
+***** Search Procedure - Split on most informative attribute for the depth you want (one way)
+***** Decision Trees, without Bias, always overfit
+***** Prefering smaller trees is the key to minimizing overfitting
+****** Inductive bias via splitting on information gain helps with this
+***** Inductive bias - alter search
+*** Model Selection
+*** K-Fold Cross validation
+**** Randomly choosing test data may result in poor models due to unrepresentative testing data
+**** K different splits of the data can help see if the model is stable
+*** Accuracy is not the only thing that matters
+**** A model that says 100% of the time that a patient doesn't have a brain tumor will be right 99.9% of the time
+*** Recall True Positive / Actual Positive
+** FEMTA
+** CS 252
+   
+* Mar 19
+** CS 252
+
+* Mar 9
+** Heuristics can be used to keep decision trees from becoming too complex
+*** One is to split when the children would be as pure as possible
+** Entropy
+*** A way to quantify impurity in the data
+*** The decision tree can be biased to split on the attribute that removes the most entropy
+** When attributes are missing, there are many ways to estimate
+*** Conditioning using other attributes as surrogates of the datum
+*** Assign fractional attribute status based on the entire set
+*** Majority voting
+** Dealing with numeric values
+*** use threshold or ranges to get boolean tests
+**** How should you determine thresholds?
+***** Should consider where changing the thresholds would change the assignments
+***** --x-xx-o-o|o-o-xx-xx--   threshold 1
+***** --x-xx-o-o-o-o|xx-xx--   threshold 2
+***** The entropy is reduced even before the tree begins construction
+***** We should choose thresholds to help the tree split more purely
+**** How many thresholds should you consider?
+***** Not all of them, for this would result in a decision tree of depth 1
+*** Decision trees, if unbiased, will ALWAYS overfit the training data
+*** Biases
+**** Search bias (hill climbing)
+**** Language bias (restricted model consideration)
+**** Static - fix the depth of the tree
+**** Dynamic - optimize while growing the tree
+**** Post Purning - prune an existing tree
+** Decision trees can help with other models
+*** Feature selection can be based on a limited depth decision tree
+*** Linear combination of decision trees (stumps)
+
+* Mar 7
+** FEMTA
+*** Testing week after spring break
+
+** CS 252
+
+* Mar 5
+** CS 373
+*** DONE Midterm Mar 7 12:30
+**** Bring Calculator
+**** No cheate sheet
+**** Everything is fair game
+***** No R programming
+*** Decision Trees
+**** Leaf Node is label, path is datum possibility
+**** One of the most explainable models
+***** No blackboxing since tree is expressable in human terms
+**** When a leaf does not exist for a datum, you can take the probability of child labels
+**** Occams Razor - balance between depth of tree and parsimony of the model
+***** Prunning trees is a way to do this
+**** Output potentials
+***** Boolean
+****** Any boolean function can be represented
+******* Decision trees always overfit if biases aren't added
+***** Multiclass - discrete categories
+***** Real valued - regression tree
+**** KNN with K = 1, KNN becomes as expressive as any decision tree
+**** More than one decision tree exists for most data
+**** Picking the smallest possible tree is an NP hard problem
+**** We want attributes that split examples into sets that are as pure as possible
+**** Entropy is a measure of disorder
+***** Each classification decision splits on which attribute lowers entropy the most
+****** Equilevel nodes may not split on the same attribute
+
+** CS 252
+*** Spinlocks involve busy waiting
+**** On multi-core systems an improvement comes from sleeping when the owner is sleeping
+
+* Feb 26
+** CS 252 [100%]
+*** DONE Midterm exam 8:00 pm WALC 1055
+*** DONE Homework
+*** Process state
+**** new -> admitted -> ready -> running -> ... -> running -> exit -> terminated
+***** interrupt ->
+***** yeild ->
+***** waiting ->
+**** Processes have an affinity for a specific CPU core to ensure cache is most efficient
+**** States
+***** New        - being created
+***** Running    - under execution
+***** Waiting    - waiting for event to occure
+***** Ready      - waiting to be assigned
+***** Terminated - process is done
+*** Process Control Block
+*** Process Table
+**** Contains a number of PCBs
+*** Context switch occurs when
+**** Wait on I/O
+**** Voluntary yeilding
+**** Interrupt occurs
+**** OS preempts the process
+*** Symmetric multiprocessors (SMP)
+**** Two or more identical processes sharing a common main memory
+**** Requires OS support
+*** Thread Control Block(TCB)
+*** OS has two
+**** Non-preemptive
+***** Only context switches when the running process waits or yields
+***** Also called cooperative multitasking
+**** Preemptive
+***** Context switches can be forced
+****** Usually happens after a fixed period of time known as a quantum
+****** A timer interrupt invokes the OS scheduler
+******* Often the process that has been in the ready state the longest is executed
+***** More robust
+***** Ensures fairness
+
+* Mar 2
+** Critical section need be executed by only one process at a time
+** Mutex is a binary semaphore
+
+* Feb 28 [1/1]
+** DONE Exam 8:00 WALC 1055
+** 90% of CPU bursts are less than 10ms
+**

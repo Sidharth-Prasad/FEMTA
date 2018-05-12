@@ -20,7 +20,7 @@ If you aren't using Emacs, please reconsider, for it is one of the most beautifu
 -.emacs, the configuration format. This is typically located at ~/.emacs, if it exists.
 -.org, the organization format. Requires org mode.
 -.md, the markdown format. Install the following packege via .emacs and the meta command line.
-![](markdown_elisp.png)
+![](markdown_elisp_white.png)
 
 
 ## With great power comes great responsability

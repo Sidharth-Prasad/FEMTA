@@ -289,6 +289,14 @@ int main() {
 	logger -> close(logger);
 	
 	break;
+      case 'p':
+	
+	// Log the pump down message
+	logger -> open(logger);
+	if (mpu_logger) mpu_reads = mpu_logger -> values_read;
+	if (bno_logger) bno_reads = bno_logger -> values_read;
+	fprintf(logger -> file, "Pump\t%d\t%d\t%d\t%d\n", 1, mpu_reads, bno_reads, time(NULL) - start_time);
+	logger -> close(logger);
       }
     }
     
@@ -320,6 +328,7 @@ int main() {
       print(1, "1: FEMTA 1", 0);
       print(1, "2: FEMTA 2", 0);
       print(1, "3: FEMTA 3", 0);
+      print(1, "p: Pump down", 0);
       manual_mode = true;
       break;
 
