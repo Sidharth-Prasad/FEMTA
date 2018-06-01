@@ -184,18 +184,20 @@ void * log_mpu_data() {
 
     mpu_log_file = fopen(mpu_log_file_name, "a");
 
-    float log_data[50][9];
+    float log_data[50][10];
     
     for (unsigned char i = 0; i < 50; i++) {
-      
+
+      // Write data into log_data array
       readGyroData(log_data[i]);
       readAccelData(log_data[i] + 3);
       readMagData(log_data[i] + 6);
+      log_data[9] = readTempData();
       
       fprintf(mpu_log_file, "%d\t", mpu_values_read++);
       mpu_logger -> values_read = mpu_values_read;
-      for (unsigned char f = 0; f < 9; f++) fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
-      for (unsigned char f = 0; f < 3; f++) {
+      for (unsigned char f = 0; f < 10; f++) fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
+      for (unsigned char f = 0; f <  3; f++) {
 	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_fnode(log_data[i][f]));
 	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_fnode(log_data[i][f + 3]));
 	plot_add_value(mpu_magn_plot, mpu_magn_plot -> lists[f], create_fnode(log_data[i][f + 6]));
@@ -465,7 +467,7 @@ bool initialize_i2c(module * initialent) {
     
     // Successful initialization, open log file for recording temperature data
     mpu_log_file = fopen(mpu_log_file_name, "a");
-    fprintf(mpu_log_file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\n" RESET);
+    fprintf(mpu_log_file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\tTemp °C\n" RESET);
     fclose(mpu_log_file);
 
     // Spawn a logging thread
