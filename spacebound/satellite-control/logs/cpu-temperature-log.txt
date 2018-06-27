@@ -50452,3 +50452,13 @@ TIME	CPU	MPU	BNO
 12	49.768	
 13	49.768	
 >>>>>>> f99acdea1714c3f1db16f880bd9fa26e31f31a75
+[0;31m
+Recording temperature
+TIME	CPU	MPU	BNO
+[0m0	52.078	
+1	51.540	
+2	50.464	
+3	51.540	
+4	50.464	
+5	50.464	
+6	51.540	

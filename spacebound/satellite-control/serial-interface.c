@@ -221,7 +221,7 @@ void * log_bno_data() {
       read_serial_rota(log_data[i] + 3);
       read_serial_lina(log_data[i] + 6);
       read_serial_magn(log_data[i] + 9);
-      log_data[12] = readSerialTempData();
+      log_data[i][12] = readSerialTempData();
       
       fprintf(bno_log_file, "%d\t", bno_values_read++);
       bno_logger -> values_read = bno_values_read;

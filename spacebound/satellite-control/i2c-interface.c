@@ -192,7 +192,7 @@ void * log_mpu_data() {
       readGyroData(log_data[i]);
       readAccelData(log_data[i] + 3);
       readMagData(log_data[i] + 6);
-      log_data[9] = readTempData();
+      log_data[i][9] = readTempData();
       
       fprintf(mpu_log_file, "%d\t", mpu_values_read++);
       mpu_logger -> values_read = mpu_values_read;
