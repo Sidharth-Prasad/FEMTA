@@ -67,8 +67,8 @@ void write_byte(uint8_t handle, int8_t address, int8_t data, bool ack) {
     0x01,
     data,
   };
-  
-  for (int attempt = 0; attempt < max_attempts; attempt++) {
+  int attempt;
+  for (attempt = 0; attempt < max_attempts; attempt++) {
 
     int write_status = serWrite(handle, command, 5);
 
@@ -100,8 +100,8 @@ void read_bytes(unsigned char handle, signed char address, signed char * buffer,
     address,
     length,
   };
-
-  for (int attempt = 0; attempt < max_attempts; attempt++) {
+  int attempt;
+  for (attempt = 0; attempt < max_attempts; attempt++) {
   
     serWrite(handle, command, 4);
   
@@ -151,8 +151,8 @@ void retrieve_data(float * axes, uint8_t address, float scalar) {
   int8_t rawData[length];
 
   read_bytes(serial_device -> uart -> serial_handle, address, rawData, length);
-
-  for (int i = 0; i < length; i += 2) {
+  int i;
+  for (i = 0; i < length; i += 2) {
     int entry = ((rawData[i + 1] << 8) | rawData[i]);
     if (entry > 32767) entry -= 65536;
     axes[i / 2] = entry * scalar;
@@ -214,8 +214,8 @@ void * log_bno_data() {
     bno_log_file = fopen(bno_log_file_name, "a");
 
     float log_data[50][13];
-
-    for (uint8_t i = 0; i < 50; i++) {
+    uint8_t i;
+    for (i = 0; i < 50; i++) {
 
       read_serial_gyro(log_data[i]    );
       read_serial_rota(log_data[i] + 3);
@@ -225,8 +225,9 @@ void * log_bno_data() {
       
       fprintf(bno_log_file, "%d\t", bno_values_read++);
       bno_logger -> values_read = bno_values_read;
-      for (uint8_t f = 0; f < 13; f++) fprintf(bno_log_file, "%.3f\t", log_data[i][f]);
-      for (uint8_t f = 0; f <  3; f++) {
+      uint8_t f;
+      for (f = 0; f < 13; f++) fprintf(bno_log_file, "%.3f\t", log_data[i][f]);
+      for (f = 0; f <  3; f++) {
 	plot_add_value(bno_gyro_plot, bno_gyro_plot -> lists[f], create_fnode(log_data[i][f    ]));
 	plot_add_value(bno_acel_plot, bno_acel_plot -> lists[f], create_fnode(log_data[i][f + 3]));
 	plot_add_value(bno_lina_plot, bno_lina_plot -> lists[f], create_fnode(log_data[i][f + 6]));
@@ -254,12 +255,12 @@ bool initialize_UART(module * initialent) {
   serial_device = initialent;
   serial_device -> uart -> temperature = &readSerialTempData;
 
-  // Reset the BNO-055
+  /*// Reset the BNO-055
   set_voltage(serial_device -> pins + 2, 0);
   nano_sleep(10000000);
   set_voltage(serial_device -> pins + 2, 1);
   nano_sleep(650000000);
-  
+  */ //removed 7/12/18 bc new board has this always on...
   serial_device -> uart -> serial_handle = serOpen("/dev/ttyAMA0", 115200, 0);
   //serial_device -> uart -> serial_handle = serOpen("/dev/ttyAMA0", 230400, 0);
   

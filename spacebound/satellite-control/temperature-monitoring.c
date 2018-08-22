@@ -25,14 +25,14 @@ void * read_cpu_temperature() {
 
   FILE * input_stream = NULL;
   double temperature  = 0.0;
-
+  int l;
   if (temperature_plot == NULL) {
     temperature_plot = malloc(sizeof(Plot));
     temperature_plot -> name = "     Temperatures v.s. Time     ";
     temperature_plot -> number_of_lists = 1;// + (i2c_device -> initialized) + (serial_device -> initialized);
     temperature_plot -> lists = malloc(temperature_plot -> number_of_lists * sizeof(List *));
     temperature_plot -> has_data = false;
-    for (int l = 0; l < temperature_plot -> number_of_lists; l++) {
+    for (l = 0; l < temperature_plot -> number_of_lists; l++) {
       temperature_plot -> lists[l] = create_list(number_of_data_points_plottable);   // Might not have been set
     }
   }

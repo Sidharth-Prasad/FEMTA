@@ -1,0 +1,840 @@
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mFEMTA 0	255	0	0	22
+FEMTA 1	255	0	0	26
+FEMTA 2	255	0	0	26
+FEMTA 3	255	0	0	26
+FEMTA 0	0	0	0	29
+FEMTA 1	0	0	0	29
+FEMTA 2	0	0	0	29
+FEMTA 3	0	0	0	29
+[0;33m
+Terminated gracefully at time 34 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mFEMTA 1	255	0	0	25
+FEMTA 1	0	0	0	27
+FEMTA 0	255	0	0	28
+FEMTA 0	0	0	0	29
+FEMTA 0	255	0	0	30
+FEMTA 1	255	0	0	30
+FEMTA 2	255	0	0	31
+[0;33m
+Terminated gracefully at time 36 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 2	255	0	0	9
+QB 2	0	0	0	10
+QB 2	255	0	0	14
+QB 0	255	0	0	16
+QB 1	255	0	0	17
+QB 1	0	0	0	18
+QB 0	0	0	0	19
+QB 2	0	0	0	20
+QB 2	255	0	0	89
+QB 1	255	0	0	91
+QB 1	0	0	0	94
+QB 0	255	0	0	96
+QB 1	255	0	0	98
+QB 1	0	0	0	99
+QB 1	255	0	0	101
+QB 2	0	0	0	104
+QB 2	255	0	0	106
+QB 1	0	0	0	106
+QB 0	0	0	0	107
+QB 2	0	0	0	109
+QB 0	255	0	0	110
+QB 1	255	0	0	110
+QB 2	255	0	0	110
+QB 2	0	0	0	111
+QB 1	0	0	0	111
+QB 0	0	0	0	112
+Pump	1	0	0	333
+Pump	1	0	0	336
+Pump	1	0	0	337
+[0;33m
+Terminated gracefully at time 359 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 27 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 8 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 23 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 8 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 2	255	0	0	27
+QB 0	255	0	0	28
+QB 0	0	0	0	36
+QB 0	255	0	0	37
+QB 1	255	0	0	38
+QB 2	0	0	0	38
+QB 1	0	0	0	39
+QB 0	0	0	0	39
+QB 0	255	0	0	40
+QB 1	255	0	0	40
+QB 2	255	0	0	40
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 1	255	0	0	39
+QB 2	255	0	0	40
+QB 2	0	0	0	41
+QB 1	0	0	0	124
+QB 1	255	0	0	126
+QB 2	255	0	0	126
+QB 0	255	0	0	129
+QB 1	0	0	0	131
+QB 1	255	0	0	135
+QB 0	0	0	0	135
+QB 0	255	0	0	139
+QB 1	0	0	0	140
+QB 0	0	0	0	142
+[0;33m
+Terminated gracefully at time 4713 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 25 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 5 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 2	255	0	0	11
+QB 0	255	0	0	12
+QB 1	255	0	0	13
+QB 1	0	0	0	14
+QB 2	0	0	0	14
+QB 0	0	0	0	15
+QB 2	255	0	0	32
+QB 2	0	0	0	35
+QB 2	255	0	0	35
+QB 2	0	0	0	40
+QB 2	255	0	0	41
+QB 0	255	0	0	42
+QB 1	255	0	0	45
+[0;33m
+Terminated gracefully at time 53 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	5
+QB 1	255	0	0	5
+QB 2	255	0	0	5
+QB 1	0	0	0	10
+QB 2	0	0	0	10
+QB 0	0	0	0	10
+QB 0	255	0	0	11
+QB 1	255	0	0	11
+QB 2	255	0	0	11
+QB 0	0	0	0	11
+QB 1	0	0	0	11
+QB 2	0	0	0	11
+QB 0	255	0	0	12
+QB 1	255	0	0	12
+QB 2	255	0	0	12
+QB 0	0	0	0	12
+QB 1	0	0	0	12
+QB 2	0	0	0	12
+QB 0	255	0	0	13
+QB 1	255	0	0	13
+QB 2	255	0	0	13
+QB 1	0	0	0	53
+QB 0	0	0	0	55
+QB 2	0	0	0	56
+QB 2	255	0	0	61
+QB 0	255	0	0	62
+QB 0	0	0	0	62
+QB 1	255	0	0	63
+QB 1	0	0	0	64
+QB 0	255	0	0	64
+QB 0	0	0	0	65
+QB 1	255	0	0	65
+QB 0	255	0	0	66
+QB 1	0	0	0	66
+QB 0	0	0	0	67
+QB 2	0	0	0	68
+[0;33m
+Terminated gracefully at time 141 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	6
+QB 1	255	0	0	6
+QB 2	255	0	0	7
+QB 2	0	0	0	7
+QB 1	0	0	0	9
+QB 2	255	0	0	10
+QB 2	0	0	0	10
+QB 0	0	0	0	12
+[0;33m
+Terminated gracefully at time 14 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 4 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 13 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 1	255	0	0	6
+QB 2	255	0	0	11
+QB 0	0	0	0	19
+QB 0	255	0	0	27
+QB 1	0	0	0	28
+QB 0	0	0	0	30
+QB 0	255	0	0	35
+QB 0	0	0	0	44
+QB 1	255	0	0	45
+QB 1	0	0	0	45
+QB 0	255	0	0	45
+QB 1	255	0	0	46
+QB 0	0	0	0	46
+[0;33m
+Terminated gracefully at time 48 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 1	255	0	0	6
+QB 2	255	0	0	8
+QB 0	255	0	0	13
+QB 0	0	0	0	14
+QB 2	0	0	0	21
+QB 2	255	0	0	22
+QB 2	0	0	0	34
+QB 2	255	0	0	38
+QB 1	0	0	0	41
+QB 1	255	0	0	42
+QB 1	0	0	0	48
+QB 2	0	0	0	57
+QB 2	255	0	0	59
+QB 0	255	0	0	60
+QB 2	0	0	0	62
+[0;33m
+Terminated gracefully at time 66 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	8
+QB 1	255	0	0	9
+QB 2	255	0	0	9
+QB 0	0	0	0	13
+QB 2	0	0	0	33
+QB 2	255	0	0	36
+QB 1	0	0	0	38
+QB 1	255	0	0	39
+QB 1	0	0	0	39
+QB 1	255	0	0	40
+QB 1	0	0	0	41
+QB 1	255	0	0	41
+QB 1	0	0	0	41
+QB 1	255	0	0	42
+QB 1	0	0	0	42
+[0;33m
+Terminated gracefully at time 45 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	5
+QB 2	255	0	0	7
+QB 2	0	0	0	10
+QB 2	255	0	0	13
+QB 2	0	0	0	14
+QB 2	255	0	0	15
+[0;33m
+Terminated gracefully at time 18 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	7
+QB 2	255	0	0	8
+[0;33m
+Terminated gracefully at time 15 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	5
+QB 2	255	0	0	5
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 2	255	0	0	6
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	12
+QB 2	255	0	0	13
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 5 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	7
+QB 2	255	0	0	10
+QB 0	0	0	0	47
+QB 1	255	0	0	54
+QB 1	0	0	0	55
+QB 1	255	0	0	56
+QB 1	0	0	0	57
+QB 2	0	0	0	57
+QB 1	255	0	0	58
+QB 1	0	0	0	59
+QB 1	255	0	0	59
+QB 1	0	0	0	60
+QB 1	255	0	0	60
+QB 2	255	0	0	61
+[0;33m
+Terminated gracefully at time 63 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 1	255	0	0	7
+QB 2	255	0	0	9
+QB 2	0	0	0	50
+[0;33m
+Terminated gracefully at time 72 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	11
+QB 2	255	0	0	12
+[0;33m
+Terminated gracefully at time 65 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	5
+QB 2	255	0	0	6
+QB 0	255	0	0	33
+QB 0	0	0	0	34
+QB 1	255	0	0	36
+QB 2	0	0	0	38
+QB 2	255	0	0	38
+QB 2	0	0	0	39
+QB 2	255	0	0	39
+QB 2	0	0	0	40
+QB 2	255	0	0	40
+QB 2	0	0	0	40
+QB 2	255	0	0	41
+QB 2	0	0	0	41
+QB 2	255	0	0	41
+QB 2	0	0	0	43
+QB 2	255	0	0	43
+QB 2	0	0	0	44
+[0;33m
+Terminated gracefully at time 46 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 1	255	0	0	6
+QB 2	255	0	0	7
+QB 1	0	0	0	119
+QB 0	255	0	0	121
+QB 0	0	0	0	122
+QB 0	255	0	0	123
+QB 2	0	0	0	128
+QB 2	255	0	0	130
+QB 2	0	0	0	131
+QB 0	0	0	0	134
+QB 0	255	0	0	138
+QB 2	255	0	0	139
+QB 2	0	0	0	140
+QB 1	255	0	0	141
+QB 1	0	0	0	143
+QB 1	255	0	0	143
+QB 1	0	0	0	146
+QB 1	255	0	0	147
+QB 1	0	0	0	147
+[0;33m
+Terminated gracefully at time 149 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	5
+QB 0	0	0	0	6
+QB 1	255	0	0	7
+QB 2	255	0	0	8
+QB 2	0	0	0	106
+QB 2	255	0	0	108
+QB 2	0	0	0	117
+QB 1	0	0	0	118
+QB 0	255	0	0	119
+QB 2	255	0	0	120
+QB 0	0	0	0	121
+QB 0	255	0	0	124
+QB 0	0	0	0	125
+QB 0	255	0	0	125
+QB 0	0	0	0	126
+QB 2	0	0	0	126
+QB 0	255	0	0	136
+QB 2	255	0	0	137
+QB 2	0	0	0	138
+QB 0	0	0	0	138
+QB 2	255	0	0	156
+QB 2	0	0	0	157
+[0;33m
+Terminated gracefully at time 160 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 7 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	8
+QB 2	255	0	0	10
+QB 2	0	0	0	42
+QB 0	255	0	0	43
+QB 0	0	0	0	47
+QB 1	255	0	0	47
+QB 2	255	0	0	48
+QB 0	255	0	0	56
+QB 0	0	0	0	56
+QB 1	0	0	0	57
+QB 2	0	0	0	57
+[0;33m
+Terminated gracefully at time 58 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 1	255	0	0	4
+QB 2	255	0	0	4
+QB 1	0	0	0	55
+QB 2	0	0	0	56
+[0;33m
+Terminated gracefully at time 258 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	10
+QB 2	255	0	0	12
+QB 0	255	0	0	47
+QB 0	0	0	0	48
+QB 0	255	0	0	49
+QB 0	0	0	0	49
+QB 2	0	0	0	50
+QB 2	255	0	0	51
+QB 2	0	0	0	52
+QB 2	255	0	0	52
+QB 2	0	0	0	52
+QB 2	255	0	0	53
+QB 2	0	0	0	54
+[0;33m
+Terminated gracefully at time 61 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	7
+QB 2	255	0	0	9
+QB 0	0	0	0	23
+QB 1	255	0	0	25
+QB 2	255	0	0	26
+QB 2	0	0	0	26
+QB 2	255	0	0	27
+QB 2	0	0	0	31
+QB 2	255	0	0	31
+QB 2	0	0	0	32
+QB 1	0	0	0	33
+[0;33m
+Terminated gracefully at time 35 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 1	255	0	0	7
+QB 2	255	0	0	8
+[0;33m
+Terminated gracefully at time 29 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	100	0	0	13
+QB 2	1	0	0	18
+QB 0	100	0	0	91
+QB 0	100	0	0	93
+QB 2	1	0	0	94
+QB 2	1	0	0	94
+QB 2	1	0	0	95
+QB 2	1	0	0	95
+QB 1	1	0	0	98
+QB 0	100	0	0	100
+QB 0	100	0	0	101
+QB 0	100	0	0	101
+QB 1	1	0	0	101
+QB 2	1	0	0	101
+QB 0	100	0	0	102
+QB 1	1	0	0	102
+QB 2	1	0	0	102
+QB 0	100	0	0	102
+QB 1	1	0	0	102
+QB 2	1	0	0	102
+QB 0	100	0	0	102
+QB 1	1	0	0	102
+QB 2	1	0	0	102
+QB 0	100	0	0	102
+QB 1	1	0	0	102
+QB 2	1	0	0	103
+QB 0	100	0	0	103
+QB 1	1	0	0	103
+QB 2	1	0	0	103
+[0;33m
+Terminated gracefully at time 105 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	11
+QB 2	255	0	0	12
+QB 2	255	0	0	41
+QB 2	0	0	0	44
+QB 2	255	0	0	48
+QB 2	0	0	0	54
+[0;33m
+Terminated gracefully at time 56 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	6
+QB 2	255	0	0	8
+QB 2	255	0	0	19
+QB 2	0	0	0	28
+QB 2	255	0	0	31
+QB 2	0	0	0	31
+QB 2	255	0	0	37
+QB 2	0	0	0	37
+QB 0	0	0	0	40
+QB 0	255	0	0	41
+QB 0	0	0	0	42
+QB 2	255	0	0	44
+QB 2	0	0	0	45
+[0;33m
+Terminated gracefully at time 55 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	7
+QB 2	255	0	0	8
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	4
+QB 2	255	0	0	5
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	5
+QB 2	255	0	0	5
+[0;33m
+Terminated gracefully at time 38 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	4
+QB 2	255	0	0	5
+QB 2	255	0	0	28
+QB 2	0	0	0	32
+[0;33m
+Terminated gracefully at time 32 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 2	255	0	0	6
+QB 2	255	0	0	23
+QB 2	0	0	0	29
+QB 1	255	0	0	30
+QB 2	255	0	0	31
+QB 2	0	0	0	33
+QB 0	255	0	0	34
+QB 2	255	0	0	35
+QB 1	0	0	0	37
+QB 1	255	0	0	39
+QB 0	0	0	0	40
+[0;33m
+Terminated gracefully at time 61 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	7
+QB 2	255	0	0	9
+QB 2	255	0	0	20
+QB 2	0	0	0	22
+QB 0	0	0	0	24
+QB 2	255	0	0	25
+QB 2	0	0	0	27
+QB 2	255	0	0	28
+QB 2	0	0	0	28
+QB 2	255	0	0	28
+QB 2	0	0	0	28
+QB 2	255	0	0	29
+QB 2	0	0	0	29
+QB 2	255	0	0	29
+QB 2	0	0	0	29
+QB 2	255	0	0	29
+QB 2	0	0	0	29
+QB 2	255	0	0	30
+QB 2	0	0	0	30
+QB 2	255	0	0	30
+QB 2	0	0	0	30
+QB 2	255	0	0	30
+QB 2	0	0	0	31
+QB 2	255	0	0	31
+QB 2	0	0	0	31
+QB 2	255	0	0	31
+QB 2	0	0	0	31
+QB 2	255	0	0	32
+QB 2	0	0	0	32
+QB 2	255	0	0	32
+QB 2	0	0	0	32
+QB 2	255	0	0	32
+QB 2	0	0	0	33
+QB 2	255	0	0	33
+QB 2	0	0	0	33
+QB 2	255	0	0	33
+QB 2	0	0	0	33
+QB 2	255	0	0	33
+QB 2	0	0	0	33
+QB 2	255	0	0	33
+QB 2	0	0	0	34
+QB 2	255	0	0	34
+QB 2	0	0	0	34
+QB 2	255	0	0	34
+QB 2	0	0	0	34
+QB 2	255	0	0	34
+QB 2	0	0	0	34
+QB 2	255	0	0	34
+QB 2	0	0	0	34
+QB 2	255	0	0	34
+QB 2	0	0	0	34
+QB 2	255	0	0	34
+QB 2	0	0	0	34
+QB 2	255	0	0	34
+[0;33m
+Terminated gracefully at time 35 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	6
+QB 2	255	0	0	7
+QB 2	255	0	0	15
+QB 0	0	0	0	26
+QB 1	255	0	0	27
+QB 2	255	0	0	29
+[0;33m
+Terminated gracefully at time 60 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 2	255	0	0	8
+[0;33m
+Terminated gracefully at time 27 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 2	255	0	0	6
+QB 1	255	0	0	15
+QB 2	255	0	0	19
+QB 1	0	0	0	46
+QB 0	255	0	0	46
+QB 2	255	0	0	47
+[0;33m
+Terminated gracefully at time 71 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 2	255	0	0	8
+QB 0	255	0	0	15
+QB 2	255	0	0	16
+QB 0	0	0	0	43
+QB 1	255	0	0	44
+QB 2	255	0	0	45
+[0;33m
+Terminated gracefully at time 78 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	5
+QB 1	255	0	0	5
+QB 2	255	0	0	7
+QB 0	0	0	0	24
+QB 1	0	0	0	24
+QB 2	255	0	0	25
+QB 0	255	0	0	32
+QB 1	255	0	0	32
+QB 0	0	0	0	34
+QB 1	0	0	0	34
+[0;33m
+Terminated gracefully at time 40 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	6
+QB 1	255	0	0	7
+QB 2	255	0	0	8
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	4
+QB 1	255	0	0	4
+QB 2	255	0	0	4
+QB 0	0	0	0	12
+QB 1	255	0	0	13
+QB 1	0	0	0	14
+QB 1	255	0	0	16
+QB 1	0	0	0	16
+QB 1	255	0	0	17
+QB 1	0	0	0	17
+QB 0	255	0	0	18
+QB 0	0	0	0	18
+QB 1	255	0	0	19
+QB 2	255	0	0	19
+QB 1	255	0	0	26
+QB 1	0	0	0	26
+[0;33m
+Terminated gracefully at time 29 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	25
+QB 0	0	0	0	27
+QB 0	255	0	0	27
+QB 0	0	0	0	29
+QB 0	255	0	0	29
+QB 2	255	0	0	35
+QB 0	0	0	0	66
+QB 1	255	0	0	67
+QB 2	255	0	0	68
+[0;33m
+Terminated gracefully at time 550 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 144 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 230 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 15 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 59 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	128
+QB 0	0	0	0	129
+QB 0	255	0	0	129
+QB 2	0	0	0	130
+QB 0	0	0	0	144
+QB 1	255	0	0	145
+QB 2	255	0	0	145
+[0;33m
+Terminated gracefully at time 558 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0mQB 0	255	0	0	12
+QB 2	255	0	0	14
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 6 seconds[0m
+
+[0;33m
+Recording Control Data
+Device	Device State	MPU Measures	BNO Measures	System Time
+[0m[0;33m
+Terminated gracefully at time 2740 seconds[0m
+

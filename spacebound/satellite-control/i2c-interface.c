@@ -1,9 +1,8 @@
-
 /**
  * The following program is a C port of the code located at
  * https://github.com/kriswiner/MPU9250/blob/master/MPU9250_MS5637_AHRS_t3.ino.
  *
- * Alterations have been made by Noah Franks to integrate the file into the FEMTA Cubesat
+ * Alterations have been made by Noah Franks and Tyler Mason to integrate the file into the FEMTA Cubesat
  * program. Additional code exists for specific use within FEMTA's project requirments,
  * but many of the functions can be copied as they are over to future projects involving 
  * communication with the MPU 9250 over I2C.
@@ -46,7 +45,7 @@
 #define USER_CTRL        0x6A  // Bit 7 enable DMP, bit 3 reset DMP
 #define PWR_MGMT_1       0x6B  // Device defaults to the SLEEP mode
 #define PWR_MGMT_2       0x6C
-#define MPU9250_ADDRESS  0x68
+#define MPU9250_ADDRESS  0x68 
 #define FIFO_COUNTH      0x72
 #define FIFO_R_W         0x74
 #define XA_OFFSET_H      0x77
@@ -118,7 +117,8 @@ void printStartupConstants(char * offset) {
 void readBytes(uint8_t address, uint8_t location, uint8_t number, uint8_t * data) {
 
   // Read the bytes sequentially, writing them to the data array
-  for (uint8_t offset = 0; offset < number; offset++) {
+  uint8_t offset;
+  for (offset = 0; offset < number; offset++) {
     data[offset] = i2cReadByteData(address, location + offset);
   }
 }
@@ -134,12 +134,13 @@ float readTempData() {
 void readGyroData(float * axes) {
   uint8_t rawData[6];  // x/y/z gyro register data stored here
   int16_t gyroCount[3];
+  int8_t i;
   readBytes(i2c_device -> i2c -> i2c_address, GYRO_XOUT_H, 6, &rawData[0]);  // Read the 6 data registers into data array
   gyroCount[0] = ((int16_t) rawData[0] << 8) | rawData[1];  // Turn the MSB and LSB into a signed 16-bit value
   gyroCount[1] = ((int16_t) rawData[2] << 8) | rawData[3];
   gyroCount[2] = ((int16_t) rawData[4] << 8) | rawData[5];
 
-  for (int8_t i = 0; i < 3; i++) axes[i] = (float) gyroCount[i] * gRes;
+  for (i = 0; i < 3; i++) axes[i] = (float) gyroCount[i] * gRes;
   //for (int8_t i = 0; i < 3; i++) axes[i] = (float) gyroCount[i] * gRes - gyroBias[i];
   //for (int8_t i = 0; i < 3; i++) axes[i] = ((float) gyroCount[i] - gyroBias[i]) * gRes;
 }
@@ -147,19 +148,21 @@ void readGyroData(float * axes) {
 void readAccelData(float * axes) {
   uint8_t rawData[6];  // x/y/z accel register data stored here
   int16_t accelCount[3];
+  int8_t i;
   readBytes(i2c_device -> i2c -> i2c_address, ACCEL_XOUT_H, 6, &rawData[0]);  // Read the 6 data registers into data array
   accelCount[0] = ((int16_t) rawData[0] << 8) | rawData[1];  // Turn the MSB and LSB into a signed 16-bit value
   accelCount[1] = ((int16_t) rawData[2] << 8) | rawData[3];
   accelCount[2] = ((int16_t) rawData[4] << 8) | rawData[5];
 
   //for (int8_t i = 0; i < 3; i++) axes[i] = (float) (accelCount[i]-accelBias[i]) * aRes;
-  for (int8_t i = 0; i < 3; i++) axes[i] = (float) accelCount[i] * aRes - accelBias[i];
+  for (i = 0; i < 3; i++) axes[i] = (float) accelCount[i] * aRes - accelBias[i];
 }
 
 void readMagData(float * axes) {
   
   uint8_t rawData[7];  // x y z gyro register data, ST2 register stored here, must read ST2 at end of data acquisition
   int16_t magCount[3];
+  int8_t i;
   newMagData = (i2cReadByteData(i2c_device -> i2c -> i2c_slave_address, AK8963_ST1) & 0x01);
   if (newMagData == true) { // wait for magnetometer data ready bit to be set
     // Read the 6 raw data and ST2 registers sequentially into the data array
@@ -173,7 +176,7 @@ void readMagData(float * axes) {
   }
 
   // Without calibration, this could be problematic
-  for (int8_t i = 0; i < 3; i++) axes[i] = ((float) magCount[i] * mRes * magCalibration[i] - magBias[i]) * magScale[i];
+  for (i = 0; i < 3; i++) axes[i] = ((float) magCount[i] * mRes * magCalibration[i] - magBias[i]) * magScale[i];
 }
 
 void * log_mpu_data() {
@@ -185,9 +188,9 @@ void * log_mpu_data() {
     mpu_log_file = fopen(mpu_log_file_name, "a");
 
     float log_data[50][10];
-    
-    for (unsigned char i = 0; i < 50; i++) {
-
+    unsigned char i;
+    for (i = 0; i < 50; i++) {
+      unsigned char f;
       // Write data into log_data array
       readGyroData(log_data[i]);
       readAccelData(log_data[i] + 3);
@@ -196,8 +199,17 @@ void * log_mpu_data() {
       
       fprintf(mpu_log_file, "%d\t", mpu_values_read++);
       mpu_logger -> values_read = mpu_values_read;
-      for (unsigned char f = 0; f < 10; f++) fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
-      for (unsigned char f = 0; f <  3; f++) {
+      mpu_logger -> gx = log_data[i][0];//added to pass the gx value to the unified-controller.c
+      mpu_logger -> gy = log_data[i][1];
+      mpu_logger -> gz = log_data[i][2];
+      mpu_logger -> ax = log_data[i][3];
+      mpu_logger -> ay = log_data[i][4];
+      mpu_logger -> az = log_data[i][5];
+      mpu_logger -> mx = log_data[i][6];
+      mpu_logger -> my = log_data[i][7];
+      mpu_logger -> mz = log_data[i][8];
+      for (f = 0; f < 10; f++) fprintf(mpu_log_file, "%5.3f\t", log_data[i][f]);
+      for (f = 0; f <  3; f++) {
 	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_fnode(log_data[i][f]));
 	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_fnode(log_data[i][f + 3]));
 	plot_add_value(mpu_magn_plot, mpu_magn_plot -> lists[f], create_fnode(log_data[i][f + 6]));
@@ -218,6 +230,76 @@ void * log_mpu_data() {
     fclose(mpu_log_file);
   }
 }
+
+/* RETURN THESE FUNCTIONS WHEN WE DECIDE TO DO MAG CALIBRATION - TYLER
+void readMagData2(int16_t *destination){
+  //using the old function to get data for magcalMPU9250()
+  uint8_t rawData[7];
+  readBytes(AK8963_ADDRESS, AK8963_ST1, 1, &newMagData);
+  newMagData = (newMagData & 0x01);
+  if(newMagData == true){
+    readBytes(AK8963_ADDRESS, AK8963_XOUT_L, 7, &rawData[0]);
+    uint8_t c = rawData[6];
+    if(!(c & 0x08)) {
+      destination[0] = ((int16_t)rawData[1] << 8) | rawData[0];
+      destination[0] = ((int16_t)rawData[3] << 8) | rawData[2];
+      destination[0] = ((int16_t)rawData[5] << 8) | rawData[4];
+    }
+  }
+  
+}
+
+void magcalMPU9250(float * dest1, float * dest2) 
+{
+  uint16_t ii = 0, sample_count = 0;
+  int32_t mag_bias[3] = {0, 0, 0}, mag_scale[3] = {0, 0, 0};
+  int16_t mag_max[3] = {-32767, -32767, -32767}, mag_min[3] = {32767, 32767, 32767}, mag_temp[3] = {0, 0, 0};
+
+  printf("Mag Calibration: Wave device in a figure eight until done!");
+  nano_sleep(4000000000);
+  
+  // shoot for ~fifteen seconds of mag data
+  if(Mmode == 0x02) sample_count = 128;  // at 8 Hz ODR, new mag data is available every 125 ms
+  if(Mmode == 0x06) sample_count = 1500;  // at 100 Hz ODR, new mag data is available every 10 ms
+  for(ii = 0; ii < sample_count; ii++) {
+    readMagData2(mag_temp);  // Read the mag data
+    int jj = 0;
+    for (jj = 0; jj < 3; jj++) {
+      if(mag_temp[jj] > mag_max[jj]) mag_max[jj] = mag_temp[jj];
+      if(mag_temp[jj] < mag_min[jj]) mag_min[jj] = mag_temp[jj];
+    }
+    if(Mmode == 0x02) nano_sleep(135000000);  // at 8 Hz ODR, new mag data is available every 125 ms
+    if(Mmode == 0x06) nano_sleep(120000000);  // at 100 Hz ODR, new mag data is available every 10 ms
+  }
+
+  //    Serial.println("mag x min/max:"); Serial.println(mag_max[0]); Serial.println(mag_min[0]);
+  //    Serial.println("mag y min/max:"); Serial.println(mag_max[1]); Serial.println(mag_min[1]);
+  //    Serial.println("mag z min/max:"); Serial.println(mag_max[2]); Serial.println(mag_min[2]);
+
+  // Get hard iron correction
+  mag_bias[0]  = (mag_max[0] + mag_min[0])/2;  // get average x mag bias in counts
+  mag_bias[1]  = (mag_max[1] + mag_min[1])/2;  // get average y mag bias in counts
+  mag_bias[2]  = (mag_max[2] + mag_min[2])/2;  // get average z mag bias in counts
+    
+  dest1[0] = (float) mag_bias[0]*mRes*magCalibration[0];  // save mag biases in G for main program
+  dest1[1] = (float) mag_bias[1]*mRes*magCalibration[1];   
+  dest1[2] = (float) mag_bias[2]*mRes*magCalibration[2];  
+       
+  // Get soft iron correction estimate
+  mag_scale[0]  = (mag_max[0] - mag_min[0])/2;  // get average x axis max chord length in counts
+  mag_scale[1]  = (mag_max[1] - mag_min[1])/2;  // get average y axis max chord length in counts
+  mag_scale[2]  = (mag_max[2] - mag_min[2])/2;  // get average z axis max chord length in counts
+
+  float avg_rad = mag_scale[0] + mag_scale[1] + mag_scale[2];
+  avg_rad /= 3.0;
+
+  dest2[0] = avg_rad/((float)mag_scale[0]);
+  dest2[1] = avg_rad/((float)mag_scale[1]);
+  dest2[2] = avg_rad/((float)mag_scale[2]);
+
+  printf("Magnetometer Calibration Complete.\n");
+}
+*/
 
 void initMPU9250() {
   
@@ -463,8 +545,8 @@ bool initialize_i2c(module * initialent) {
     calibrateMPU9250(gyroBias, accelBias);
     initMPU9250();
 
-   initAK8963(magCalibration);
-    
+    initAK8963(magCalibration);
+    //magcalMPU9250(magBias, magScale);
     // Successful initialization, open log file for recording temperature data
     mpu_log_file = fopen(mpu_log_file_name, "a");
     fprintf(mpu_log_file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\tTemp °C\n" RESET);
@@ -482,3 +564,11 @@ bool initialize_i2c(module * initialent) {
 void terminate_mpu_logging() {
   mpu_termination_signal = true;
 }
+
+
+
+
+
+
+
+

@@ -16,7 +16,16 @@ Logger * create_logger(char * filename) {
   Logger * logger = malloc(sizeof(Logger));
   logger -> filename = filename;
   logger -> values_read = 0;
-
+  logger -> gx = 0.0; //Tyler addition 7/24/18
+  logger -> gy = 0.0;
+  logger -> gz = 0.0;
+  logger -> ax = 0.0;
+  logger -> ay = 0.0;
+  logger -> az = 0.0;
+  logger -> mx = 0.0;
+  logger -> my = 0.0;
+  logger -> mz = 0.0;
+  
   // Connect function pointers
   logger -> open    = &open_prototype;
   logger -> close   = &close_prototype;

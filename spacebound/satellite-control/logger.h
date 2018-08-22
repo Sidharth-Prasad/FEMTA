@@ -12,7 +12,8 @@ typedef struct Logger {
   pthread_t thread;
   bool termination_signal;       // used to terminate child thread
   int values_read;
-
+  float gx, gy, gz, ax, ay, az, mx, my, mz; //sorry testing this out
+  
   bool (*open   )(Logger * self);
   bool (*close  )(Logger * self);
   void (*destroy)(Logger * self);

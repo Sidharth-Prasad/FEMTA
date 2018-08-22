@@ -1,4 +1,4 @@
-#ifndef HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_CONTROLLER
+ #ifndef HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_CONTROLLER
 #define HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_CONTROLLER
 
 typedef struct pin {
@@ -30,10 +30,10 @@ typedef struct module {
 
 } module;
 
-module ** modules, * BNO, * MPU, * Valve, * FEMTA;
+module ** modules, * BNO, * MPU, * Valve, * QB;
 
 void set_voltage(pin * p, char voltage);
 
 #include "i2c-interface.h"       // Promise fulfilled for the compiler
 #include "serial-interface.h"      // Promise fulfilled for the compiler
-#endif
+ #endif
