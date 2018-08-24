@@ -24,6 +24,7 @@ List * create_list(unsigned int limit, bool doublely_linked) {
 
 void list_insert(List * list, Node * node) {
   // Inserts node into the linked list
+  // Complexity: O(1)
 
   if (list -> head == NULL) {
     list -> head = node;
@@ -64,28 +65,31 @@ void list_insert(List * list, Node * node) {
 
 void list_remove(List * list, Node * node) {
   // Removes node from list
-  // Note: Currently only does anything for DLLs
+  // Complexity: O(n) for SLLs
+  // Complexity: O(1) for DLLs
   // Note: I have not considered limited DLLs
-  
-  if (list -> doublely_linked) {
 
-    list -> elements--;
+  if (!list -> doublely_linked) {
+    // Seek for previous node
+
+    Node * previous;
     
-    if (node == list -> head) {
-      list -> head = node -> next;
-      free(node);
-      return;
-    }
-    
-    if (node -> next = NULL) {
-      free(node);
-      return
+    for (previous = list -> head; previous != node; previous = previous -> next) {
+      if (previous -> next == node) break;
     }
 
-    node -> next -> prev = node -> prev;
-    node -> prev -> next = node -> next;
-    free(node);
+    previous -> next = node -> next;   // Drop out of SLL
   }
-  
-}
 
+  else {
+    node -> next -> prev = node -> prev;   // Drop out of DLL
+    node -> prev -> next = node -> next;   // ---------------
+  }
+
+  if (node == list -> head) {
+    list -> head = node -> next;
+  }
+
+  list -> elements--;
+  free(node);
+}
