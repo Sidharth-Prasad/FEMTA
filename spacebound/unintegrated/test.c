@@ -92,15 +92,22 @@ int test() {
     tests_passed++;
   }
 
+  
   // SLL integer test
   printf("Testing singlely-linked list: integers\n");
   List * integer_list = create_list(0, false);
-  int integer_array[8];
+
   for (int i = 0; i < 8; i++) {
     list_insert(integer_list, create_node((void *) i));
-    integer_array[i] = 7 - i;
   }
-  if (integer_list -> elements != 8) printf(CONSOLE_RED "FAILED: SLL integer test\n\n" CONSOLE_RESET);
+  
+  list_remove(integer_list, integer_list -> head -> next -> next);
+  list_remove(integer_list, integer_list -> head);
+  list_remove(integer_list, integer_list -> head -> next -> next -> next);
+
+  int integer_array[5] = {6, 4, 3, 1, 0};   // What we expect
+  
+  if (integer_list -> elements != 5) printf(CONSOLE_RED "FAILED: SLL integer test\n\n" CONSOLE_RESET);
   else if (!assert_list(integer_list, (void *) integer_array, INTEGER_NODE)) {
     printf(CONSOLE_RED "FAILED: SLL integer test\n\n" CONSOLE_RESET);
   }
@@ -109,6 +116,7 @@ int test() {
     tests_passed++;
   }
 
+  
   // SLL float test
   printf("Testing singlely-linked list: floats\n");
   float float_array[3];
@@ -118,6 +126,7 @@ int test() {
     list_insert(float_list, create_node((void *)(*((int *) &f))));
     float_array[float_array_index--] = f;
   }
+  //print_list(float_list, FLOAT_NODE);
   if (float_list -> elements != 3) printf(CONSOLE_RED "FAILED: SLL float test\n\n" CONSOLE_RESET);
   else if (!assert_list(float_list, (void *) float_array, FLOAT_NODE)) {
     printf(CONSOLE_RED "FAILED: SLL float test\n\n" CONSOLE_RESET);

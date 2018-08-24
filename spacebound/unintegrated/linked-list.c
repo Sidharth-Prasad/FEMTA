@@ -10,6 +10,8 @@
 Node * create_node(void * value) {
   Node * node = malloc(sizeof(Node));
   node -> value = value;
+  node -> next = NULL;
+  node -> prev = NULL;
 }
 
 // Creates a list with potentially limited length
