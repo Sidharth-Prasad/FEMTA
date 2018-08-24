@@ -10,7 +10,7 @@
 typedef struct HashmapElement {
 
   char * key;     // The string used to access this value
-  void * value;   // The content this element points to
+  void * datum;   // The content this element points to
 
 } HashmapElement;
 
@@ -23,14 +23,14 @@ typedef struct Hashmap {
   unsigned int elements;
   unsigned int size;
 
-  List * data;    // output values
-  bool * valid;    // ensures data is not junk
+  List ** table;   // output values
+  bool *  valid;   // ensures data is not junk
 
-  int  (*    get)(Hashmap this, char * string);
-  void (*    add)(Hashmap this, char * string);
-  void (* remove)(Hashmap this, char * string);
-  int  (* exists)(Hashmap this, char * string);
-  void (* update)(Hashmap this, char * string);
+  void * (*    get)(Hashmap * this, char * string);
+  void   (*    add)(Hashmap * this, char * string, void * datum);
+  void   (* remove)(Hashmap * this, char * string);
+  bool   (* exists)(Hashmap * this, char * string);
+  void   (* update)(Hashmap * this, char * string);
   
 } Hashmap;
 

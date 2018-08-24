@@ -8,11 +8,11 @@
 #include "linked-list.h"
 #include "hashmap.h"
 
-int  hashmap_get(Hashmap this, char * string);
-void hashmap_add(Hashmap this, char * string);
-int  hashmap_exists(Hashmap this, char * string);
-void hashmap_remove(Hashmap this, char * string);
-void hashmap_update(Hashmap this, char * string);
+void * hashmap_get   (Hashmap * this, char * string);
+void   hashmap_add   (Hashmap * this, char * string, void * datum);
+bool   hashmap_exists(Hashmap * this, char * string);
+void   hashmap_remove(Hashmap * this, char * string);
+void   hashmap_update(Hashmap * this, char * string);
 
 Hashmap * create_hashmap(int expected_size) {
   // Creates a hashmap with starting size as a function of expectations
@@ -21,9 +21,14 @@ Hashmap * create_hashmap(int expected_size) {
   
   map -> elements = 0;
   map -> size = (expected_size + 1) * 2;
-  
-  map -> data  = malloc(map -> size * sizeof(List *));
-  map -> valid = malloc(map -> size * sizeof(bool  ));
+
+  map -> table = malloc(map -> size * sizeof(List **));
+  map -> valid = malloc(map -> size * sizeof(bool   ));
+
+  // Create table of singlely linked lists
+  for (int i = 0; i < map -> size; i++) {
+    map -> table[i] = create_list(0, true);
+  }                                    
   
   // Clear initial values in hashmap
   for (int i = 0; i < map -> size; i++) {
@@ -42,7 +47,7 @@ Hashmap * create_hashmap(int expected_size) {
 
 int hash(char * string, int upper_bound) {
   // Hashes a string into a range using java's algorithm
-  // H(x) has been chosen to minimize collisions
+  // h(x) has been chosen to minimize collisions
   
   int hx = 0;
   for (int i = 0; i < strlen(string); i++) {
@@ -52,7 +57,7 @@ int hash(char * string, int upper_bound) {
   return hx % upper_bound;
 }
 
-int hashmap_get(Hashmap this, char * string) {
+void * hashmap_get(Hashmap * this, char * string) {
   // Gets element from hashmap
 
   int hx = hash(string, this -> size);
@@ -63,21 +68,29 @@ int hashmap_get(Hashmap this, char * string) {
     exit(1);
   }
 
-  // Make sure element matches querry
-  if (strcmp(string, this -> keys[hx])) {
-    printf("Tried to retrieve element that does not exist\n");
-    exit(1);
+  List * list = this -> table[hx];
+
+  for (Node * node = list -> head; node; node = node -> next) {
+
+    char * key = ((HashmapElement *) node -> value) -> key;
+    
+    if (strcmp(string, key)) continue;
+
+    // string matches key
+    return ((HashmapElement *) node -> value) -> datum;
   }
-  
-  return this -> data[hx];
+
+  // No match was found in the matching table list
+  printf("Tried to retrieve element that does not exist\n");
+  exit(1);
 }
 
-void hashmap_add(Hashmap this, char * string) {
+void hashmap_add(Hashmap * this, char * string, void * datum) {
   // Adds an element to the hashmap
 
   int hx = hash(string, this -> size);
   
-  // See if collision is imminent
+  /*// See if collision is imminent
   if (this -> valid[hx]) {
 
     if (!strcmp(string, this -> keys[hx])) {
@@ -88,18 +101,42 @@ void hashmap_add(Hashmap this, char * string) {
     // double hashmap size and rehash
     this -> size *= 2;
     for (
-  }
+    }*/
 }
 
-int hashmap_exists(Hashmap this, char * string) {
+bool hashmap_exists(Hashmap * this, char * string) {
   return this -> valid[hash(string, this -> size)];
 }
 
-void hashmap_remove(Hashmap this, char * string) {
-  
+void hashmap_remove(Hashmap * this, char * string) {
+  // Removes element, making sure it exists
+
+  int hx = hash(string, this -> size);
+
+  // Make sure an element exists
+  if (!this -> valid[hx]) {
+    printf("Tried to retrieve element that does not exist\n");
+    exit(1);
+  }
+
+  List * list = this -> table[hx];
+
+  for (Node * node = list -> head; node; node = node -> next) {
+
+    char * key = ((HashmapElement *) node -> value) -> key;
+    
+    if (strcmp(string, key)) continue;
+
+    // string matches key
+    return ((HashmapElement *) node -> value) -> datum;
+  }
+
+  // No match was found in the matching table list
+  printf("Tried to retrieve element that does not exist\n");
+  exit(1);
 }
 
-void hashmap_update(Hashmap this, char * string) {
+void hashmap_update(Hashmap * this, char * string) {
   
 }
 

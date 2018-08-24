@@ -38,5 +38,6 @@ typedef struct List {
 Node * create_node(void * value);
 List * create_list(unsigned int limit, bool doublely_linked);
 void list_insert(List * list, Node * node);
+void list_remove(List * list, Node * node);
 
 #endif

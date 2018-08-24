@@ -62,4 +62,30 @@ void list_insert(List * list, Node * node) {
   free(node);
 }
 
+void list_remove(List * list, Node * node) {
+  // Removes node from list
+  // Note: Currently only does anything for DLLs
+  // Note: I have not considered limited DLLs
+  
+  if (list -> doublely_linked) {
+
+    list -> elements--;
+    
+    if (node == list -> head) {
+      list -> head = node -> next;
+      free(node);
+      return;
+    }
+    
+    if (node -> next = NULL) {
+      free(node);
+      return
+    }
+
+    node -> next -> prev = node -> prev;
+    node -> prev -> next = node -> next;
+    free(node);
+  }
+  
+}
 
