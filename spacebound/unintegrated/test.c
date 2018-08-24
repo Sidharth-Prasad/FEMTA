@@ -101,13 +101,14 @@ int test() {
     list_insert(integer_list, create_node((void *) i));
   }
   
-  list_remove(integer_list, integer_list -> head -> next -> next);
-  list_remove(integer_list, integer_list -> head);
-  list_remove(integer_list, integer_list -> head -> next -> next -> next);
+  list_remove(integer_list, integer_list -> head -> next -> next                );   // rm 5
+  list_remove(integer_list, integer_list -> head                                );   // rm 7
+  list_remove(integer_list, integer_list -> head -> next -> next -> next        );   // rm 2
+  list_remove(integer_list, integer_list -> head -> next -> next -> next -> next);   // rm 0
 
-  int integer_array[5] = {6, 4, 3, 1, 0};   // What we expect
+  int integer_array[4] = {6, 4, 3, 1};   // What we expect
   
-  if (integer_list -> elements != 5) printf(CONSOLE_RED "FAILED: SLL integer test\n\n" CONSOLE_RESET);
+  if (integer_list -> elements != 4) printf(CONSOLE_RED "FAILED: SLL integer test\n\n" CONSOLE_RESET);
   else if (!assert_list(integer_list, (void *) integer_array, INTEGER_NODE)) {
     printf(CONSOLE_RED "FAILED: SLL integer test\n\n" CONSOLE_RESET);
   }
@@ -126,7 +127,7 @@ int test() {
     list_insert(float_list, create_node((void *)(*((int *) &f))));
     float_array[float_array_index--] = f;
   }
-  //print_list(float_list, FLOAT_NODE);
+  
   if (float_list -> elements != 3) printf(CONSOLE_RED "FAILED: SLL float test\n\n" CONSOLE_RESET);
   else if (!assert_list(float_list, (void *) float_array, FLOAT_NODE)) {
     printf(CONSOLE_RED "FAILED: SLL float test\n\n" CONSOLE_RESET);
@@ -158,12 +159,21 @@ int test() {
   // DLL integer test
   printf("Testing doublely-linked list: integers\n");
   List * double_integer_list = create_list(0, true);
-  int double_integer_array[8];
+  
+
   for (int i = 0; i < 8; i++) {
     list_insert(double_integer_list, create_node((void *) i));
-    double_integer_array[i] = 7 - i;
   }
-  if (double_integer_list -> elements != 8) printf(CONSOLE_RED "FAILED: DLL integer test\n\n" CONSOLE_RESET);
+  
+  list_remove(double_integer_list, double_integer_list -> head -> prev        );   // rm 0
+  list_remove(double_integer_list, double_integer_list -> head                );   // rm 7
+  list_remove(double_integer_list, double_integer_list -> head -> prev        );   // rm 1
+  list_remove(double_integer_list, double_integer_list -> head                );   // rm 6
+  list_remove(double_integer_list, double_integer_list -> head -> next -> next);   // rm 3
+
+  int double_integer_array[3] = {5, 4, 2};
+  
+  if (double_integer_list -> elements != 3) printf(CONSOLE_RED "FAILED: DLL integer test\n\n" CONSOLE_RESET);
   else if (!assert_list(double_integer_list, (void *) double_integer_array, INTEGER_NODE)) {
     printf(CONSOLE_RED "FAILED: DLL integer test\n\n" CONSOLE_RESET);
   }
