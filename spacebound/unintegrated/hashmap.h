@@ -24,13 +24,12 @@ typedef struct Hashmap {
   unsigned int size;
 
   List ** table;   // output values
-  bool *  valid;   // ensures data is not junk
 
   void * (*    get)(Hashmap * this, char * string);
   void   (*    add)(Hashmap * this, char * string, void * datum);
   void   (* remove)(Hashmap * this, char * string);
   bool   (* exists)(Hashmap * this, char * string);
-  void   (* update)(Hashmap * this, char * string);
+  void   (* update)(Hashmap * this, char * string, void * datum);
   
 } Hashmap;
 

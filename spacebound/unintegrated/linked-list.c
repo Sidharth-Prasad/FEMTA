@@ -92,6 +92,8 @@ void list_remove(List * list, Node * node) {
     list -> head = node -> next;
   }
 
-  list -> elements--;
+  if (--list -> elements == 0) list -> head = NULL;
   free(node);
+
+  
 }
