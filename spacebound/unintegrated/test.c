@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "linked-list.h"
+#include "hashmap.h"
 #include "colors.h"
 
 void print_list(List * list, short type) {
@@ -66,7 +67,7 @@ bool assert_list(List * list, void * array, short type) {
   return true;
 }
 
-int test() {
+int test_list() {
 
   printf("\n");
 
@@ -242,14 +243,130 @@ int test() {
   }
   
 
-  if (tests_passed == tests) printf(CONSOLE_GREEN "passed all %d tests\n", tests);
+  if (tests_passed == tests) printf(CONSOLE_GREEN "passed all %d list tests\n" CONSOLE_RESET, tests);
   else printf(CONSOLE_RED "passed %d out of %d tests\n" CONSOLE_RESET, tests_passed, tests); 
   
   return (tests_passed == tests);
 }
 
+void hashmap_print(Hashmap * map) {
+
+  printf("printing out hashmap\n");
+  
+  for (int i = 0; i < map -> size; i++) {
+
+    printf("list %d\n", i);
+
+    // Ensure list isn't empty
+    if (!map -> table[i] -> elements) continue;
+
+    Node * node = (Node *) 0x1;   // Used to bypass first loop condition
+
+    for (; node != map -> table[i] -> head; node = node -> next) {
+
+      if (node == (Node *) 0x1) node = map -> table[i] -> head;
+      
+      HashmapElement * element = (HashmapElement *) node -> value;
+      
+      printf("\t(%s, %d)\n", element -> key, (int) element -> datum);
+      
+    }
+  }
+
+  printf("\n");
+}
+
+int test_hashmap() {
+
+  printf("\nTesting hashmap\n");
+  
+  Hashmap * map = create_hashmap(4);
+
+  printf("Adding 8 elements\n");
+  map ->    add(map, "humanity", (void *)   0);
+  map ->    add(map, "universe", (void *)  64);
+  map ->    add(map, "unity"   , (void *)  32);
+  map ->    add(map, "computer", (void *) 256);
+  map ->    add(map, "abacus"  , (void *)   8);
+  map ->    add(map, "calculx" , (void *)  16);
+  map ->    add(map, "aero"    , (void *) 128);
+  map ->    add(map, "mayday"  , (void *) 128);
+  //hashmap_print(map);
+
+  printf("updating 2 elements\n");
+  map -> update(map, "mayday"  , (void *)  32);
+  map -> update(map, "mayday"  , (void *)  16);
+  //hashmap_print(map);
+  
+  printf("removing 2 elements\n");
+  map -> remove(map, "aero"                  );
+  map -> remove(map, "abacus"                );
+  
+  printf("updating 2 elements\n");
+  map -> update(map, "unity"   , (void *)  64);
+  map -> update(map, "calculx" , (void *)  32);
+
+  hashmap_print(map);
+  
+  int tests = 2;
+  int tests_passed = 2;
+  
+  int expected_elements[8] = {0, 2, 0, 1, 1, 2, 0, 0};
+  int expected_values[6] = {16, 0, 64, 32, 256, 64};
+
+  if (map -> elements != 6) tests_passed--;   // Ensure proper number of elements recorded
+  else {
+    // Make sure element count in each list is as expected
+    
+    for (int i = 0; i < map -> size; i++) {
+      if (map -> table[i] -> elements != expected_elements[i]) {
+        tests_passed--;
+        break;
+      }
+    }
+  }
+  if (tests_passed == 2) printf(CONSOLE_GREEN "PASSED: Hashmap location test\n" CONSOLE_RESET);
+  else printf(CONSOLE_RED "FAILED: Hashmap location test\n" CONSOLE_RESET);
+  
+  int expectation_index = 0;
+  for (int i = 0; i < map -> size; i++) {
+
+    if (!map -> table[i] -> elements) continue;   // Ensure list isn't empty
+
+    Node * node = (Node *) 0x1;   // Used to bypass first loop condition
+
+    for (; node != map -> table[i] -> head; node = node -> next) {
+
+      if (node == (Node *) 0x1) node = map -> table[i] -> head;
+      
+      HashmapElement * element = (HashmapElement *) node -> value;
+
+      if ((int) element -> datum != expected_values[expectation_index++]) {
+        printf(CONSOLE_RED "FAILED: Hashmap location test\n\n" CONSOLE_RESET);
+        tests_passed--;
+        break;
+      }
+    }
+
+    if (!tests_passed) break;
+  }
+  
+  if (tests_passed == 2) {
+    printf(CONSOLE_GREEN "PASSED: Hashmap value test\n\n" CONSOLE_RESET);
+    printf(CONSOLE_GREEN "passed all %d hashmap tests\n" CONSOLE_RESET, tests);
+  }
+  else printf(CONSOLE_RED "PASSED: %d out of %d hashmap tests\n" CONSOLE_RESET, tests_passed, tests);
+  
+  //printf("humanity: %d\n", (int) map -> get(map, "humanity"));
+  //printf("universe: %d\n", (int) map -> get(map, "universe"));
+  //printf("abacus: %d\n"  , (int) map -> get(map, "abacus"  ));
+  //printf("aero: %d\n"    , (int) map -> get(map, "aero"    ));
+  
+  return tests_passed;
+}
+
 
 
 int main () {
-  return test();
+  return test_list() + test_hashmap();
 }
