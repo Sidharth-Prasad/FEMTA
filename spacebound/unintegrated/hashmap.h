@@ -33,7 +33,7 @@ typedef struct Hashmap {
   
 } Hashmap;
 
-Hashmap * create_hashmap();
+Hashmap * create_hashmap(int expected_size);
 
 int hash(char * string, int upper_bound);
 
