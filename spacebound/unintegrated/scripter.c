@@ -1,52 +1,66 @@
 
-#include "stdlib.h"
-#include "stdio.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "hashmap.h"
 #include "scripter.h"
+#include "error.h"
+#include "colors.h"
 
 
 
 void initialize_scripter() {
 
-  action_table = create_hashmap(16);
+  action_table = create_hashmap(8);
   
   
 }
 
 void define_script_action(char * symbol, lambda action) {
   
+  action_table -> add(action_table, symbol, (void *) action);
   
+}
+
+void execute_script(char * filename) {
+  FILE * file = fopen(filename, "r");
   
-}
-
-
-void   print_string(char * string);
-int    add_numbers(int a, int b);
-void * random_pointer();
-float  random_float();
-
-int main() {
-
-  define_script_action("print"         , (lambda) print_string);
-  define_script_action("add"           , (lambda) print_string);
-  define_script_action("random_pointer", (lambda) print_string);
-  define_script_action("random_decimal", (lambda) print_string);
+  if (!file) exit_printing("Could not read file\n", ERROR_OS_FAILURE);
   
-  return 0;
+  char * line = NULL;
+  size_t length = 0;
+  
+  while (getline(&line, &length, file) != -1) {
+
+    char instruction[64];
+    
+    char * seeker = line;
+    char * command = instruction;
+    
+    for (; *seeker != ' '; seeker++) *command++ = *seeker;
+    for (; *seeker == ' '; seeker++);
+    *command = '\0';
+
+    //printf("%c\n", *seeker);
+    //printf("rest: %s\n", seeker);
+    
+    if (!strcmp("nothing\n", seeker)) {
+      
+      printf("command: %s\n", instruction);
+      
+      ((lambda) action_table -> get(action_table, instruction))();
+      printf("\n");
+    }
+    else {
+      printf("command: %s\n", instruction);
+      printf("argument: %s", seeker);
+      ((void (*)(void *))((lambda) action_table -> get(action_table, instruction)))((void *) seeker);
+      printf("\n");
+    }
+  }
+
+  if (line) free(line);
+  fclose(file);
 }
 
-void print_string(char * string) {
-  printf("%s\n", string);
-}
-
-int add_numbers(int a, int b) {
-  return a + b;
-}
-
-void * random_pointer() {
-  return (void *) rand();
-}
-
-float random_float() {
-  return (((float) rand()) / 4294967296);
-}

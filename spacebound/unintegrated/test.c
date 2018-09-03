@@ -5,6 +5,8 @@
 #include "linked-list.h"
 #include "hashmap.h"
 #include "colors.h"
+#include "error.h"
+#include "scripter.h"
 
 void print_list(List * list, short type) {
   printf("Elements: %d\n", list -> elements);
@@ -365,8 +367,71 @@ int test_hashmap() {
   return tests_passed;
 }
 
+// Compiler promises for each function
+void print_string(void * string);
+void double_integer(void * integer);
+void random_pointer();
+void random_float();
+
+int test_scripter() {
+
+  initialize_scripter();
+  
+  define_script_action("print"         , (lambda) print_string  );
+  define_script_action("double"        , (lambda) double_integer);
+  define_script_action("random_pointer", (lambda) random_pointer);
+  define_script_action("random_decimal", (lambda) random_float  );
+
+  printf("\nTesting action table entries\n");
+  
+  void * a = action_table -> get(action_table, "print"         );
+  void * b = action_table -> get(action_table, "double"        );
+  void * c = action_table -> get(action_table, "random_pointer");
+  void * d = action_table -> get(action_table, "random_decimal");
+  
+  printf("\t%p\t%p\n", a, print_string  );
+  printf("\t%p\t%p\n", b, double_integer);
+  printf("\t%p\t%p\n", c, random_pointer);
+  printf("\t%p\t%p\n", d, random_float  );
+
+  char tests_failed = 0;
+  
+  if (a == print_string && b == double_integer && c == random_pointer && d == random_float) {
+    printf(CONSOLE_GREEN "SUCCESS: action table test\n\n" CONSOLE_RESET);
+  }
+  else {
+    printf(CONSOLE_RED "FAILURE: action table test\n\n" CONSOLE_RESET);
+    tests_failed++;
+  }
+  
+  execute_script("scripts/test.txt");
+
+  hashmap_print(action_table);
+  
+  return tests_failed;
+}
+
+
+// Functions for testing
+
+void print_string(void * string) {
+  printf(CONSOLE_YELLOW "\t-> %s" CONSOLE_RESET, (char *) string);
+}
+
+void double_integer(void * integer) {
+  printf(CONSOLE_YELLOW "\t-> %d\n" CONSOLE_RESET, 2 * atoi((char *) integer));
+}
+
+void random_pointer() {
+  printf(CONSOLE_YELLOW "\t-> %p\n" CONSOLE_RESET, (void *) rand());
+}
+
+void random_float() {
+  printf(CONSOLE_YELLOW "\t-> %f\n" CONSOLE_RESET, (((float) rand()) / 4294967296));
+}
+
 
 
 int main () {
-  return test_list() + test_hashmap();
+  return test_list() + test_hashmap() + test_scripter();
 }
