@@ -25,10 +25,12 @@
 #define UART_STATE 3
 
 //define saturation limits. This is due to the nature of the motors for the quadcopter.
-#define MIN_SAT 0
+#define MIN_SAT 0 //MIN_SAT and MAX_PWM temporarily 0 until the MPU data can be read accurately
 #define MAX_PWM 0
 #define PID_ERR_TOL 0.05
 #define PI 3.14159265
+
+float yaw_angle(struct Logger * mpu_logger);
 
 void initialize_pin(pin * initialent, char logical, char physical, short state) {
   initialent -> state    = state;
@@ -527,8 +529,30 @@ void get_DCM_angles(float *angles, float *q){
   return;
 }
 
+void get_DCM_angles321(float *angles, float *q){
+  float C[3][3] = {{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f}};
+  //rename quaternions to get appropriate naming convention
+  float q1 = q[0];
+  float q2 = q[1];
+  float q3 = q[2];
+  float q4 = q[4];
+  float psi, theta, phi;
+  float angle_tol = 5; //degrees
+  
+  //Implement methodology seen in the madgwick_internal_report PDF
+  psi = atan2(2*q2*q3 - 2*q1*q4, 2*q1*q1 + 2*q2*q2 - 1);
+  theta = -asin(2*q2*q4 + 2*q1*q3);
+  phi = atan2(2*q3*q4 - 2*q1*q2, 2*q1*q1 + 2*q4*q4 - 1);
+  //get psi
+  angles[0] = 2*q2*q4 + 2*q1*q3;//psi * 180/PI;
+  //assign theta
+  angles[1] = theta * 180/PI;
+  //get phi
+  angles[2] = phi * 180/PI;
+  return;
+}
 
-		   
+
 void PID_controller(bool CW, bool CCW, float init_or, float dor, char mode){
   //init_or will be defined as 0 degrees until data can be read from MPU
   //dor is the change in orientation (delta orientation)
@@ -638,10 +662,11 @@ void PID_controller(bool CW, bool CCW, float init_or, float dor, char mode){
       m1 = mpu_logger -> mx;
       m2 = mpu_logger -> my;
       m3 = mpu_logger -> mz;
-      MadgwickQuaternionUpdate(-a3, a2, a1, -g3*PI/180, g2*PI/180, g1*PI/180, m3, m1, m2, tdiff, q); //sensor x n accelerometer = y of the gyro
-      get_DCM_angles(angles, q);
 
-      phi_mpu = angles[1]; //mpu_logger -> gx;//get_mpu_val();
+      MadgwickQuaternionUpdate(-a3, a2, a1, -g3*PI/180, g2*PI/180, g1*PI/180, m3, m1, m2, tdiff, q); //sensor x n accelerometer = y of the gyro
+      get_DCM_angles321(angles, q);
+
+      phi_mpu = angles[1];//yaw_angle(mpu_logger);//angles[1]; //mpu_logger -> gx;//get_mpu_val();
       //printf("%f\n", phi_mpu);
       err1 = phi_mpu - phi_tr;
       
@@ -682,6 +707,24 @@ void PID_controller(bool CW, bool CCW, float init_or, float dor, char mode){
     }
   }   
   return;
+}
+
+float yaw_angle(struct Logger * mpu_logger){
+  //this is an adaptation of kate's Matlab code.
+  float theta, m1, m2, m3;
+  //int mpu_reads = 0;
+  //if (mpu_logger) mpu_reads = mpu_logger -> values_read;
+  m1 = mpu_logger -> mx;
+  m2 = mpu_logger -> my;
+  m3 = mpu_logger -> mz;
+  
+  if(m3 > 0) theta = 90  - (atan(m1/m3) * 180/PI);
+  if(m3 < 0) theta = 270 - (atan(m1/m3) * 180/PI);
+  if(m3 == 0){
+    if(m1 < 0) theta = 180;
+    else theta = 0;
+  }
+  return theta;
 }
 
 
