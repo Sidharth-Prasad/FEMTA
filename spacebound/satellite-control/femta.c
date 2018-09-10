@@ -10,13 +10,12 @@
 // Program headers, in compilation order
 #include "femta.h"
 #include "i2c-interface.h"
-#include "serial-interface.h"
 #include "temperature-monitoring.h"
 #include "graphics.h"
 #include "logger.h"
 #include "colors.h"
 
-#define NUMBER_OF_MODULES 4
+#define NUMBER_OF_MODULES 3
 
 #define I2C_STATE 2
 #define UART_STATE 3
@@ -46,19 +45,19 @@ void initialize_satellite() {
   for (char m = 0; m < NUMBER_OF_MODULES; m++) modules[m] -> loaded = false;
   
   // All modules should be grouped together
-  BNO   = modules[0];
-  MPU   = modules[1];
-  Valve = modules[2];
-  FEMTA = modules[3];
+  // BNO   = modules[0];
+  MPU   = modules[0];
+  Valve = modules[1];
+  FEMTA = modules[2];
 
   // Set module identifiers for printing
-  BNO   -> identifier = "BNO 055";
+  // BNO   -> identifier = "BNO 055";
   MPU   -> identifier = "MPU 9250";
   Valve -> identifier = "Valve";
   FEMTA -> identifier = "FEMTA";
 
   // Set each module's number of pins
-  BNO   -> n_pins = 3;
+  // BNO   -> n_pins = 3;
   MPU   -> n_pins = 2;
   Valve -> n_pins = 1;
   FEMTA -> n_pins = 4;
@@ -68,9 +67,9 @@ void initialize_satellite() {
     modules[m] -> pins = malloc((modules[m] -> n_pins) * sizeof(module));
 
   // The BNO has the UART interface
-  initialize_pin(&(BNO -> pins[0]), 14,  8, UART_STATE);   // UART TXD
-  initialize_pin(&(BNO -> pins[1]), 15, 10, UART_STATE);   // UART RXD
-  initialize_pin(&(BNO -> pins[2]), 23, 16, PI_OUTPUT);
+  //initialize_pin(&(BNO -> pins[0]), 14,  8, UART_STATE);   // UART TXD
+  //initialize_pin(&(BNO -> pins[1]), 15, 10, UART_STATE);   // UART RXD
+  //initialize_pin(&(BNO -> pins[2]), 23, 16, PI_OUTPUT);
 
   // The MPU has the I2C interface
   initialize_pin(&(MPU -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
@@ -87,10 +86,10 @@ void initialize_satellite() {
 
   // Set up the interfaces
   bool i2c_success    = initialize_i2c(MPU);
-  bool serial_success = initialize_UART(BNO);
+  //bool serial_success = initialize_UART(BNO);
 
   // Set each module's initialization state
-  BNO   -> initialized = true; //serial_success
+  //BNO   -> initialized = true; //serial_success
   MPU   -> initialized = i2c_success;
   Valve -> initialized = true;
   FEMTA -> initialized = true;
@@ -109,11 +108,11 @@ void initialize_satellite() {
   else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
 
   // Serial_success is a highly falible indicator. It's a long story.
-  if (BNO -> initialized) printf(GREEN "\tBNO\tSUCCESS\tSPAWNED\n" RESET);
-  else                    printf(RED   "\tBNO\tOFFLINE\t" RESET);
+  /*if (BNO -> initialized) printf(GREEN "\tBNO\tSUCCESS\tSPAWNED\n" RESET);
+    else                    printf(RED   "\tBNO\tOFFLINE\t" RESET);*/
   
   printf("\n");
-  if (!(i2c_success && thermal_success && serial_success)) {
+  if (!(i2c_success && thermal_success)) {
     printf( RED "\nSatellite failed to initialize" RESET "\n\n");
     return;
   }
@@ -158,7 +157,7 @@ void terminate_satellite() {
   
   terminate_temperature_monitoring();
   terminate_mpu_logging();
-  terminate_bno_logging();
+  //terminate_bno_logging();
   gpioTerminate();
 }
 
@@ -209,7 +208,7 @@ int main() {
   Logger * logger = create_logger("./logs/control-log.txt");
   logger -> open(logger);
   fprintf(logger -> file,
-	  YELLOW "\nRecording Control Data\nDevice\tDevice State\tMPU Measures\tBNO Measures\tSystem Time\n" RESET);
+	  YELLOW "\nRecording Control Data\nDevice\tDevice State\tMPU Measures\tSystem Time\n" RESET);
   logger -> close(logger);
   
   initialize_satellite();
@@ -217,15 +216,15 @@ int main() {
   
   initialize_graphics();
   
-  Plot * all_possible_owners[8] = {
+  Plot * all_possible_owners[4] = {
     temperature_plot,
     mpu_gyro_plot,
     mpu_acel_plot,
     mpu_magn_plot,
-    bno_gyro_plot,
+    /*bno_gyro_plot,
     bno_acel_plot,
     bno_lina_plot,
-    bno_magn_plot,
+    bno_magn_plot,*/
   };
 
   List * owner_index_list = create_list(8);
@@ -244,7 +243,7 @@ int main() {
     input = getc(stdin);
 
     int mpu_reads = 0;
-    int bno_reads = 0;	
+    //int bno_reads = 0;	
     
     if (manual_mode) {
       switch (input) {
@@ -267,9 +266,9 @@ int main() {
 	// Log this manual command
 	logger -> open(logger);
 	if (mpu_logger) mpu_reads = mpu_logger -> values_read;
-	if (bno_logger) bno_reads = bno_logger -> values_read;
-	fprintf(logger -> file, "FEMTA %d\t%d\t%d\t%d\t%d\n",
-		number, (FEMTA -> pins + number) -> duty_cycle, mpu_reads, bno_reads, time(NULL) - start_time);
+	//if (bno_logger) bno_reads = bno_logger -> values_read;
+	fprintf(logger -> file, "FEMTA %d\t%d\t%d\t%d\n",
+		number, (FEMTA -> pins + number) -> duty_cycle, mpu_reads, time(NULL) - start_time);
 	logger -> close(logger);
 
 	break;
@@ -283,9 +282,9 @@ int main() {
 	// Log this manual command
 	logger -> open(logger);
 	if (mpu_logger) mpu_reads = mpu_logger -> values_read;
-	if (bno_logger) bno_reads = bno_logger -> values_read;
-	fprintf(logger -> file, "Valve\t%d\t%d\t%d\t%d\n",
-		Valve -> pins -> voltage, mpu_reads, bno_reads, time(NULL) - start_time);
+	//if (bno_logger) bno_reads = bno_logger -> values_read;
+	fprintf(logger -> file, "Valve\t%d\t%d\t%d\n",
+		Valve -> pins -> voltage, mpu_reads, time(NULL) - start_time);
 	logger -> close(logger);
 	
 	break;
@@ -294,8 +293,8 @@ int main() {
 	// Log the pump down message
 	logger -> open(logger);
 	if (mpu_logger) mpu_reads = mpu_logger -> values_read;
-	if (bno_logger) bno_reads = bno_logger -> values_read;
-	fprintf(logger -> file, "Pump\t%d\t%d\t%d\t%d\n", 1, mpu_reads, bno_reads, time(NULL) - start_time);
+	//if (bno_logger) bno_reads = bno_logger -> values_read;
+	fprintf(logger -> file, "Pump\t%d\t%d\t%d\n", 1, mpu_reads, time(NULL) - start_time);
 	logger -> close(logger);
       }
     }
@@ -305,10 +304,10 @@ int main() {
     case 'c':
 
       // Add BNO plots
-      if (BNO -> initialized && !BNO -> loaded) {
+      /*if (BNO -> initialized && !BNO -> loaded) {
 	for (char p = 4; p <= 7; p++) list_insert(owner_index_list, create_inode(p));
 	BNO -> loaded = true;
-      }
+	}*/
 
       // Add MPU plots
       if (MPU -> initialized && !MPU -> loaded) {

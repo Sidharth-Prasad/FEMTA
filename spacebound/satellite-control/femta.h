@@ -32,12 +32,9 @@ typedef struct module {
 
 } module;
 
-module ** modules, * BNO, * MPU, * Valve, * FEMTA;
-
-//module * serial_device;
+module ** modules, * MPU, * Valve, * FEMTA;
 
 void set_voltage(pin * p, char voltage);
 
 #include "i2c-interface.h"       // Promise fulfilled for the compiler
-#include "serial-interface.h"      // Promise fulfilled for the compiler
 #endif

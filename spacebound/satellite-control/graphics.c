@@ -11,7 +11,7 @@
 #include "femta.h"
 
 // Unified Controller Macros
-#define NUMBER_OF_MODULES 4
+#define NUMBER_OF_MODULES 3
 #define I2C_STATE 2
 #define UART_STATE 3
 
@@ -262,11 +262,10 @@ void initialize_graphics() {
   else                              print(2, "UART  FAILURE"          , 4);*/
 
   print(0, "5 Threads are running", 0);
-  print(0, "  - BNO is being sampled at 100 Hz", 0);
-  print(0, "  - MPU is being sampled at 100 Hz", 0);
+  print(0, "  - MPU is being sampled at 10 Hz", 0);
   print(0, "  - CPU is being sampled at 1 Hz", 0);
   print(0, "Logging 3 files asynchronously", 0);
-  print(0, "The OS is running 21 threads", 0);
+  //print(0, "The OS is running 21 threads", 0);
   print(1, "c: cycle graphs"             , 0);
   print(1, "m: manual control"           , 0);
   print(1, "q: quit"                     , 0);

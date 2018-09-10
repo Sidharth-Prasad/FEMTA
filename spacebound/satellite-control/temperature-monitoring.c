@@ -53,15 +53,8 @@ void * read_cpu_temperature() {
       float value = (i2c_device    -> i2c  -> temperature)();
       fprintf(cpu_temperature_log_file, "%6.3f\t", value);
       plot_add_value(temperature_plot, temperature_plot -> lists[1], create_fnode(value));
-    }
+      }*/
 
-    // Serial temperature record
-    if (serial_device -> initialized) {
-      float value = (serial_device -> uart -> temperature)();
-      fprintf(cpu_temperature_log_file, "%6.3f\t", value);
-      plot_add_value(temperature_plot, temperature_plot -> lists[2], create_fnode(value));
-    }
-    */
     fprintf(cpu_temperature_log_file, "\n");
     fflush(stdout);
 
@@ -92,7 +85,7 @@ bool initialize_temperature_monitoring() {
   
   // Successful initialization, open log file for recording temperature data
   cpu_temperature_log_file = fopen(temperature_log_filename, "a");
-  fprintf(cpu_temperature_log_file, RED "\nRecording temperature\nTIME\tCPU\tMPU\tBNO\n" RESET);
+  fprintf(cpu_temperature_log_file, RED "\nRecording temperature\nTIME\tCPU\tMPU\n" RESET);
   fclose(cpu_temperature_log_file);
   
   return true;
