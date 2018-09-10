@@ -19,6 +19,8 @@ typedef struct I2C {
 
 } I2C;
 
+typedef struct module module;
+
 bool initialize_i2c(module * initialent);
 void printStartupConstants(char * offset);
 void terminate_mpu_logging();

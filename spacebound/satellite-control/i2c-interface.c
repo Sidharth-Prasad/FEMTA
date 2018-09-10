@@ -17,7 +17,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "unified-controller.h"
+#include "femta.h"
 #include "i2c-interface.h"
 #include "linked-list.h"
 #include "graphics.h"

@@ -8,7 +8,7 @@
 #include <menu.h>
 
 #include "graphics.h"
-#include "unified-controller.h"
+#include "femta.h"
 
 // Unified Controller Macros
 #define NUMBER_OF_MODULES 4

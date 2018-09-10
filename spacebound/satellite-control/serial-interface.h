@@ -1,5 +1,5 @@
-#ifndef HEADER_GAURD_FOR_COMPILER_UNIT_UART_INTERFACE
-#define HEADER_GAURD_FOR_COMPILER_UNIT_UART_INTERFACE
+#ifndef HEADER_GAURD_UART_INTERFACE
+#define HEADER_GAURD_UART_INTERFACE
 
 #include "graphics.h"
 #include "logger.h"
@@ -12,6 +12,8 @@ typedef struct UART {
   float (* temperature)();
 
 } UART;
+
+typedef struct module module;   // compiler promise
 
 bool initialize_UART(module * initialent);
 void terminate_bno_logging();

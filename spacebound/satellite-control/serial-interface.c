@@ -14,7 +14,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-#include "unified-controller.h"
+#include "femta.h"
 #include "serial-interface.h"
 #include "linked-list.h"
 #include "graphics.h"
