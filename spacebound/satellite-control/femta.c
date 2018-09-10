@@ -45,19 +45,16 @@ void initialize_satellite() {
   for (char m = 0; m < NUMBER_OF_MODULES; m++) modules[m] -> loaded = false;
   
   // All modules should be grouped together
-  // BNO   = modules[0];
   MPU   = modules[0];
   Valve = modules[1];
   FEMTA = modules[2];
 
   // Set module identifiers for printing
-  // BNO   -> identifier = "BNO 055";
   MPU   -> identifier = "MPU 9250";
   Valve -> identifier = "Valve";
   FEMTA -> identifier = "FEMTA";
 
   // Set each module's number of pins
-  // BNO   -> n_pins = 3;
   MPU   -> n_pins = 2;
   Valve -> n_pins = 1;
   FEMTA -> n_pins = 4;
@@ -65,11 +62,6 @@ void initialize_satellite() {
   // Get space for module pin arrays
   for (char m = 0; m < NUMBER_OF_MODULES; m++)
     modules[m] -> pins = malloc((modules[m] -> n_pins) * sizeof(module));
-
-  // The BNO has the UART interface
-  //initialize_pin(&(BNO -> pins[0]), 14,  8, UART_STATE);   // UART TXD
-  //initialize_pin(&(BNO -> pins[1]), 15, 10, UART_STATE);   // UART RXD
-  //initialize_pin(&(BNO -> pins[2]), 23, 16, PI_OUTPUT);
 
   // The MPU has the I2C interface
   initialize_pin(&(MPU -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
@@ -86,10 +78,8 @@ void initialize_satellite() {
 
   // Set up the interfaces
   bool i2c_success    = initialize_i2c(MPU);
-  //bool serial_success = initialize_UART(BNO);
 
   // Set each module's initialization state
-  //BNO   -> initialized = true; //serial_success
   MPU   -> initialized = i2c_success;
   Valve -> initialized = true;
   FEMTA -> initialized = true;
@@ -107,10 +97,6 @@ void initialize_satellite() {
   }
   else printf(RED "\tI2C\tFAILURE\t\tError: %d\n" RESET, i2cReadByteData(MPU -> i2c -> i2c_address, 0));
 
-  // Serial_success is a highly falible indicator. It's a long story.
-  /*if (BNO -> initialized) printf(GREEN "\tBNO\tSUCCESS\tSPAWNED\n" RESET);
-    else                    printf(RED   "\tBNO\tOFFLINE\t" RESET);*/
-  
   printf("\n");
   if (!(i2c_success && thermal_success)) {
     printf( RED "\nSatellite failed to initialize" RESET "\n\n");
@@ -157,7 +143,6 @@ void terminate_satellite() {
   
   terminate_temperature_monitoring();
   terminate_mpu_logging();
-  //terminate_bno_logging();
   gpioTerminate();
 }
 
@@ -243,7 +228,6 @@ int main() {
     input = getc(stdin);
 
     int mpu_reads = 0;
-    //int bno_reads = 0;	
     
     if (manual_mode) {
       switch (input) {
