@@ -4,6 +4,7 @@
 ./FEMTA/spacebound/satellite-control/logs
 ./FEMTA/spacebound/satellite-control/logs/*.txt
 ./FEMTA/spacebound/satellite-control/unified-controller
+./FEMTA/spacebound/satellite-control/femta
 ./FEMTA/spacebound/unintegrated/test
 *log.txt
 *.o
