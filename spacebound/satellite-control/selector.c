@@ -68,8 +68,8 @@ void present_selector(Selector * selector) {
 // Functions we bind to selectors
 
 void change_selector(void * selector) {
-  //  printf("\nSwitching to selector %p\n", (Selector *) selector);
   visible_selector = (Selector *) selector;
+  present_selector((Selector *) selector);
 }
 
 void flip_bool(void * pointer) {             // Flips a boolean value

@@ -233,7 +233,7 @@ int main() {
   add_selector_command(main_menu, 'm', "Manual control", (lambda) change_selector,  (void *)      manual);
   add_selector_command(main_menu, 's', "Run script",     (lambda) change_selector,  (void *)     scripts);
   add_selector_command(main_menu, 'q', "Quit",           (lambda)       flip_bool,  (void *) &user_input);
-
+  
   add_selector_command(   manual, '0', "FEMTA 0",        (lambda)      flip_femta,  (void *)           0);
   add_selector_command(   manual, '1', "FEMTA 1",        (lambda)      flip_femta,  (void *)           1);
   add_selector_command(   manual, '2', "FEMTA 2",        (lambda)      flip_femta,  (void *)           2);

@@ -150,7 +150,7 @@ void initialize_graphics() {
   // Draw a printf window
   view = print_views[1] -> view;
   view -> outer_width  = (COLS - setup_views[0] -> view -> outer_width) / 2 + 1;
-  view -> outer_height = 12;
+  view -> outer_height = 14;//12
   view -> inner_width  = view -> outer_width  - 2;
   view -> inner_height = view -> outer_height - 4;
 
@@ -250,16 +250,13 @@ void initialize_graphics() {
   
   //print(2, "CPU   SPAWNED   SUCCESS", 2);
 
-  print(2, "        CPU    SPAWNED   SUCCESS", 2);
-  print(2, "        I2C    SPAWNED   SUCCESS", 2);
-  print(2, "        UART   SPAWNED   SUCCESS", 2);
+  print(2, "CPU    SPAWNED   SUCCESS", 2);
+  print(2, "I2C    SPAWNED   SUCCESS", 2);
   
   /*
   if (i2c_device -> initialized)    print(2, "I2C   SPAWNED   SUCCESS", 2);
-  else                              print(2, "I2C   FAILURE"          , 4);
+  else                              print(2, "I2C   FAILURE"          , 4);*/
   
-  if (serial_device -> initialized) print(2, "UART  SPAWNED   SUCCESS", 2);
-  else                              print(2, "UART  FAILURE"          , 4);*/
 
   print(0, "5 Threads are running", 0);
   print(0, "  - MPU is being sampled at 10 Hz", 0);
@@ -340,8 +337,8 @@ void print(unsigned char window_number, char * string, unsigned int color) {
   int chars_to_print = printer -> view -> inner_width - 2;
   if (strlen(string) < chars_to_print) chars_to_print = strlen(string);
   
-  list_insert(printer -> lines,  create_node((void *) string));
-  list_insert(printer -> colors, create_node((void *) color ));
+  list_insert(printer -> lines,  create_node((void *) strdup(string)));   // Consider leak possibility - LEAK
+  list_insert(printer -> colors, create_node((void *) color ));           // Consider leak possibility
 
   //wattron(printer -> view -> window, COLOR_PAIR(color));
   Node * node = printer -> lines -> head -> prev;
