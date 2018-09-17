@@ -226,12 +226,12 @@ int main() {
   // Allocate space for selectors
   Selector * main_menu = create_selector(NULL);
   Selector * manual  = create_selector(main_menu);
-  //Selector * scripts = create_selector(main_menu);
+  Selector * scripts = create_selector(main_menu);
 
   // Make the menus
   add_selector_command(main_menu, 'c', "Cycle graph",    (lambda)     cycle_graph,                  NULL);
-  add_selector_command(main_menu, 'm', "Manual control", (lambda) change_selector,                  NULL);
-  add_selector_command(main_menu, 's', "Run script",     (lambda) change_selector,                  NULL);
+  add_selector_command(main_menu, 'm', "Manual control", (lambda) change_selector,  (void *)      manual);
+  add_selector_command(main_menu, 's', "Run script",     (lambda) change_selector,  (void *)     scripts);
   add_selector_command(main_menu, 'q', "Quit",           (lambda)       flip_bool,  (void *) &user_input);
 
   add_selector_command(   manual, '0', "FEMTA 0",        (lambda)      flip_femta,  (void *)           0);
@@ -241,16 +241,20 @@ int main() {
   add_selector_command(   manual, 'v', "Valve",          (lambda)      flip_valve,                  NULL);
   add_selector_command(   manual, 'r', "Rotate",         (lambda)          rotate,                  NULL);
   add_selector_command(   manual, 'm', "Write message",  (lambda)   write_message,                  NULL);
-
   
   visible_selector = main_menu;
 
-  /*  while (user_input) {
-
-      }*/
+  present_selector(visible_selector);
   
   char input;
   while (user_input) {
+    input = getc(stdin);
+
+    execute_selector(visible_selector, input);
+  }
+  
+  
+  /*  while (user_input) {
     
     input = getc(stdin);
 
@@ -293,7 +297,7 @@ int main() {
 	// Log this manual command
 	logger -> open(logger);
 	if (mpu_logger) mpu_reads = mpu_logger -> values_read;
-	//if (bno_logger) bno_reads = bno_logger -> values_read;
+	
 	fprintf(logger -> file, "Valve\t%d\t%d\t%d\n",
 		Valve -> pins -> voltage, mpu_reads, time(NULL) - start_time);
 	logger -> close(logger);
@@ -304,7 +308,7 @@ int main() {
 	// Log the pump down message
 	logger -> open(logger);
 	if (mpu_logger) mpu_reads = mpu_logger -> values_read;
-	//if (bno_logger) bno_reads = bno_logger -> values_read;
+	
 	fprintf(logger -> file, "Pump\t%d\t%d\t%d\n", 1, mpu_reads, time(NULL) - start_time);
 	logger -> close(logger);
       }
@@ -348,7 +352,7 @@ int main() {
       user_input = false;
       break;
     }
-  }
+    }*/
 
   printf("\n");
 

@@ -5,6 +5,7 @@
 
 #include "linked-list.h"
 #include "selector.h"
+#include "graphics.h"
 
 
 void change_selector(void * selector);   // promise
@@ -44,6 +45,22 @@ void execute_selector(Selector * selector, char key) {
     if (entry -> key != key) continue;
 
     (entry -> action)(entry -> argument);
+  }
+}
+
+void present_selector(Selector * selector) {
+
+  erase_print_window(1);
+  
+  char text[64];
+  
+  for (Node * node = selector -> entries -> head; node; node = node -> next) {
+
+    Command * entry = (Command *) node -> value;
+
+    sprintf(text, "%c: %s", entry -> key, entry -> text);
+
+    print(1, text, 0);
   }
 }
 
