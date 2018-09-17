@@ -12,6 +12,7 @@
 #include "i2c-interface.h"
 #include "temperature-monitoring.h"
 #include "graphics.h"
+#include "selector.h"
 #include "logger.h"
 #include "colors.h"
 
@@ -206,23 +207,49 @@ int main() {
     mpu_gyro_plot,
     mpu_acel_plot,
     mpu_magn_plot,
-    /*bno_gyro_plot,
-    bno_acel_plot,
-    bno_lina_plot,
-    bno_magn_plot,*/
   };
 
-  List * owner_index_list = create_list(8);
+  List * owner_index_list = create_list(0, true);   // Doublly linked list of owners
 
   // Temperature plot no matter what
-  list_insert(owner_index_list, create_inode(0));
+  list_insert(owner_index_list, create_node((void *) 0));
   
   Node * graph_owner_index_node = owner_index_list -> head;
-  graph_owner = all_possible_owners[graph_owner_index_node -> ivalue];
+  graph_owner = all_possible_owners[(int) (graph_owner_index_node -> value)];
+
+
+  // State of the interface
+  bool user_input = true;           // Whether we are accepting input
+  bool manual_mode = false;         // 
+
+  
+  // Allocate space for selectors
+  Selector * main_menu = create_selector(NULL);
+  Selector * manual  = create_selector(main_menu);
+  //Selector * scripts = create_selector(main_menu);
+
+  // Make the menus
+  add_selector_command(main_menu, 'c', "Cycle graph",    (lambda)     cycle_graph,                  NULL);
+  add_selector_command(main_menu, 'm', "Manual control", (lambda) change_selector,                  NULL);
+  add_selector_command(main_menu, 's', "Run script",     (lambda) change_selector,                  NULL);
+  add_selector_command(main_menu, 'q', "Quit",           (lambda)       flip_bool,  (void *) &user_input);
+
+  add_selector_command(   manual, '0', "FEMTA 0",        (lambda)      flip_femta,  (void *)           0);
+  add_selector_command(   manual, '1', "FEMTA 1",        (lambda)      flip_femta,  (void *)           1);
+  add_selector_command(   manual, '2', "FEMTA 2",        (lambda)      flip_femta,  (void *)           2);
+  add_selector_command(   manual, '3', "FEMTA 3",        (lambda)      flip_femta,  (void *)           3);
+  add_selector_command(   manual, 'v', "Valve",          (lambda)      flip_valve,                  NULL);
+  add_selector_command(   manual, 'r', "Rotate",         (lambda)          rotate,                  NULL);
+  add_selector_command(   manual, 'm', "Write message",  (lambda)   write_message,                  NULL);
+
+  
+  visible_selector = main_menu;
+
+  /*  while (user_input) {
+
+      }*/
   
   char input;
-  bool user_input = true;
-  bool manual_mode = false;
   while (user_input) {
     
     input = getc(stdin);
@@ -287,20 +314,14 @@ int main() {
       
     case 'c':
 
-      // Add BNO plots
-      /*if (BNO -> initialized && !BNO -> loaded) {
-	for (char p = 4; p <= 7; p++) list_insert(owner_index_list, create_inode(p));
-	BNO -> loaded = true;
-	}*/
-
       // Add MPU plots
       if (MPU -> initialized && !MPU -> loaded) {
-	for (char p = 1; p <= 3; p++) list_insert(owner_index_list, create_inode(p));
+	for (int p = 1; p <= 3; p++) list_insert(owner_index_list, create_node((void *) p));
 	MPU -> loaded = true;
       }
       
       graph_owner_index_node = graph_owner_index_node -> next;
-      graph_owner = all_possible_owners[graph_owner_index_node -> ivalue];
+      graph_owner = all_possible_owners[(int) (graph_owner_index_node -> value)];
       break;
 
     case 'm':

@@ -198,9 +198,11 @@ void * log_mpu_data() {
       mpu_logger -> values_read = mpu_values_read;
       for (unsigned char f = 0; f < 10; f++) fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
       for (unsigned char f = 0; f <  3; f++) {
-	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_fnode(log_data[i][f]));
-	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_fnode(log_data[i][f + 3]));
-	plot_add_value(mpu_magn_plot, mpu_magn_plot -> lists[f], create_fnode(log_data[i][f + 6]));
+
+	// Add the float values casted as void *s to the plot lists
+	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f    ]))));
+	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f + 3]))));
+	plot_add_value(mpu_magn_plot, mpu_magn_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f + 6]))));
       }
       
       fprintf(mpu_log_file, "\n");

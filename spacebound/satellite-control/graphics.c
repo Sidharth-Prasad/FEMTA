@@ -226,8 +226,8 @@ void initialize_graphics() {
 
   // Instantiate printing lists of the proper sizes
   for (uint8_t p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) {
-    print_views[p] -> lines = create_list(print_views[p] -> view -> inner_height);
-    print_views[p] -> colors = create_list(print_views[p] -> view -> inner_height);
+    print_views[p] -> lines = create_list(print_views[p] -> view -> inner_height, true);    // DLL Ring
+    print_views[p] -> colors = create_list(print_views[p] -> view -> inner_height, true);   // DLL Ring
   }
   
   // Let everyone know
@@ -309,7 +309,7 @@ Plot * create_plot(char * name, unsigned char number_of_lists) {
   plot -> lists = malloc(number_of_lists * sizeof(Plot *));
   
   for (unsigned char l = 0; l < number_of_lists; l++) {
-    plot -> lists[l] = create_list(number_of_data_points_plottable);
+    plot -> lists[l] = create_list(number_of_data_points_plottable, true);   // DLL Ring
   }
   return plot;
 }
@@ -328,7 +328,7 @@ void clear_print_window(unsigned char window_number) {
   }
 }
 
-void print(unsigned char window_number, char * string, unsigned char color) {
+void print(unsigned char window_number, char * string, unsigned int color) {
   
   if (window_number >= NUMBER_OF_PRINT_VIEWS) return;   // Ensure print view exists
   if (!ready_to_graph) return;
@@ -340,8 +340,8 @@ void print(unsigned char window_number, char * string, unsigned char color) {
   int chars_to_print = printer -> view -> inner_width - 2;
   if (strlen(string) < chars_to_print) chars_to_print = strlen(string);
   
-  list_insert(printer -> lines, create_snode(string));
-  list_insert(printer -> colors, create_inode(color));
+  list_insert(printer -> lines,  create_node((void *) string));
+  list_insert(printer -> colors, create_node((void *) color ));
 
   //wattron(printer -> view -> window, COLOR_PAIR(color));
   Node * node = printer -> lines -> head -> prev;
@@ -349,13 +349,13 @@ void print(unsigned char window_number, char * string, unsigned char color) {
   int i = 0;
   
   for (; node != printer -> lines -> head; node = node -> prev, lcolor = lcolor -> prev, i++) {
-    wattron(printer -> view -> window, COLOR_PAIR(lcolor -> ivalue));
-    mvwprintw(printer -> view -> window, 3 + i, 2, "%s", node -> svalue);
-    wattroff(printer -> view -> window, COLOR_PAIR(lcolor -> ivalue));
+    wattron(printer -> view -> window, COLOR_PAIR((int) (lcolor -> value)));
+    mvwprintw(printer -> view -> window, 3 + i, 2, "%s", (char *) (node -> value));
+    wattroff(printer -> view -> window, COLOR_PAIR((int) (lcolor -> value)));
   }
-  wattron(printer -> view -> window, COLOR_PAIR(lcolor -> ivalue));
-  mvwprintw(printer -> view -> window, 3 + i, 2, "%s", node -> svalue);
-  wattroff(printer -> view -> window, COLOR_PAIR(lcolor -> ivalue));
+  wattron(printer -> view -> window, COLOR_PAIR((int) (lcolor -> value)));
+  mvwprintw(printer -> view -> window, 3 + i, 2, "%s", (char *) (node -> value));
+  wattroff(printer -> view -> window, COLOR_PAIR((int) (lcolor -> value)));
   //wattroff(printer -> view -> window, COLOR_PAIR(color));
   
   refresh();
@@ -384,8 +384,8 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
   
   // track extrema
   if (plot -> has_data) {
-    if (node -> fvalue < plot -> min_value) plot -> min_value = node -> fvalue;
-    if (node -> fvalue > plot -> max_value) plot -> max_value = node -> fvalue;
+    if (*(float *) &node -> value < plot -> min_value) plot -> min_value = *(float *) &node -> value;
+    if (*(float *) &node -> value > plot -> max_value) plot -> max_value = *(float *) &node -> value;
   }
 
   // first datum
@@ -396,11 +396,11 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
 
     // Update all lists in the plot to the initialized value
     for (unsigned char l = 0; l < plot -> number_of_lists; l++) {
-      plot -> lists[l] -> number_of_elements_limit = number_of_data_points_plottable;
+      plot -> lists[l] -> elements_limit = number_of_data_points_plottable;
     }
     
-    plot -> min_value = node -> fvalue;
-    plot -> max_value = node -> fvalue;
+    plot -> min_value = *(float *) &node -> value;
+    plot -> max_value = *(float *) &node -> value;
     plot -> has_data = true;
   }
   list_insert(list, node);
@@ -418,7 +418,7 @@ void graph_plot(Plot * plot) {
   //printf("%s", plot -> name);
   print_window_title(view -> window, 1, 0, view -> outer_width, plot -> name, COLOR_PAIR(2)); 
   
-  int y_axis_position = view -> inner_width - 1 - plot -> lists[0] -> number_of_elements;
+  int y_axis_position = view -> inner_width - 1 - plot -> lists[0] -> elements;
   if (y_axis_position < 7) y_axis_position = 7;
 
   // Clear the screen
@@ -454,11 +454,11 @@ void graph_plot(Plot * plot) {
     List * list = plot -> lists[l];
     Node * node = list -> head;
     int horizontal_position = view -> inner_width;
-    float p_height = view -> inner_height - view -> inner_height * (node -> fvalue - plot -> min_value) / vertical_range + 2;
+    float p_height = view -> inner_height - view -> inner_height * ((*(float *) &node -> value) - plot -> min_value) / vertical_range + 2;
     if (p_height < 3) p_height = 3;
     mvwprintw(view -> window, p_height, horizontal_position--, "-");
     for (node = node -> next; node != list -> head; node = node -> next) {
-      p_height = view -> inner_height - view -> inner_height * (node -> fvalue - plot -> min_value) / vertical_range + 2;
+      p_height = view -> inner_height - view -> inner_height * ((*(float *) &node -> value) - plot -> min_value) / vertical_range + 2;
       if (p_height < 3) p_height = 3;
       mvwprintw(view -> window, p_height, horizontal_position--, "-");
     }

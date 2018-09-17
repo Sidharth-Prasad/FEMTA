@@ -1,5 +1,5 @@
-#ifndef HEADER_GAURD_FOR_COMPILER_UNIT_GRAPHICS
-#define HEADER_GAURD_FOR_COMPILER_UNIT_GRAPHICS
+#ifndef HEADER_GAURD_GRAPHICS
+#define HEADER_GAURD_GRAPHICS
 
 #include <stdbool.h>
 #include <curses.h>
@@ -60,7 +60,7 @@ typedef struct setup_view {
 
 void initialize_graphics();
 void terminate_graphics();
-void print(unsigned char window_number, char * string, unsigned char color);
+void print(unsigned char window_number, char * string, unsigned int color);
 void clear_print_window(unsigned char window_number);
 void erase_print_window(unsigned char window_number);
 void update_state_graphic(unsigned char line, bool state);

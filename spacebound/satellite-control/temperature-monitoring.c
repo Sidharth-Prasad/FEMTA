@@ -33,7 +33,7 @@ void * read_cpu_temperature() {
     temperature_plot -> lists = malloc(temperature_plot -> number_of_lists * sizeof(List *));
     temperature_plot -> has_data = false;
     for (int l = 0; l < temperature_plot -> number_of_lists; l++) {
-      temperature_plot -> lists[l] = create_list(number_of_data_points_plottable);   // Might not have been set
+      temperature_plot -> lists[l] = create_list(number_of_data_points_plottable, true);   // Might not have been set
     }
   }
 	 
@@ -44,8 +44,11 @@ void * read_cpu_temperature() {
     fprintf(cpu_temperature_log_file, "%d\t", values_read++);
 
     // CPU temperature record
-    fprintf(cpu_temperature_log_file, "%6.3f\t", temperature / 1000);
-    plot_add_value(temperature_plot, temperature_plot -> lists[0], create_fnode(temperature / 1000));
+
+    float reported = temperature / 1000.0;
+    
+    fprintf(cpu_temperature_log_file, "%6.3f\t", reported);
+    plot_add_value(temperature_plot, temperature_plot -> lists[0], create_node((void *)(*((int *) &reported))));
 
     /*
     // I2C temperature record
