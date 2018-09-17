@@ -13,6 +13,7 @@
 #include "temperature-monitoring.h"
 #include "graphics.h"
 #include "selector.h"
+#include "scripter.h"
 #include "logger.h"
 #include "colors.h"
 
@@ -196,31 +197,43 @@ int main() {
   fprintf(logger -> file,
 	  YELLOW "\nRecording Control Data\nDevice\tDevice State\tMPU Measures\tSystem Time\n" RESET);
   logger -> close(logger);
+
+  // Initializations
   
   initialize_satellite();
-  print_configuration();
+  print_configuration();    // Print configuration to console in case of crash
   
-  initialize_graphics();
+  initialize_graphics(); 
+
+  initialize_scripter();
   
-  Plot * all_possible_owners[4] = {
+  /*Plot * all_possible_owners[4] = {
     temperature_plot,
     mpu_gyro_plot,
     mpu_acel_plot,
     mpu_magn_plot,
-  };
+    };*/
 
-  List * owner_index_list = create_list(0, true);   // Doublly linked list of owners
+  all_possible_owners    = malloc(4 * sizeof(Plot *));
+  all_possible_owners[0] = temperature_plot;
+  all_possible_owners[1] = mpu_gyro_plot;
+  all_possible_owners[2] = mpu_acel_plot;
+  all_possible_owners[3] = mpu_magn_plot;
+
+  //List * owner_index_list = create_list(0, true);   // Doublly linked list of owners
+  owner_index_list = create_list(0, true);   // Doublly linked list of owners
 
   // Temperature plot no matter what
   list_insert(owner_index_list, create_node((void *) 0));
   
-  Node * graph_owner_index_node = owner_index_list -> head;
+  //Node * graph_owner_index_node = owner_index_list -> head;
+  graph_owner_index_node = owner_index_list -> head;
   graph_owner = all_possible_owners[(int) (graph_owner_index_node -> value)];
 
 
   // State of the interface
   bool user_input = true;           // Whether we are accepting input
-  bool manual_mode = false;         // 
+  //bool manual_mode = false;         // 
 
   
   // Allocate space for selectors
@@ -241,9 +254,12 @@ int main() {
   add_selector_command(   manual, 'v', "Valve",          (lambda)      flip_valve,                  NULL);
   add_selector_command(   manual, 'r', "Rotate",         (lambda)          rotate,                  NULL);
   add_selector_command(   manual, 'm', "Write message",  (lambda)   write_message,                  NULL);
+
+  add_selector_command(  scripts, 'i', "Test",           (lambda)  execute_script,  (void *)    "test.x");
+  add_selector_command(  scripts, 'e', "Example",        (lambda)  execute_script,  (void *) "example.x");
+  add_selector_command(  scripts, 't', "Tuner",          (lambda)  execute_script,  (void *)   "tuner.x");
   
   visible_selector = main_menu;
-
   present_selector(visible_selector);
   
   char input;

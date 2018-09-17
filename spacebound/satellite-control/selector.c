@@ -6,7 +6,7 @@
 #include "linked-list.h"
 #include "selector.h"
 #include "graphics.h"
-
+#include "femta.h"
 
 void change_selector(void * selector);   // promise
 
@@ -76,7 +76,17 @@ void flip_bool(void * pointer) {             // Flips a boolean value
   *(bool *) pointer = !(*(bool *) pointer);
 }
 
-void cycle_graph(void * list) {              // Change graph to display
+void cycle_graph(void * nil) {              // Change graph to display
+
+  // Add MPU plots
+  if (MPU -> initialized && !MPU -> loaded) {
+    for (int p = 1; p <= 3; p++) list_insert(owner_index_list, create_node((void *) p));
+    MPU -> loaded = true;
+  }
+
+  graph_owner_index_node = graph_owner_index_node -> next;
+  graph_owner = all_possible_owners[(int) (graph_owner_index_node -> value)];
+  
   return;
 }
 

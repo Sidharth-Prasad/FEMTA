@@ -47,17 +47,17 @@ void execute_script(char * filename) {
     
     if (!strcmp("nothing\n", seeker)) {
       
-      printf("command: %s\n", instruction);
+      //printf("command: %s\n", instruction);
       
       ((lambda) action_table -> get(action_table, instruction))(NULL);
-      printf("\n");
+      //printf("\n");
     }
     else {
-      printf("command: %s\n", instruction);
-      printf("argument: %s", seeker);
+      //printf("command: %s\n", instruction);
+      //printf("argument: %s", seeker);
       //((void (*)(void *))((lambda) action_table -> get(action_table, instruction)))((void *) seeker);
       (((lambda) action_table -> get(action_table, instruction)))((void *) seeker);
-      printf("\n");
+      //printf("\n");
     }
   }
 

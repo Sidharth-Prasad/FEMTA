@@ -3,15 +3,12 @@
 
 #include "hashmap.h"
 
-Hashmap * action_table;
-
-void initialize_scripter();
-
-
 typedef void (*lambda)(void *);
 
+void initialize_scripter();
 void define_script_action(char * symbol, lambda action);
 void execute_script(char * filename);
 
+Hashmap * action_table;
 
 #endif

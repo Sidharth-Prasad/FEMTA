@@ -71,6 +71,10 @@ void plot_add_value(Plot * plot, List * list, Node * node);
 Plot * create_plot(char * name, unsigned char number_of_lists);
 
 unsigned char number_of_data_points_plottable;
-Plot * graph_owner;
+
+Plot *  graph_owner;              // The stream in control of the plot area
+Plot ** all_possible_owners;      // All possible plots that could be in control
+List *  owner_index_list;         // DLL of owners for the plot area
+Node *  graph_owner_index_node;   // Used for indexing owners array
 
 #endif

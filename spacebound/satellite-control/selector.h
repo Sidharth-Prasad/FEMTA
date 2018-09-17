@@ -37,7 +37,7 @@ void     present_selector(Selector * selector);
 // All functions we bind to selectors in femta.c
 void change_selector(void * selector);      // Switches visible selector
 void flip_bool(void * pointer);             // Flips a boolean value
-void cycle_graph(void * list);              // Change graph to display
+void cycle_graph(void * nil);               // Change graph to display
 void flip_femta(void * number);             // Flip a FEMTA module
 void flip_valve(void *    nil);             // Flip the valve
 void rotate(void * nil);                    // Rotate a number of degrees

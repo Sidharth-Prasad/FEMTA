@@ -370,8 +370,8 @@ int test_hashmap() {
 // Compiler promises for each function
 void print_string(void * string);
 void double_integer(void * integer);
-void random_pointer();
-void random_float();
+void random_pointer(void * nil);
+void random_float(void * nil);
 
 int test_scripter() {
 
@@ -422,11 +422,11 @@ void double_integer(void * integer) {
   printf(CONSOLE_YELLOW "\t-> %d\n" CONSOLE_RESET, 2 * atoi((char *) integer));
 }
 
-void random_pointer() {
+void random_pointer(void * nil) {
   printf(CONSOLE_YELLOW "\t-> %p\n" CONSOLE_RESET, (void *) rand());
 }
 
-void random_float() {
+void random_float(void * nil) {
   printf(CONSOLE_YELLOW "\t-> %f\n" CONSOLE_RESET, (((float) rand()) / 4294967296));
 }
 
