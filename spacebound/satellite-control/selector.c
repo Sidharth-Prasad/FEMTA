@@ -82,6 +82,7 @@ void cycle_graph(void * nil) {              // Change graph to display
   if (MPU -> initialized && !MPU -> loaded) {
     for (int p = 1; p <= 3; p++) list_insert(owner_index_list, create_node((void *) p));
     MPU -> loaded = true;
+    print(GENERAL_WINDOW, "Loaded MPU plots", 1);
   }
 
   graph_owner_index_node = graph_owner_index_node -> next;
@@ -101,7 +102,28 @@ void rotate(void * nil) {                    // Rotate a number of degrees
   return;
 }
 
-void write_message(void * nil) {             // Writes a message to the log
-  return;
+void write_message(void * logger) {             // Writes a message to the log
+
+  erase_print_window(1);
+
+  char message[32];
+  
+  //fgets(message, sizeof(message), stdin);
+  getstr(message);
+  print(GENERAL_WINDOW, message, 1);
+
+  // Get timestamp
+  int mpu_reads = 0;
+  if (mpu_logger) mpu_reads = mpu_logger -> values_read;
+  int relativeTime = time(NULL) - start_time;
+
+  // Log the message
+  Logger * log = (Logger *) logger;
+  
+  log -> open(log);
+  fprintf(log -> file, "%d\t%d\t%s\n", mpu_reads, relativeTime, message);
+  log -> close(log);
+
+  present_selector((void *) visible_selector);
 }
 

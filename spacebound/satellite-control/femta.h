@@ -2,6 +2,7 @@
 #define HEADER_GAURD_FEMTA
 
 #include <stdbool.h>
+#include <time.h>
 
 typedef struct pin {
 
@@ -33,6 +34,8 @@ typedef struct module {
 } module;
 
 module ** modules, * MPU, * Valve, * FEMTA;
+
+time_t start_time;
 
 void set_voltage(pin * p, char voltage);
 

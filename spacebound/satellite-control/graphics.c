@@ -263,9 +263,9 @@ void initialize_graphics() {
   print(0, "  - CPU is being sampled at 1 Hz", 0);
   print(0, "Logging 3 files asynchronously", 0);
   //print(0, "The OS is running 21 threads", 0);
-  print(1, "c: cycle graphs"             , 0);
-  print(1, "m: manual control"           , 0);
-  print(1, "q: quit"                     , 0);
+  //print(1, "c: cycle graphs"             , 0);
+  //print(1, "m: manual control"           , 0);
+  //print(1, "q: quit"                     , 0);
   
   //print(2, "The universe appears flat :)", 2);
   
@@ -413,7 +413,9 @@ void graph_plot(Plot * plot) {
   View * view = graph -> view;
 
   //printf("%s", plot -> name);
-  print_window_title(view -> window, 1, 0, view -> outer_width, plot -> name, COLOR_PAIR(2)); 
+  print_window_title(view -> window, 1, 0, view -> outer_width, plot -> name, COLOR_PAIR(2));
+
+  return; // Shorting - SHORT
   
   int y_axis_position = view -> inner_width - 1 - plot -> lists[0] -> elements;
   if (y_axis_position < 7) y_axis_position = 7;

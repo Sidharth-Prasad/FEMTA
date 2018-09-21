@@ -189,7 +189,7 @@ void set_pwm(pin * p, unsigned char duty_cycle) {
 
 int main() {
 
-  time_t start_time = time(NULL);
+  start_time = time(NULL);
 
   // Create the control logger
   Logger * logger = create_logger("./logs/control-log.txt");
@@ -198,6 +198,13 @@ int main() {
 	  YELLOW "\nRecording Control Data\nDevice\tDevice State\tMPU Measures\tSystem Time\n" RESET);
   logger -> close(logger);
 
+  // Create message logger
+  Logger * message_logger = create_logger("./logs/message-log.txt");
+  message_logger -> open(message_logger);
+  fprintf(message_logger -> file, PURPLE "\nStarting message log\n");
+  fprintf(message_logger -> file,        "MPU Measures\tSystem Time\tMessage\n" RESET);
+  message_logger -> close(message_logger);
+  
   // Initializations
   
   initialize_satellite();
@@ -242,22 +249,22 @@ int main() {
   Selector * scripts = create_selector(main_menu);
 
   // Make the menus
-  add_selector_command(main_menu, 'c', "Cycle graph",    (lambda)     cycle_graph,                  NULL);
-  add_selector_command(main_menu, 'm', "Manual control", (lambda) change_selector,  (void *)      manual);
-  add_selector_command(main_menu, 's', "Run script",     (lambda) change_selector,  (void *)     scripts);
-  add_selector_command(main_menu, 'q', "Quit",           (lambda)       flip_bool,  (void *) &user_input);
+  add_selector_command(main_menu, 'c', "Cycle graph",    (lambda)     cycle_graph,                     NULL);
+  add_selector_command(main_menu, 'm', "Manual control", (lambda) change_selector,  (void *)         manual);
+  add_selector_command(main_menu, 's', "Run script",     (lambda) change_selector,  (void *)        scripts);
+  add_selector_command(main_menu, 'q', "Quit",           (lambda)       flip_bool,  (void *)    &user_input);
   
-  add_selector_command(   manual, '0', "FEMTA 0",        (lambda)      flip_femta,  (void *)           0);
-  add_selector_command(   manual, '1', "FEMTA 1",        (lambda)      flip_femta,  (void *)           1);
-  add_selector_command(   manual, '2', "FEMTA 2",        (lambda)      flip_femta,  (void *)           2);
-  add_selector_command(   manual, '3', "FEMTA 3",        (lambda)      flip_femta,  (void *)           3);
-  add_selector_command(   manual, 'v', "Valve",          (lambda)      flip_valve,                  NULL);
-  add_selector_command(   manual, 'r', "Rotate",         (lambda)          rotate,                  NULL);
-  add_selector_command(   manual, 'm', "Write message",  (lambda)   write_message,                  NULL);
+  add_selector_command(   manual, '0', "FEMTA 0",        (lambda)      flip_femta,  (void *)              0);
+  add_selector_command(   manual, '1', "FEMTA 1",        (lambda)      flip_femta,  (void *)              1);
+  add_selector_command(   manual, '2', "FEMTA 2",        (lambda)      flip_femta,  (void *)              2);
+  add_selector_command(   manual, '3', "FEMTA 3",        (lambda)      flip_femta,  (void *)              3);
+  add_selector_command(   manual, 'v', "Valve",          (lambda)      flip_valve,                     NULL);
+  add_selector_command(   manual, 'r', "Rotate",         (lambda)          rotate,                     NULL);
+  add_selector_command(   manual, 'm', "Write message",  (lambda)   write_message,  (void *) message_logger);
 
-  add_selector_command(  scripts, 'i', "Test",           (lambda)  execute_script,  (void *)    "test.x");
-  add_selector_command(  scripts, 'e', "Example",        (lambda)  execute_script,  (void *) "example.x");
-  add_selector_command(  scripts, 't', "Tuner",          (lambda)  execute_script,  (void *)   "tuner.x");
+  add_selector_command(  scripts, 'i', "Test",           (lambda)  execute_script,  (void *)       "test.x");
+  add_selector_command(  scripts, 'e', "Example",        (lambda)  execute_script,  (void *)    "example.x");
+  add_selector_command(  scripts, 't', "Tuner",          (lambda)  execute_script,  (void *)      "tuner.x");
   
   visible_selector = main_menu;
   present_selector(visible_selector);
@@ -330,44 +337,6 @@ int main() {
       }
     }
     
-    switch (input) {
-      
-    case 'c':
-
-      // Add MPU plots
-      if (MPU -> initialized && !MPU -> loaded) {
-	for (int p = 1; p <= 3; p++) list_insert(owner_index_list, create_node((void *) p));
-	MPU -> loaded = true;
-      }
-      
-      graph_owner_index_node = graph_owner_index_node -> next;
-      graph_owner = all_possible_owners[(int) (graph_owner_index_node -> value)];
-      break;
-
-    case 'm':
-      erase_print_window(1);
-      print(1, "b: back", 0);
-      print(1, "v: valve", 0);
-      print(1, "0: FEMTA 0", 0);
-      print(1, "1: FEMTA 1", 0);
-      print(1, "2: FEMTA 2", 0);
-      print(1, "3: FEMTA 3", 0);
-      print(1, "p: Pump down", 0);
-      manual_mode = true;
-      break;
-
-    case 'b':
-      if (manual_mode) manual_mode = false;
-      erase_print_window(1);
-      print(1, "c: cycle graphs", 0);
-      print(1, "m: manual control", 0);
-      print(1, "q: quit", 0);
-      break;
-      
-    case 'q':
-      user_input = false;
-      break;
-    }
     }*/
 
   printf("\n");
@@ -379,6 +348,11 @@ int main() {
   fprintf(logger -> file, YELLOW "\nTerminated gracefully at time %d seconds" RESET "\n\n", time(NULL) - start_time);
   logger -> close(logger);
   logger -> destroy(logger);
+
+  message_logger -> open(message_logger);
+  fprintf(message_logger -> file, PURPLE "\nTerminated gracefully at time %d seconds" RESET "\n\n", time(NULL) - start_time);
+  message_logger -> close(message_logger);
+  message_logger -> destroy(message_logger);
   
   return 0;
 }

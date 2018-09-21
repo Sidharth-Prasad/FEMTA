@@ -7,6 +7,10 @@
 
 #include "linked-list.h"
 
+#define GENERAL_WINDOW 0
+#define CONTROL_WINDOW 1
+#define OPERATE_WINDOW 2
+
 typedef struct View {
 
   WINDOW * window;
