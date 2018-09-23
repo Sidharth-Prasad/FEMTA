@@ -1,0 +1,7 @@
+<map id="femta.h" name="femta.h">
+<area shape="rect" id="node2" href="$femta_8c.html" title="femta.c" alt="" coords="5,80,72,107"/>
+<area shape="rect" id="node3" href="$graphics_8c.html" title="graphics.c" alt="" coords="96,80,179,107"/>
+<area shape="rect" id="node4" href="$i2c-interface_8c.html" title="i2c&#45;interface.c" alt="" coords="203,80,307,107"/>
+<area shape="rect" id="node5" href="$selector_8c.html" title="selector.c" alt="" coords="331,80,410,107"/>
+<area shape="rect" id="node6" href="$temperature-monitoring_8c.html" title="temperature&#45;monitoring.c" alt="" coords="434,80,601,107"/>
+</map>

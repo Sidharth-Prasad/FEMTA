@@ -1,0 +1,7 @@
+<map id="present_selector" name="present_selector">
+<area shape="rect" id="node2" href="$graphics_8c.html#af6f539f61823ed2e8ca170234076ef0a" title="erase_print_window" alt="" coords="172,31,309,57"/>
+<area shape="rect" id="node3" href="$graphics_8c.html#af09a3a6eecb74c0b79f9f52e04d9bb05" title="print" alt="" coords="357,56,404,83"/>
+<area shape="rect" id="node4" href="$graphics_8c.html#a22f207fb5603352362eaa769c35a8555" title="clear_print_window" alt="" coords="452,5,585,32"/>
+<area shape="rect" id="node5" href="$linked-list_8c.html#a947069a28d8173531d9186a74e82fb62" title="list_insert" alt="" coords="479,56,558,83"/>
+<area shape="rect" id="node6" href="$linked-list_8c.html#a45dfa9366701eddf667fd95d05cc3be0" title="create_node" alt="" coords="472,107,565,133"/>
+</map>

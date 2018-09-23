@@ -1,0 +1,55 @@
+
+
+* TODO New menu system                                 [15 hr]
+** TODO Menu selection                                  [7 hr]
+*** DONE Function binding and execution
+*** DONE Ownership switching and hierarchy 
+*** DONE Graphical printing of choices                   [4 hr]
+*** TODO Scanning text                                   [2 hr]
+*** TODO Scanning floats and ints                        [1 hr]
+** DONE Integration                                     [4 hr]
+** TODO Test cases                                      [4 hr]
+*** DONE Non-graphical
+*** TODO Graphical                                       [4 hr]
+
+* TODO Physical Sensors                                [64 hr]
+** TODO Piezoelectric presser sensor                    [20 hr]
+*** TODO Basic I2C communication                         [16 hr]
+*** TODO Calibration routine                             [4 hr]
+*** TODO Thread for logging sensor data                  [4 hr]
+** TODO External tank sensor                            [20 hr]
+*** TODO External computer logging                       [4 hr]
+*** TODO Server for holding sensor data                  [8 hr]
+*** TODO Thread for requesting + logging server data     [4 hr]
+** TODO UM7                                             [24 hr]
+*** TODO Basic Serial communication                      [16 hr]
+*** TODO Calibration routine                             [4 hr]
+*** TODO Thread for logging sensor data                  [4 hr]
+** TODO MPU-9250                                        [4 hr]
+*** TODO Test sensor against UM7 for correctness         [4 hr]
+
+* TODO Control Algorithm                               [86 hr]
+** TODO Control loop                                    [58 hr]
+*** DONE Quaternion positioning system
+*** TODO Plant program loop                              [48 hr]
+**** TODO Quad-copter                                     [16 hr]
+***** TODO Physical verification                           [8 hr]
+***** TODO Tuning for constants                            [8 hr]
+**** TODO FEMTA                                           [32 hr]
+***** TODO Physical verification                           [16 hr]
+***** TODO Tuning for constants                            [16 hr]
+*** TODO Integration                                     [4 hr]
+*** TODO Test cases                                      [6 hr]
+**** TODO Quaternion math                                 [2 hr]
+**** TODO PID plant process                               [4 hr]
+** TODO Executable scripting system (+ manual)          [28 hr]
+*** DONE Executing a non-sensor script 
+*** TODO Executing a sensor script                       [4 hr]
+*** TODO Executing a quad copter script                  [8 hr]
+*** TODO Executing a FEMTA script                        [4 hr]
+*** TODO Test cases                                      [12 hr]
+**** DONE Mathematical and non-sensor
+**** TODO Tests with MPU-9250                             [2 hr]
+**** TODO Tests with Piezoelectric presser sensor         [2 hr]
+**** TODO Tests with External presser sensor              [8 hr]
+

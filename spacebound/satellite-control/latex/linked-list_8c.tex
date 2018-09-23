@@ -1,0 +1,86 @@
+\hypertarget{linked-list_8c}{}\section{linked-\/list.c File Reference}
+\label{linked-list_8c}\index{linked-\/list.\+c@{linked-\/list.\+c}}
+{\ttfamily \#include $<$stdbool.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}linked-\/list.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}string.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}colors.\+h\char`\"{}}\newline
+Include dependency graph for linked-\/list.c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8c__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structNode}{Node} $\ast$ \hyperlink{linked-list_8c_a45dfa9366701eddf667fd95d05cc3be0}{create\+\_\+node} (void $\ast$value)
+\item 
+\hyperlink{structList}{List} $\ast$ \hyperlink{linked-list_8c_abd16529dbe0922996788f10925823eea}{create\+\_\+list} (unsigned int limit, bool doublely\+\_\+linked)
+\item 
+void \hyperlink{linked-list_8c_a947069a28d8173531d9186a74e82fb62}{list\+\_\+insert} (\hyperlink{structList}{List} $\ast$list, \hyperlink{structNode}{Node} $\ast$node)
+\item 
+void \hyperlink{linked-list_8c_ad17dd6e2d3e64d3e9665f313ffb808a1}{list\+\_\+remove} (\hyperlink{structList}{List} $\ast$list, \hyperlink{structNode}{Node} $\ast$node)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{linked-list_8c_abd16529dbe0922996788f10925823eea}\label{linked-list_8c_abd16529dbe0922996788f10925823eea}} 
+\index{linked-\/list.\+c@{linked-\/list.\+c}!create\+\_\+list@{create\+\_\+list}}
+\index{create\+\_\+list@{create\+\_\+list}!linked-\/list.\+c@{linked-\/list.\+c}}
+\subsubsection{\texorpdfstring{create\+\_\+list()}{create\_list()}}
+{\footnotesize\ttfamily \hyperlink{structList}{List}$\ast$ create\+\_\+list (\begin{DoxyParamCaption}\item[{unsigned int}]{limit,  }\item[{bool}]{doublely\+\_\+linked }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8c_abd16529dbe0922996788f10925823eea_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{linked-list_8c_a45dfa9366701eddf667fd95d05cc3be0}\label{linked-list_8c_a45dfa9366701eddf667fd95d05cc3be0}} 
+\index{linked-\/list.\+c@{linked-\/list.\+c}!create\+\_\+node@{create\+\_\+node}}
+\index{create\+\_\+node@{create\+\_\+node}!linked-\/list.\+c@{linked-\/list.\+c}}
+\subsubsection{\texorpdfstring{create\+\_\+node()}{create\_node()}}
+{\footnotesize\ttfamily \hyperlink{structNode}{Node}$\ast$ create\+\_\+node (\begin{DoxyParamCaption}\item[{void $\ast$}]{value }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8c_a45dfa9366701eddf667fd95d05cc3be0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{linked-list_8c_a947069a28d8173531d9186a74e82fb62}\label{linked-list_8c_a947069a28d8173531d9186a74e82fb62}} 
+\index{linked-\/list.\+c@{linked-\/list.\+c}!list\+\_\+insert@{list\+\_\+insert}}
+\index{list\+\_\+insert@{list\+\_\+insert}!linked-\/list.\+c@{linked-\/list.\+c}}
+\subsubsection{\texorpdfstring{list\+\_\+insert()}{list\_insert()}}
+{\footnotesize\ttfamily void list\+\_\+insert (\begin{DoxyParamCaption}\item[{\hyperlink{structList}{List} $\ast$}]{list,  }\item[{\hyperlink{structNode}{Node} $\ast$}]{node }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8c_a947069a28d8173531d9186a74e82fb62_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{linked-list_8c_ad17dd6e2d3e64d3e9665f313ffb808a1}\label{linked-list_8c_ad17dd6e2d3e64d3e9665f313ffb808a1}} 
+\index{linked-\/list.\+c@{linked-\/list.\+c}!list\+\_\+remove@{list\+\_\+remove}}
+\index{list\+\_\+remove@{list\+\_\+remove}!linked-\/list.\+c@{linked-\/list.\+c}}
+\subsubsection{\texorpdfstring{list\+\_\+remove()}{list\_remove()}}
+{\footnotesize\ttfamily void list\+\_\+remove (\begin{DoxyParamCaption}\item[{\hyperlink{structList}{List} $\ast$}]{list,  }\item[{\hyperlink{structNode}{Node} $\ast$}]{node }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8c_ad17dd6e2d3e64d3e9665f313ffb808a1_icgraph}
+\end{center}
+\end{figure}

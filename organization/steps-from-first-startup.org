@@ -17,10 +17,6 @@
 *** if it's not there, use
 *** sudo mv /boot/wpa_supplicant.conf /etc/wpa_supplicant/
 ** Should be connected to PAL 3.0
-* sudo apt update && sudo apt upgrade -y && sudo apt-get dist-upgrade -y
-* sudo reboot 0
-* sudo apt update
-* sudo apt install emacs-nox logwatch htop ufw
 * passwd
 * sudo raspi-config
 ** Interface Options
@@ -28,6 +24,12 @@
 *** Enable i2c
 *** Disable serial login, enable serial
 ** Reboot now
+*** If no ssh, run the following to recreate the RSA keys
+**** sudo rm /etc/ssh/ssh_host_*
+**** sudo dpkg-reconfigure openssh-server
+* sudo apt update && sudo apt upgrade -y && sudo apt-get dist-upgrade -y && sudo apt autoremove
+* sudo reboot 0
+* sudo apt install emacs-nox logwatch htop ufw git pigpio ssmtp mailutils libncurses5-dev libncursesw5-dev i2c-tools tmux
 * sudo cp /etc/fstab /etc/fstap.backup
 * sudo emacs /etc/fstab
 ** replace all nonzero entries in the last column with 0
@@ -42,7 +44,6 @@
 * sudo ufw default allow outgoing
 * sudo ufw allow ssh
 * sudo reboot 0
-* sudo apt install git
 * git clone https://github.com/Noah-Franks/FEMTA.git
 ** Installs the FEMTA repository, where the main satellite code is present
 ** You need to have GitHub access to the repository. Ask noah for an invitation. 
@@ -51,8 +52,6 @@
 ** Contains various dot files and an auxillery for cd named cdd and newcdd
 ** You need to have GitHub access to the repository. Ask noah for an invitation.
 * cp ~/Layer/.* .
-* sudo apt install pigpio ssmtp mailutils libncurses5-dev libncursesw5-dev i2c-tools
-* sudo apt reboot 0
 * sudo emacs /etc/config.txt
 ** append dtoverlay=pi3-disable-bt
 * sudo systemctl disable hciuart
@@ -73,7 +72,6 @@
 ** append the following to the end
 *** 0,20,40 * * * * /home/noah/FEMTA/spacebound/bash-scripts/email.sh
 *** 0 17,23 * * * sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y
-* sudo apt install tmux
 * sudo emacs /etc/ssh/sshd_config
 ** Append AllowUsers noah kate
 ** This white lists everyone but the default user pi

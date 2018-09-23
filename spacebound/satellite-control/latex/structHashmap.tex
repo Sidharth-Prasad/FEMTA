@@ -1,0 +1,91 @@
+\hypertarget{structHashmap}{}\section{Hashmap Struct Reference}
+\label{structHashmap}\index{Hashmap@{Hashmap}}
+
+
+{\ttfamily \#include $<$hashmap.\+h$>$}
+
+
+
+Collaboration diagram for Hashmap\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=170pt]{structHashmap__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+unsigned int \hyperlink{structHashmap_acf25511ea4f01ef33fa00e3b40fddfb8}{elements}
+\item 
+unsigned int \hyperlink{structHashmap_acb5951c2662ce58e2196fcb465551e36}{size}
+\item 
+\hyperlink{structList}{List} $\ast$$\ast$ \hyperlink{structHashmap_a84d20ef62c1f397de5fdac234445c1e7}{table}
+\item 
+void $\ast$($\ast$ \hyperlink{structHashmap_a94750a8d94eb1d30ad153ccc447c40ae}{get} )(\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string)
+\item 
+void($\ast$ \hyperlink{structHashmap_a86fd2c2aaa8f266c2e99a035479b67df}{add} )(\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string, void $\ast$datum)
+\item 
+void($\ast$ \hyperlink{structHashmap_a869ddf80d753042c35a4741a0bd5b10b}{remove} )(\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string)
+\item 
+bool($\ast$ \hyperlink{structHashmap_abcabe76ebc3b3f7744bc78b3d31682dc}{exists} )(\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string)
+\item 
+void($\ast$ \hyperlink{structHashmap_ac7249166e6305fcec9a7fd4be614c3cd}{update} )(\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string, void $\ast$datum)
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{structHashmap_a86fd2c2aaa8f266c2e99a035479b67df}\label{structHashmap_a86fd2c2aaa8f266c2e99a035479b67df}} 
+\index{Hashmap@{Hashmap}!add@{add}}
+\index{add@{add}!Hashmap@{Hashmap}}
+\subsubsection{\texorpdfstring{add}{add}}
+{\footnotesize\ttfamily void($\ast$  Hashmap\+::add) (\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string, void $\ast$datum)}
+
+\mbox{\Hypertarget{structHashmap_acf25511ea4f01ef33fa00e3b40fddfb8}\label{structHashmap_acf25511ea4f01ef33fa00e3b40fddfb8}} 
+\index{Hashmap@{Hashmap}!elements@{elements}}
+\index{elements@{elements}!Hashmap@{Hashmap}}
+\subsubsection{\texorpdfstring{elements}{elements}}
+{\footnotesize\ttfamily unsigned int Hashmap\+::elements}
+
+\mbox{\Hypertarget{structHashmap_abcabe76ebc3b3f7744bc78b3d31682dc}\label{structHashmap_abcabe76ebc3b3f7744bc78b3d31682dc}} 
+\index{Hashmap@{Hashmap}!exists@{exists}}
+\index{exists@{exists}!Hashmap@{Hashmap}}
+\subsubsection{\texorpdfstring{exists}{exists}}
+{\footnotesize\ttfamily bool($\ast$  Hashmap\+::exists) (\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string)}
+
+\mbox{\Hypertarget{structHashmap_a94750a8d94eb1d30ad153ccc447c40ae}\label{structHashmap_a94750a8d94eb1d30ad153ccc447c40ae}} 
+\index{Hashmap@{Hashmap}!get@{get}}
+\index{get@{get}!Hashmap@{Hashmap}}
+\subsubsection{\texorpdfstring{get}{get}}
+{\footnotesize\ttfamily void$\ast$($\ast$  Hashmap\+::get) (\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string)}
+
+\mbox{\Hypertarget{structHashmap_a869ddf80d753042c35a4741a0bd5b10b}\label{structHashmap_a869ddf80d753042c35a4741a0bd5b10b}} 
+\index{Hashmap@{Hashmap}!remove@{remove}}
+\index{remove@{remove}!Hashmap@{Hashmap}}
+\subsubsection{\texorpdfstring{remove}{remove}}
+{\footnotesize\ttfamily void($\ast$  Hashmap\+::remove) (\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string)}
+
+\mbox{\Hypertarget{structHashmap_acb5951c2662ce58e2196fcb465551e36}\label{structHashmap_acb5951c2662ce58e2196fcb465551e36}} 
+\index{Hashmap@{Hashmap}!size@{size}}
+\index{size@{size}!Hashmap@{Hashmap}}
+\subsubsection{\texorpdfstring{size}{size}}
+{\footnotesize\ttfamily unsigned int Hashmap\+::size}
+
+\mbox{\Hypertarget{structHashmap_a84d20ef62c1f397de5fdac234445c1e7}\label{structHashmap_a84d20ef62c1f397de5fdac234445c1e7}} 
+\index{Hashmap@{Hashmap}!table@{table}}
+\index{table@{table}!Hashmap@{Hashmap}}
+\subsubsection{\texorpdfstring{table}{table}}
+{\footnotesize\ttfamily \hyperlink{structList}{List}$\ast$$\ast$ Hashmap\+::table}
+
+\mbox{\Hypertarget{structHashmap_ac7249166e6305fcec9a7fd4be614c3cd}\label{structHashmap_ac7249166e6305fcec9a7fd4be614c3cd}} 
+\index{Hashmap@{Hashmap}!update@{update}}
+\index{update@{update}!Hashmap@{Hashmap}}
+\subsubsection{\texorpdfstring{update}{update}}
+{\footnotesize\ttfamily void($\ast$  Hashmap\+::update) (\hyperlink{structHashmap}{Hashmap} $\ast$this, char $\ast$string, void $\ast$datum)}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\hyperlink{hashmap_8h}{hashmap.\+h}\end{DoxyCompactItemize}

@@ -1,0 +1,5 @@
+<map id="read_cpu_temperature" name="read_cpu_temperature">
+<area shape="rect" id="node2" href="$temperature-monitoring_8h.html#a1d2bab81a3e6aa84eb0c2e0172594299" title="initialize_temperature\l_monitoring" alt="" coords="204,5,349,47"/>
+<area shape="rect" id="node3" href="$femta_8c.html#a8ecd8ad82265b8157b5c24ba269bf362" title="initialize_satellite" alt="" coords="397,13,519,39"/>
+<area shape="rect" id="node4" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="567,13,617,39"/>
+</map>

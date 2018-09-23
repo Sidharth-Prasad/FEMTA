@@ -1,0 +1,8 @@
+<map id="plot_add_value" name="plot_add_value">
+<area shape="rect" id="node2" href="$i2c-interface_8c.html#a0ffd56a84248b3976097e0d38b2fcdaf" title="log_mpu_data" alt="" coords="187,8,289,35"/>
+<area shape="rect" id="node6" href="$temperature-monitoring_8c.html#a6a33eb327dd6b9aac62b32cf7220cca0" title="read_cpu_temperature" alt="" coords="163,60,313,87"/>
+<area shape="rect" id="node3" href="$i2c-interface_8h.html#a8eb11c031b9484a01fd8b263c13373cf" title="initialize_i2c" alt="" coords="387,5,481,32"/>
+<area shape="rect" id="node4" href="$femta_8c.html#a8ecd8ad82265b8157b5c24ba269bf362" title="initialize_satellite" alt="" coords="555,35,676,61"/>
+<area shape="rect" id="node5" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="724,35,775,61"/>
+<area shape="rect" id="node7" href="$temperature-monitoring_8h.html#a1d2bab81a3e6aa84eb0c2e0172594299" title="initialize_temperature\l_monitoring" alt="" coords="361,57,507,98"/>
+</map>

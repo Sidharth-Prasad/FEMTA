@@ -1,0 +1,12 @@
+<map id="clear_print_window" name="clear_print_window">
+<area shape="rect" id="node2" href="$graphics_8h.html#af09a3a6eecb74c0b79f9f52e04d9bb05" title="print" alt="" coords="187,155,233,182"/>
+<area shape="rect" id="node3" href="$femta_8c.html#a8ecd8ad82265b8157b5c24ba269bf362" title="initialize_satellite" alt="" coords="467,17,588,43"/>
+<area shape="rect" id="node5" href="$graphics_8h.html#a68b3737c7aa742e27cede272fa1f5901" title="initialize_graphics" alt="" coords="801,67,927,94"/>
+<area shape="rect" id="node6" href="$graphics_8h.html#af6f539f61823ed2e8ca170234076ef0a" title="erase_print_window" alt="" coords="281,181,419,207"/>
+<area shape="rect" id="node7" href="$selector_8h.html#aed1ec1657292441550d4f9c7884abcec" title="present_selector" alt="" coords="468,130,587,157"/>
+<area shape="rect" id="node10" href="$selector_8h.html#a91f19fa0a64a5300eb71dea13a36a389" title="write_message" alt="" coords="639,219,750,246"/>
+<area shape="rect" id="node11" href="$selector_8h.html#af52577609cb803ac1e0db975d7e24f43" title="cycle_graph" alt="" coords="304,307,396,334"/>
+<area shape="rect" id="node4" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="975,169,1025,195"/>
+<area shape="rect" id="node8" href="$selector_8h.html#a5dbc77744df9f365fe80912765933e71" title="change_selector" alt="" coords="636,169,753,195"/>
+<area shape="rect" id="node9" href="$selector_8c.html#aa0be9c44e18a4a88d05836979b032555" title="create_selector" alt="" coords="809,219,919,246"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="close_prototype" name="close_prototype">
+<area shape="rect" id="node2" href="$logger_8h.html#a26868cccaec4f85594aa4074752d2e4a" title="create_logger" alt="" coords="168,5,268,32"/>
+<area shape="rect" id="node3" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="777,5,828,32"/>
+<area shape="rect" id="node4" href="$i2c-interface_8c.html#a0ffd56a84248b3976097e0d38b2fcdaf" title="log_mpu_data" alt="" coords="316,31,419,57"/>
+<area shape="rect" id="node5" href="$i2c-interface_8h.html#a8eb11c031b9484a01fd8b263c13373cf" title="initialize_i2c" alt="" coords="467,31,560,57"/>
+<area shape="rect" id="node6" href="$femta_8c.html#a8ecd8ad82265b8157b5c24ba269bf362" title="initialize_satellite" alt="" coords="608,31,729,57"/>
+</map>

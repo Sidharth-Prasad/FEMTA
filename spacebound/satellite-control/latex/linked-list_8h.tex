@@ -1,0 +1,148 @@
+\hypertarget{linked-list_8h}{}\section{linked-\/list.h File Reference}
+\label{linked-list_8h}\index{linked-\/list.\+h@{linked-\/list.\+h}}
+{\ttfamily \#include $<$stdbool.\+h$>$}\newline
+Include dependency graph for linked-\/list.h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=146pt]{linked-list_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structNode}{Node}
+\item 
+struct \hyperlink{structList}{List}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{linked-list_8h_a38009bdae1680b572de252ce6efc72e3}{I\+N\+T\+E\+G\+E\+R\+\_\+\+N\+O\+DE}~0
+\item 
+\#define \hyperlink{linked-list_8h_ac7657356b9d25f27a814e9e5d7ae3d72}{F\+L\+O\+A\+T\+\_\+\+N\+O\+DE}~1
+\item 
+\#define \hyperlink{linked-list_8h_a6b6ad317b09a9ef8f68619bf862289d6}{S\+T\+R\+I\+N\+G\+\_\+\+N\+O\+DE}~2
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \hyperlink{structNode}{Node} \hyperlink{linked-list_8h_a3b09f37e675bcd48a01bf22155996872}{Node}
+\item 
+typedef struct \hyperlink{structList}{List} \hyperlink{linked-list_8h_ab2926f8a4255847074664d6549d3a1ee}{List}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structNode}{Node} $\ast$ \hyperlink{linked-list_8h_a45dfa9366701eddf667fd95d05cc3be0}{create\+\_\+node} (void $\ast$value)
+\item 
+\hyperlink{structList}{List} $\ast$ \hyperlink{linked-list_8h_abd16529dbe0922996788f10925823eea}{create\+\_\+list} (unsigned int limit, bool doublely\+\_\+linked)
+\item 
+void \hyperlink{linked-list_8h_a947069a28d8173531d9186a74e82fb62}{list\+\_\+insert} (\hyperlink{structList}{List} $\ast$list, \hyperlink{structNode}{Node} $\ast$node)
+\item 
+void \hyperlink{linked-list_8h_ad17dd6e2d3e64d3e9665f313ffb808a1}{list\+\_\+remove} (\hyperlink{structList}{List} $\ast$list, \hyperlink{structNode}{Node} $\ast$node)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{linked-list_8h_ac7657356b9d25f27a814e9e5d7ae3d72}\label{linked-list_8h_ac7657356b9d25f27a814e9e5d7ae3d72}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!F\+L\+O\+A\+T\+\_\+\+N\+O\+DE@{F\+L\+O\+A\+T\+\_\+\+N\+O\+DE}}
+\index{F\+L\+O\+A\+T\+\_\+\+N\+O\+DE@{F\+L\+O\+A\+T\+\_\+\+N\+O\+DE}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{F\+L\+O\+A\+T\+\_\+\+N\+O\+DE}{FLOAT\_NODE}}
+{\footnotesize\ttfamily \#define F\+L\+O\+A\+T\+\_\+\+N\+O\+DE~1}
+
+\mbox{\Hypertarget{linked-list_8h_a38009bdae1680b572de252ce6efc72e3}\label{linked-list_8h_a38009bdae1680b572de252ce6efc72e3}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!I\+N\+T\+E\+G\+E\+R\+\_\+\+N\+O\+DE@{I\+N\+T\+E\+G\+E\+R\+\_\+\+N\+O\+DE}}
+\index{I\+N\+T\+E\+G\+E\+R\+\_\+\+N\+O\+DE@{I\+N\+T\+E\+G\+E\+R\+\_\+\+N\+O\+DE}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{I\+N\+T\+E\+G\+E\+R\+\_\+\+N\+O\+DE}{INTEGER\_NODE}}
+{\footnotesize\ttfamily \#define I\+N\+T\+E\+G\+E\+R\+\_\+\+N\+O\+DE~0}
+
+\mbox{\Hypertarget{linked-list_8h_a6b6ad317b09a9ef8f68619bf862289d6}\label{linked-list_8h_a6b6ad317b09a9ef8f68619bf862289d6}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!S\+T\+R\+I\+N\+G\+\_\+\+N\+O\+DE@{S\+T\+R\+I\+N\+G\+\_\+\+N\+O\+DE}}
+\index{S\+T\+R\+I\+N\+G\+\_\+\+N\+O\+DE@{S\+T\+R\+I\+N\+G\+\_\+\+N\+O\+DE}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{S\+T\+R\+I\+N\+G\+\_\+\+N\+O\+DE}{STRING\_NODE}}
+{\footnotesize\ttfamily \#define S\+T\+R\+I\+N\+G\+\_\+\+N\+O\+DE~2}
+
+
+
+\subsection{Typedef Documentation}
+\mbox{\Hypertarget{linked-list_8h_ab2926f8a4255847074664d6549d3a1ee}\label{linked-list_8h_ab2926f8a4255847074664d6549d3a1ee}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!List@{List}}
+\index{List@{List}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{List}{List}}
+{\footnotesize\ttfamily typedef struct \hyperlink{structList}{List}  \hyperlink{structList}{List}}
+
+\mbox{\Hypertarget{linked-list_8h_a3b09f37e675bcd48a01bf22155996872}\label{linked-list_8h_a3b09f37e675bcd48a01bf22155996872}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!Node@{Node}}
+\index{Node@{Node}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{Node}{Node}}
+{\footnotesize\ttfamily typedef struct \hyperlink{structNode}{Node} \hyperlink{structNode}{Node}}
+
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{linked-list_8h_abd16529dbe0922996788f10925823eea}\label{linked-list_8h_abd16529dbe0922996788f10925823eea}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!create\+\_\+list@{create\+\_\+list}}
+\index{create\+\_\+list@{create\+\_\+list}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{create\+\_\+list()}{create\_list()}}
+{\footnotesize\ttfamily \hyperlink{structList}{List}$\ast$ create\+\_\+list (\begin{DoxyParamCaption}\item[{unsigned int}]{limit,  }\item[{bool}]{doublely\+\_\+linked }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8h_abd16529dbe0922996788f10925823eea_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{linked-list_8h_a45dfa9366701eddf667fd95d05cc3be0}\label{linked-list_8h_a45dfa9366701eddf667fd95d05cc3be0}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!create\+\_\+node@{create\+\_\+node}}
+\index{create\+\_\+node@{create\+\_\+node}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{create\+\_\+node()}{create\_node()}}
+{\footnotesize\ttfamily \hyperlink{structNode}{Node}$\ast$ create\+\_\+node (\begin{DoxyParamCaption}\item[{void $\ast$}]{value }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8h_a45dfa9366701eddf667fd95d05cc3be0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{linked-list_8h_a947069a28d8173531d9186a74e82fb62}\label{linked-list_8h_a947069a28d8173531d9186a74e82fb62}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!list\+\_\+insert@{list\+\_\+insert}}
+\index{list\+\_\+insert@{list\+\_\+insert}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{list\+\_\+insert()}{list\_insert()}}
+{\footnotesize\ttfamily void list\+\_\+insert (\begin{DoxyParamCaption}\item[{\hyperlink{structList}{List} $\ast$}]{list,  }\item[{\hyperlink{structNode}{Node} $\ast$}]{node }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8h_a947069a28d8173531d9186a74e82fb62_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{linked-list_8h_ad17dd6e2d3e64d3e9665f313ffb808a1}\label{linked-list_8h_ad17dd6e2d3e64d3e9665f313ffb808a1}} 
+\index{linked-\/list.\+h@{linked-\/list.\+h}!list\+\_\+remove@{list\+\_\+remove}}
+\index{list\+\_\+remove@{list\+\_\+remove}!linked-\/list.\+h@{linked-\/list.\+h}}
+\subsubsection{\texorpdfstring{list\+\_\+remove()}{list\_remove()}}
+{\footnotesize\ttfamily void list\+\_\+remove (\begin{DoxyParamCaption}\item[{\hyperlink{structList}{List} $\ast$}]{list,  }\item[{\hyperlink{structNode}{Node} $\ast$}]{node }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{linked-list_8h_ad17dd6e2d3e64d3e9665f313ffb808a1_icgraph}
+\end{center}
+\end{figure}

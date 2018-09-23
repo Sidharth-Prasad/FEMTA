@@ -1,0 +1,347 @@
+\hypertarget{graphics_8h}{}\section{graphics.\+h File Reference}
+\label{graphics_8h}\index{graphics.\+h@{graphics.\+h}}
+{\ttfamily \#include $<$stdbool.\+h$>$}\newline
+{\ttfamily \#include $<$curses.\+h$>$}\newline
+{\ttfamily \#include $<$menu.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}linked-\/list.\+h\char`\"{}}\newline
+Include dependency graph for graphics.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=298pt]{graphics_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structView}{View}
+\item 
+struct \hyperlink{structPlot}{Plot}
+\item 
+struct \hyperlink{structprint__view}{print\+\_\+view}
+\item 
+struct \hyperlink{structgraph__view}{graph\+\_\+view}
+\item 
+struct \hyperlink{structsetup__view}{setup\+\_\+view}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{graphics_8h_a6df7958d438966bf34dc9524cbf7d8f0}{G\+E\+N\+E\+R\+A\+L\+\_\+\+W\+I\+N\+D\+OW}~0
+\item 
+\#define \hyperlink{graphics_8h_a3f4bf8af94b8c1c45ee5c16d05c235c1}{C\+O\+N\+T\+R\+O\+L\+\_\+\+W\+I\+N\+D\+OW}~1
+\item 
+\#define \hyperlink{graphics_8h_afea4087ad18bef55383c783669b5f3c6}{O\+P\+E\+R\+A\+T\+E\+\_\+\+W\+I\+N\+D\+OW}~2
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \hyperlink{structView}{View} \hyperlink{graphics_8h_a4db1f4ea505b597e255278b110002b63}{View}
+\item 
+typedef struct \hyperlink{structPlot}{Plot} \hyperlink{graphics_8h_a1c9783a619ececaff6ca8cd670a2f998}{Plot}
+\item 
+typedef struct \hyperlink{structprint__view}{print\+\_\+view} \hyperlink{graphics_8h_a8adb006ef95ecf838877a80bd9fcc052}{print\+\_\+view}
+\item 
+typedef struct \hyperlink{structgraph__view}{graph\+\_\+view} \hyperlink{graphics_8h_ab4cafed81f535c2bcaa088caa1c9f914}{graph\+\_\+view}
+\item 
+typedef struct \hyperlink{structsetup__view}{setup\+\_\+view} \hyperlink{graphics_8h_ae3c6a8958ebd350426acf84ed95411b9}{setup\+\_\+view}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{graphics_8h_a68b3737c7aa742e27cede272fa1f5901}{initialize\+\_\+graphics} ()
+\item 
+void \hyperlink{graphics_8h_a801e9e5cdcd5cbc0871a4ff73edc171e}{terminate\+\_\+graphics} ()
+\item 
+void \hyperlink{graphics_8h_af09a3a6eecb74c0b79f9f52e04d9bb05}{print} (unsigned char window\+\_\+number, char $\ast$string, unsigned int color)
+\item 
+void \hyperlink{graphics_8h_a22f207fb5603352362eaa769c35a8555}{clear\+\_\+print\+\_\+window} (unsigned char window\+\_\+number)
+\item 
+void \hyperlink{graphics_8h_af6f539f61823ed2e8ca170234076ef0a}{erase\+\_\+print\+\_\+window} (unsigned char window\+\_\+number)
+\item 
+void \hyperlink{graphics_8h_a40fc6b0869e05eb28aceb0faff2a3517}{update\+\_\+state\+\_\+graphic} (unsigned char line, bool state)
+\item 
+void \hyperlink{graphics_8h_a0149357e966fd1342354a03d37e093c2}{graph\+\_\+plot} (\hyperlink{structPlot}{Plot} $\ast$plot)
+\item 
+void \hyperlink{graphics_8h_a7556c334f33b2eeb5dad2fbfdafd96ce}{plot\+\_\+add\+\_\+value} (\hyperlink{structPlot}{Plot} $\ast$plot, \hyperlink{structList}{List} $\ast$list, \hyperlink{structNode}{Node} $\ast$node)
+\item 
+\hyperlink{structPlot}{Plot} $\ast$ \hyperlink{graphics_8h_a0d74bbdd6f2abaafd1cfb1a12c0e5fe3}{create\+\_\+plot} (char $\ast$name, unsigned char number\+\_\+of\+\_\+lists)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+unsigned char \hyperlink{graphics_8h_a49d2b92059a29312ac2727b0ed2b8bc4}{number\+\_\+of\+\_\+data\+\_\+points\+\_\+plottable}
+\item 
+\hyperlink{structPlot}{Plot} $\ast$ \hyperlink{graphics_8h_a313e20a66c8833e422e3f0180bce3757}{graph\+\_\+owner}
+\item 
+\hyperlink{structPlot}{Plot} $\ast$$\ast$ \hyperlink{graphics_8h_ad9c8da25c90166f9515c8f19f7f409dc}{all\+\_\+possible\+\_\+owners}
+\item 
+\hyperlink{structList}{List} $\ast$ \hyperlink{graphics_8h_afc01ec0b1c938ce19a65f94f81f6746c}{owner\+\_\+index\+\_\+list}
+\item 
+\hyperlink{structNode}{Node} $\ast$ \hyperlink{graphics_8h_a0256791883a8ea626376399c88f02040}{graph\+\_\+owner\+\_\+index\+\_\+node}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\mbox{\Hypertarget{graphics_8h_a3f4bf8af94b8c1c45ee5c16d05c235c1}\label{graphics_8h_a3f4bf8af94b8c1c45ee5c16d05c235c1}} 
+\index{graphics.\+h@{graphics.\+h}!C\+O\+N\+T\+R\+O\+L\+\_\+\+W\+I\+N\+D\+OW@{C\+O\+N\+T\+R\+O\+L\+\_\+\+W\+I\+N\+D\+OW}}
+\index{C\+O\+N\+T\+R\+O\+L\+\_\+\+W\+I\+N\+D\+OW@{C\+O\+N\+T\+R\+O\+L\+\_\+\+W\+I\+N\+D\+OW}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{C\+O\+N\+T\+R\+O\+L\+\_\+\+W\+I\+N\+D\+OW}{CONTROL\_WINDOW}}
+{\footnotesize\ttfamily \#define C\+O\+N\+T\+R\+O\+L\+\_\+\+W\+I\+N\+D\+OW~1}
+
+\mbox{\Hypertarget{graphics_8h_a6df7958d438966bf34dc9524cbf7d8f0}\label{graphics_8h_a6df7958d438966bf34dc9524cbf7d8f0}} 
+\index{graphics.\+h@{graphics.\+h}!G\+E\+N\+E\+R\+A\+L\+\_\+\+W\+I\+N\+D\+OW@{G\+E\+N\+E\+R\+A\+L\+\_\+\+W\+I\+N\+D\+OW}}
+\index{G\+E\+N\+E\+R\+A\+L\+\_\+\+W\+I\+N\+D\+OW@{G\+E\+N\+E\+R\+A\+L\+\_\+\+W\+I\+N\+D\+OW}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{G\+E\+N\+E\+R\+A\+L\+\_\+\+W\+I\+N\+D\+OW}{GENERAL\_WINDOW}}
+{\footnotesize\ttfamily \#define G\+E\+N\+E\+R\+A\+L\+\_\+\+W\+I\+N\+D\+OW~0}
+
+\mbox{\Hypertarget{graphics_8h_afea4087ad18bef55383c783669b5f3c6}\label{graphics_8h_afea4087ad18bef55383c783669b5f3c6}} 
+\index{graphics.\+h@{graphics.\+h}!O\+P\+E\+R\+A\+T\+E\+\_\+\+W\+I\+N\+D\+OW@{O\+P\+E\+R\+A\+T\+E\+\_\+\+W\+I\+N\+D\+OW}}
+\index{O\+P\+E\+R\+A\+T\+E\+\_\+\+W\+I\+N\+D\+OW@{O\+P\+E\+R\+A\+T\+E\+\_\+\+W\+I\+N\+D\+OW}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{O\+P\+E\+R\+A\+T\+E\+\_\+\+W\+I\+N\+D\+OW}{OPERATE\_WINDOW}}
+{\footnotesize\ttfamily \#define O\+P\+E\+R\+A\+T\+E\+\_\+\+W\+I\+N\+D\+OW~2}
+
+
+
+\subsection{Typedef Documentation}
+\mbox{\Hypertarget{graphics_8h_ab4cafed81f535c2bcaa088caa1c9f914}\label{graphics_8h_ab4cafed81f535c2bcaa088caa1c9f914}} 
+\index{graphics.\+h@{graphics.\+h}!graph\+\_\+view@{graph\+\_\+view}}
+\index{graph\+\_\+view@{graph\+\_\+view}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{graph\+\_\+view}{graph\_view}}
+{\footnotesize\ttfamily typedef struct \hyperlink{structgraph__view}{graph\+\_\+view}  \hyperlink{structgraph__view}{graph\+\_\+view}}
+
+\mbox{\Hypertarget{graphics_8h_a1c9783a619ececaff6ca8cd670a2f998}\label{graphics_8h_a1c9783a619ececaff6ca8cd670a2f998}} 
+\index{graphics.\+h@{graphics.\+h}!Plot@{Plot}}
+\index{Plot@{Plot}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{Plot}{Plot}}
+{\footnotesize\ttfamily typedef struct \hyperlink{structPlot}{Plot}  \hyperlink{structPlot}{Plot}}
+
+\mbox{\Hypertarget{graphics_8h_a8adb006ef95ecf838877a80bd9fcc052}\label{graphics_8h_a8adb006ef95ecf838877a80bd9fcc052}} 
+\index{graphics.\+h@{graphics.\+h}!print\+\_\+view@{print\+\_\+view}}
+\index{print\+\_\+view@{print\+\_\+view}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{print\+\_\+view}{print\_view}}
+{\footnotesize\ttfamily typedef struct \hyperlink{structprint__view}{print\+\_\+view}  \hyperlink{structprint__view}{print\+\_\+view}}
+
+\mbox{\Hypertarget{graphics_8h_ae3c6a8958ebd350426acf84ed95411b9}\label{graphics_8h_ae3c6a8958ebd350426acf84ed95411b9}} 
+\index{graphics.\+h@{graphics.\+h}!setup\+\_\+view@{setup\+\_\+view}}
+\index{setup\+\_\+view@{setup\+\_\+view}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{setup\+\_\+view}{setup\_view}}
+{\footnotesize\ttfamily typedef struct \hyperlink{structsetup__view}{setup\+\_\+view}  \hyperlink{structsetup__view}{setup\+\_\+view}}
+
+\mbox{\Hypertarget{graphics_8h_a4db1f4ea505b597e255278b110002b63}\label{graphics_8h_a4db1f4ea505b597e255278b110002b63}} 
+\index{graphics.\+h@{graphics.\+h}!View@{View}}
+\index{View@{View}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{View}{View}}
+{\footnotesize\ttfamily typedef struct \hyperlink{structView}{View}  \hyperlink{structView}{View}}
+
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{graphics_8h_a22f207fb5603352362eaa769c35a8555}\label{graphics_8h_a22f207fb5603352362eaa769c35a8555}} 
+\index{graphics.\+h@{graphics.\+h}!clear\+\_\+print\+\_\+window@{clear\+\_\+print\+\_\+window}}
+\index{clear\+\_\+print\+\_\+window@{clear\+\_\+print\+\_\+window}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{clear\+\_\+print\+\_\+window()}{clear\_print\_window()}}
+{\footnotesize\ttfamily void clear\+\_\+print\+\_\+window (\begin{DoxyParamCaption}\item[{unsigned char}]{window\+\_\+number }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h_a22f207fb5603352362eaa769c35a8555_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{graphics_8h_a0d74bbdd6f2abaafd1cfb1a12c0e5fe3}\label{graphics_8h_a0d74bbdd6f2abaafd1cfb1a12c0e5fe3}} 
+\index{graphics.\+h@{graphics.\+h}!create\+\_\+plot@{create\+\_\+plot}}
+\index{create\+\_\+plot@{create\+\_\+plot}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{create\+\_\+plot()}{create\_plot()}}
+{\footnotesize\ttfamily \hyperlink{structPlot}{Plot}$\ast$ create\+\_\+plot (\begin{DoxyParamCaption}\item[{char $\ast$}]{name,  }\item[{unsigned char}]{number\+\_\+of\+\_\+lists }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{graphics_8h_a0d74bbdd6f2abaafd1cfb1a12c0e5fe3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h_a0d74bbdd6f2abaafd1cfb1a12c0e5fe3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{graphics_8h_af6f539f61823ed2e8ca170234076ef0a}\label{graphics_8h_af6f539f61823ed2e8ca170234076ef0a}} 
+\index{graphics.\+h@{graphics.\+h}!erase\+\_\+print\+\_\+window@{erase\+\_\+print\+\_\+window}}
+\index{erase\+\_\+print\+\_\+window@{erase\+\_\+print\+\_\+window}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{erase\+\_\+print\+\_\+window()}{erase\_print\_window()}}
+{\footnotesize\ttfamily void erase\+\_\+print\+\_\+window (\begin{DoxyParamCaption}\item[{unsigned char}]{window\+\_\+number }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h_af6f539f61823ed2e8ca170234076ef0a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h_af6f539f61823ed2e8ca170234076ef0a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{graphics_8h_a0149357e966fd1342354a03d37e093c2}\label{graphics_8h_a0149357e966fd1342354a03d37e093c2}} 
+\index{graphics.\+h@{graphics.\+h}!graph\+\_\+plot@{graph\+\_\+plot}}
+\index{graph\+\_\+plot@{graph\+\_\+plot}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{graph\+\_\+plot()}{graph\_plot()}}
+{\footnotesize\ttfamily void graph\+\_\+plot (\begin{DoxyParamCaption}\item[{\hyperlink{structPlot}{Plot} $\ast$}]{plot }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{graphics_8h_a0149357e966fd1342354a03d37e093c2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h_a0149357e966fd1342354a03d37e093c2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{graphics_8h_a68b3737c7aa742e27cede272fa1f5901}\label{graphics_8h_a68b3737c7aa742e27cede272fa1f5901}} 
+\index{graphics.\+h@{graphics.\+h}!initialize\+\_\+graphics@{initialize\+\_\+graphics}}
+\index{initialize\+\_\+graphics@{initialize\+\_\+graphics}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{initialize\+\_\+graphics()}{initialize\_graphics()}}
+{\footnotesize\ttfamily void initialize\+\_\+graphics (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h_a68b3737c7aa742e27cede272fa1f5901_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=248pt]{graphics_8h_a68b3737c7aa742e27cede272fa1f5901_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{graphics_8h_a7556c334f33b2eeb5dad2fbfdafd96ce}\label{graphics_8h_a7556c334f33b2eeb5dad2fbfdafd96ce}} 
+\index{graphics.\+h@{graphics.\+h}!plot\+\_\+add\+\_\+value@{plot\+\_\+add\+\_\+value}}
+\index{plot\+\_\+add\+\_\+value@{plot\+\_\+add\+\_\+value}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{plot\+\_\+add\+\_\+value()}{plot\_add\_value()}}
+{\footnotesize\ttfamily void plot\+\_\+add\+\_\+value (\begin{DoxyParamCaption}\item[{\hyperlink{structPlot}{Plot} $\ast$}]{plot,  }\item[{\hyperlink{structList}{List} $\ast$}]{list,  }\item[{\hyperlink{structNode}{Node} $\ast$}]{node }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=257pt]{graphics_8h_a7556c334f33b2eeb5dad2fbfdafd96ce_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h_a7556c334f33b2eeb5dad2fbfdafd96ce_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{graphics_8h_af09a3a6eecb74c0b79f9f52e04d9bb05}\label{graphics_8h_af09a3a6eecb74c0b79f9f52e04d9bb05}} 
+\index{graphics.\+h@{graphics.\+h}!print@{print}}
+\index{print@{print}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{print()}{print()}}
+{\footnotesize\ttfamily void print (\begin{DoxyParamCaption}\item[{unsigned char}]{window\+\_\+number,  }\item[{char $\ast$}]{string,  }\item[{unsigned int}]{color }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{graphics_8h_af09a3a6eecb74c0b79f9f52e04d9bb05_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{graphics_8h_af09a3a6eecb74c0b79f9f52e04d9bb05_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{graphics_8h_a801e9e5cdcd5cbc0871a4ff73edc171e}\label{graphics_8h_a801e9e5cdcd5cbc0871a4ff73edc171e}} 
+\index{graphics.\+h@{graphics.\+h}!terminate\+\_\+graphics@{terminate\+\_\+graphics}}
+\index{terminate\+\_\+graphics@{terminate\+\_\+graphics}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{terminate\+\_\+graphics()}{terminate\_graphics()}}
+{\footnotesize\ttfamily void terminate\+\_\+graphics (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=253pt]{graphics_8h_a801e9e5cdcd5cbc0871a4ff73edc171e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{graphics_8h_a40fc6b0869e05eb28aceb0faff2a3517}\label{graphics_8h_a40fc6b0869e05eb28aceb0faff2a3517}} 
+\index{graphics.\+h@{graphics.\+h}!update\+\_\+state\+\_\+graphic@{update\+\_\+state\+\_\+graphic}}
+\index{update\+\_\+state\+\_\+graphic@{update\+\_\+state\+\_\+graphic}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{update\+\_\+state\+\_\+graphic()}{update\_state\_graphic()}}
+{\footnotesize\ttfamily void update\+\_\+state\+\_\+graphic (\begin{DoxyParamCaption}\item[{unsigned char}]{line,  }\item[{bool}]{state }\end{DoxyParamCaption})}
+
+
+
+\subsection{Variable Documentation}
+\mbox{\Hypertarget{graphics_8h_ad9c8da25c90166f9515c8f19f7f409dc}\label{graphics_8h_ad9c8da25c90166f9515c8f19f7f409dc}} 
+\index{graphics.\+h@{graphics.\+h}!all\+\_\+possible\+\_\+owners@{all\+\_\+possible\+\_\+owners}}
+\index{all\+\_\+possible\+\_\+owners@{all\+\_\+possible\+\_\+owners}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{all\+\_\+possible\+\_\+owners}{all\_possible\_owners}}
+{\footnotesize\ttfamily \hyperlink{structPlot}{Plot}$\ast$$\ast$ all\+\_\+possible\+\_\+owners}
+
+\mbox{\Hypertarget{graphics_8h_a313e20a66c8833e422e3f0180bce3757}\label{graphics_8h_a313e20a66c8833e422e3f0180bce3757}} 
+\index{graphics.\+h@{graphics.\+h}!graph\+\_\+owner@{graph\+\_\+owner}}
+\index{graph\+\_\+owner@{graph\+\_\+owner}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{graph\+\_\+owner}{graph\_owner}}
+{\footnotesize\ttfamily \hyperlink{structPlot}{Plot}$\ast$ graph\+\_\+owner}
+
+\mbox{\Hypertarget{graphics_8h_a0256791883a8ea626376399c88f02040}\label{graphics_8h_a0256791883a8ea626376399c88f02040}} 
+\index{graphics.\+h@{graphics.\+h}!graph\+\_\+owner\+\_\+index\+\_\+node@{graph\+\_\+owner\+\_\+index\+\_\+node}}
+\index{graph\+\_\+owner\+\_\+index\+\_\+node@{graph\+\_\+owner\+\_\+index\+\_\+node}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{graph\+\_\+owner\+\_\+index\+\_\+node}{graph\_owner\_index\_node}}
+{\footnotesize\ttfamily \hyperlink{structNode}{Node}$\ast$ graph\+\_\+owner\+\_\+index\+\_\+node}
+
+\mbox{\Hypertarget{graphics_8h_a49d2b92059a29312ac2727b0ed2b8bc4}\label{graphics_8h_a49d2b92059a29312ac2727b0ed2b8bc4}} 
+\index{graphics.\+h@{graphics.\+h}!number\+\_\+of\+\_\+data\+\_\+points\+\_\+plottable@{number\+\_\+of\+\_\+data\+\_\+points\+\_\+plottable}}
+\index{number\+\_\+of\+\_\+data\+\_\+points\+\_\+plottable@{number\+\_\+of\+\_\+data\+\_\+points\+\_\+plottable}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{number\+\_\+of\+\_\+data\+\_\+points\+\_\+plottable}{number\_of\_data\_points\_plottable}}
+{\footnotesize\ttfamily unsigned char number\+\_\+of\+\_\+data\+\_\+points\+\_\+plottable}
+
+\mbox{\Hypertarget{graphics_8h_afc01ec0b1c938ce19a65f94f81f6746c}\label{graphics_8h_afc01ec0b1c938ce19a65f94f81f6746c}} 
+\index{graphics.\+h@{graphics.\+h}!owner\+\_\+index\+\_\+list@{owner\+\_\+index\+\_\+list}}
+\index{owner\+\_\+index\+\_\+list@{owner\+\_\+index\+\_\+list}!graphics.\+h@{graphics.\+h}}
+\subsubsection{\texorpdfstring{owner\+\_\+index\+\_\+list}{owner\_index\_list}}
+{\footnotesize\ttfamily \hyperlink{structList}{List}$\ast$ owner\+\_\+index\+\_\+list}
+
