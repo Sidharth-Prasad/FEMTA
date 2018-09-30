@@ -11,7 +11,7 @@
 #include "femta.h"
 
 // Unified Controller Macros
-#define NUMBER_OF_MODULES 3
+#define NUMBER_OF_MODULES 4
 #define I2C_STATE 2
 #define UART_STATE 3
 
@@ -23,10 +23,6 @@
 bool ready_to_graph = false;
 
 void print_window_title();
-
-print_view ** print_views;
-graph_view ** graph_views;
-setup_view ** setup_views;
 
 void initialize_graphics() {
 
@@ -88,6 +84,7 @@ void initialize_graphics() {
   wattroff(view -> window, COLOR_PAIR(5));
   
   for (char m = 0; m < NUMBER_OF_MODULES; m++) {
+    if (! modules[m] -> enabled) wattron(view -> window, A_DIM);
     wattron(view -> window, COLOR_PAIR(5));
     mvwprintw(view -> window, line++, 2, modules[m] -> identifier);
     wattroff(view -> window, COLOR_PAIR(5));
@@ -118,6 +115,7 @@ void initialize_graphics() {
       line++;
     }
     line++;
+    if (! modules[m] -> enabled) wattroff(view -> window, A_DIM);
   }
   
   refresh();
@@ -312,7 +310,8 @@ Plot * create_plot(char * name, unsigned char number_of_lists) {
 }
 
 void clear_print_window(unsigned char window_number) {
-
+  // Clears the print window by writing a space character to every location
+  
   // Space buffer
   unsigned char line_length = print_views[window_number] -> view -> inner_width - 2;
   char spaces[line_length + 1];
@@ -326,6 +325,7 @@ void clear_print_window(unsigned char window_number) {
 }
 
 void print(unsigned char window_number, char * string, unsigned int color) {
+  // Prints a string to the window provided
   
   if (window_number >= NUMBER_OF_PRINT_VIEWS) return;   // Ensure print view exists
   if (!ready_to_graph) return;
@@ -349,10 +349,24 @@ void print(unsigned char window_number, char * string, unsigned int color) {
     wattron(printer -> view -> window, COLOR_PAIR((int) (lcolor -> value)));
     mvwprintw(printer -> view -> window, 3 + i, 2, "%s", (char *) (node -> value));
     wattroff(printer -> view -> window, COLOR_PAIR((int) (lcolor -> value)));
+
+    // Clear the rest of the line
+    for (short s = strlen((char *) (node -> value)) + 2; s < printer -> view -> inner_width - 2; s++) {
+      mvwprintw(printer -> view -> window, 3 + i, s, " ");
+    }
   }
   wattron(printer -> view -> window, COLOR_PAIR((int) (lcolor -> value)));
   mvwprintw(printer -> view -> window, 3 + i, 2, "%s", (char *) (node -> value));
   wattroff(printer -> view -> window, COLOR_PAIR((int) (lcolor -> value)));
+
+  // Clear the rest of the last line
+  for (short s = strlen((char *) (node -> value)) + 2; s < printer -> view -> inner_width - 2; s++) {
+    mvwprintw(printer -> view -> window, 3 + i, s, " ");
+  }
+
+  // Seeks the front of the last line
+  // This allows other functions to use wgetstr() without writing off the line
+  mvwprintw(printer -> view -> window, 3 + i, 2, "");   
   //wattroff(printer -> view -> window, COLOR_PAIR(color));
   
   refresh();
@@ -415,7 +429,7 @@ void graph_plot(Plot * plot) {
   //printf("%s", plot -> name);
   print_window_title(view -> window, 1, 0, view -> outer_width, plot -> name, COLOR_PAIR(2));
 
-  return; // Shorting - SHORT
+  //return; // Shorting - SHORT
   
   int y_axis_position = view -> inner_width - 1 - plot -> lists[0] -> elements;
   if (y_axis_position < 7) y_axis_position = 7;

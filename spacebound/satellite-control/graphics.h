@@ -62,6 +62,11 @@ typedef struct setup_view {
   
 } setup_view;
 
+// Views shown to the user
+print_view ** print_views;
+graph_view ** graph_views;
+setup_view ** setup_views;
+
 void initialize_graphics();
 void terminate_graphics();
 void print(unsigned char window_number, char * string, unsigned int color);

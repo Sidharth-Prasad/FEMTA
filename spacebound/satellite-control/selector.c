@@ -102,14 +102,22 @@ void rotate(void * nil) {                    // Rotate a number of degrees
   return;
 }
 
-void write_message(void * logger) {             // Writes a message to the log
+void write_message(void * logger) {
+  // Writes a message to the log
+  // Gets input from the user in the control window
 
   erase_print_window(1);
-
+  print(CONTROL_WINDOW, "Please enter a message:", 5);
+  print(CONTROL_WINDOW, "", 1);                          // Print an empty line
+  
   char message[32];
   
-  //fgets(message, sizeof(message), stdin);
-  getstr(message);
+  echo();
+  //mvwgetstr(print_views[CONTROL_WINDOW] -> view -> window, 0, 0, message);
+  wgetstr(print_views[CONTROL_WINDOW] -> view -> window, message);
+  noecho();
+
+  print(GENERAL_WINDOW, "Logged message:", 5);
   print(GENERAL_WINDOW, message, 1);
 
   // Get timestamp

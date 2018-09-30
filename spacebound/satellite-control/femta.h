@@ -30,10 +30,11 @@ typedef struct module {
 
   bool initialized;
   bool loaded;
+  bool enabled;                 // Whether module is actually on the sat
 
 } module;
 
-module ** modules, * MPU, * Valve, * FEMTA;
+module ** modules, * MPU, * Valve, * FEMTA, * QB;
 
 time_t start_time;
 

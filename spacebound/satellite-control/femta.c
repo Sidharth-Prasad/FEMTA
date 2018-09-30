@@ -17,7 +17,7 @@
 #include "logger.h"
 #include "colors.h"
 
-#define NUMBER_OF_MODULES 3
+#define NUMBER_OF_MODULES 4
 
 #define I2C_STATE 2
 #define UART_STATE 3
@@ -49,17 +49,25 @@ void initialize_satellite() {
   // All modules should be grouped together
   MPU   = modules[0];
   Valve = modules[1];
-  FEMTA = modules[2];
+  FEMTA = modules[3];
+  QB    = modules[2];
 
   // Set module identifiers for printing
   MPU   -> identifier = "MPU 9250";
   Valve -> identifier = "Valve";
   FEMTA -> identifier = "FEMTA";
+  QB    -> identifier = "Quad Bank";
 
   // Set each module's number of pins
   MPU   -> n_pins = 2;
   Valve -> n_pins = 1;
   FEMTA -> n_pins = 4;
+  QB    -> n_pins = 4;
+
+  MPU   -> enabled = true;
+  Valve -> enabled = true;
+  FEMTA -> enabled = false;
+  QB    -> enabled = true;
 
   // Get space for module pin arrays
   for (char m = 0; m < NUMBER_OF_MODULES; m++)
@@ -78,6 +86,14 @@ void initialize_satellite() {
   initialize_pin(&(FEMTA -> pins[2]), 27, 13, PI_OUTPUT);
   initialize_pin(&(FEMTA -> pins[3]), 22, 15, PI_OUTPUT);
 
+  // The quad bank pins are: 0 = CW, 1 = CCW, and 2 is the PWM control. The circuit
+  // is set up with the 0 and 1 pins acting as "on" switches; so setting 0 to HIGH
+  // will turn on the CW engines, and then 2 will act as the throttle
+  initialize_pin(&(QB -> pins[0]), 23, 16, PI_OUTPUT);
+  initialize_pin(&(QB -> pins[1]), 18, 12, PI_OUTPUT);
+  initialize_pin(&(QB -> pins[2]), 24, 18, PI_OUTPUT);
+  initialize_pin(&(QB -> pins[3]), 25, 22, PI_OUTPUT);
+
   // Set up the interfaces
   bool i2c_success    = initialize_i2c(MPU);
 
@@ -85,6 +101,7 @@ void initialize_satellite() {
   MPU   -> initialized = i2c_success;
   Valve -> initialized = true;
   FEMTA -> initialized = true;
+  QB    -> initialized = true;
 
   bool thermal_success = initialize_temperature_monitoring();
   
@@ -214,20 +231,12 @@ int main() {
 
   initialize_scripter();
   
-  /*Plot * all_possible_owners[4] = {
-    temperature_plot,
-    mpu_gyro_plot,
-    mpu_acel_plot,
-    mpu_magn_plot,
-    };*/
-
   all_possible_owners    = malloc(4 * sizeof(Plot *));
   all_possible_owners[0] = temperature_plot;
   all_possible_owners[1] = mpu_gyro_plot;
   all_possible_owners[2] = mpu_acel_plot;
   all_possible_owners[3] = mpu_magn_plot;
 
-  //List * owner_index_list = create_list(0, true);   // Doublly linked list of owners
   owner_index_list = create_list(0, true);   // Doublly linked list of owners
 
   // Temperature plot no matter what
@@ -240,31 +249,44 @@ int main() {
 
   // State of the interface
   bool user_input = true;           // Whether we are accepting input
-  //bool manual_mode = false;         // 
-
   
   // Allocate space for selectors
   Selector * main_menu = create_selector(NULL);
-  Selector * manual  = create_selector(main_menu);
-  Selector * scripts = create_selector(main_menu);
+  Selector * manual    = create_selector(main_menu);
+  Selector * scripts   = create_selector(main_menu);
+  Selector * auto_menu = create_selector(main_menu);
+  Selector * pid_menu  = create_selector(main_menu);
 
   // Make the menus
-  add_selector_command(main_menu, 'c', "Cycle graph",    (lambda)     cycle_graph,                     NULL);
-  add_selector_command(main_menu, 'm', "Manual control", (lambda) change_selector,  (void *)         manual);
-  add_selector_command(main_menu, 's', "Run script",     (lambda) change_selector,  (void *)        scripts);
-  add_selector_command(main_menu, 'q', "Quit",           (lambda)       flip_bool,  (void *)    &user_input);
+  add_selector_command(main_menu, 'q', "Quit"            , (lambda)       flip_bool,  (void *)    &user_input);
+  add_selector_command(main_menu, 's', "Run script"      , (lambda) change_selector,  (void *)        scripts);
+  add_selector_command(main_menu, 'm', "Manual control"  , (lambda) change_selector,  (void *)         manual);
+  add_selector_command(main_menu, 'a', "Auto control"    , (lambda) change_selector,  (void *)      auto_menu);
+  add_selector_command(main_menu, 'p', "PID control"     , (lambda) change_selector,  (void *)       pid_menu);
+  add_selector_command(main_menu, 'c', "Cycle graph"     , (lambda)     cycle_graph,                     NULL);
   
-  add_selector_command(   manual, '0', "FEMTA 0",        (lambda)      flip_femta,  (void *)              0);
-  add_selector_command(   manual, '1', "FEMTA 1",        (lambda)      flip_femta,  (void *)              1);
-  add_selector_command(   manual, '2', "FEMTA 2",        (lambda)      flip_femta,  (void *)              2);
-  add_selector_command(   manual, '3', "FEMTA 3",        (lambda)      flip_femta,  (void *)              3);
-  add_selector_command(   manual, 'v', "Valve",          (lambda)      flip_valve,                     NULL);
-  add_selector_command(   manual, 'r', "Rotate",         (lambda)          rotate,                     NULL);
-  add_selector_command(   manual, 'm', "Write message",  (lambda)   write_message,  (void *) message_logger);
+  add_selector_command(   manual, 'm', "Write message"   , (lambda)   write_message,  (void *) message_logger);
+  add_selector_command(   manual, 'v', "Valve"           , (lambda)      flip_valve,                     NULL);
+  add_selector_command(   manual, 'r', "Rotate"          , (lambda)          rotate,                     NULL);
+  add_selector_command(   manual, 'p', "QB PWM"          , (lambda)          rotate,                     NULL);
+  add_selector_command(   manual, 'e', "QB CCW"          , (lambda)          rotate,                     NULL);
+  add_selector_command(   manual, 'w', "QB CW"           , (lambda)          rotate,                     NULL);
+//add_selector_command(   manual, '0', "FEMTA 0"         , (lambda)      flip_femta,  (void *)              0);
+//add_selector_command(   manual, '1', "FEMTA 1"         , (lambda)      flip_femta,  (void *)              1);
+//add_selector_command(   manual, '2', "FEMTA 2"         , (lambda)      flip_femta,  (void *)              2);
+//add_selector_command(   manual, '3', "FEMTA 3"         , (lambda)      flip_femta,  (void *)              3);
 
-  add_selector_command(  scripts, 'i', "Test",           (lambda)  execute_script,  (void *)       "test.x");
-  add_selector_command(  scripts, 'e', "Example",        (lambda)  execute_script,  (void *)    "example.x");
-  add_selector_command(  scripts, 't', "Tuner",          (lambda)  execute_script,  (void *)      "tuner.x");
+  add_selector_command(  scripts, 'i', "Test"            , (lambda)  execute_script,  (void *)       "test.x");
+  add_selector_command(  scripts, 'e', "Example"         , (lambda)  execute_script,  (void *)    "example.x");
+  add_selector_command(  scripts, 't', "Tuner"           , (lambda)  execute_script,  (void *)      "tuner.x");
+
+  add_selector_command(auto_menu, 'x', "Ramp 0-100%"     , (lambda)          rotate,                     NULL);
+  add_selector_command(auto_menu, 'y', "Pyramid 0-100-0%", (lambda)          rotate,                     NULL);
+  add_selector_command(auto_menu, 'z', "Configuration"   , (lambda)          rotate,                     NULL);
+
+  add_selector_command( pid_menu, 't', "test w/ data"    , (lambda)          rotate,                     NULL);
+  add_selector_command( pid_menu, 'n', "Initialize PID"  , (lambda)          rotate,                     NULL);
+
   
   visible_selector = main_menu;
   present_selector(visible_selector);
