@@ -13,6 +13,7 @@
 #include "temperature-monitoring.h"
 #include "graphics.h"
 #include "selector.h"
+#include "controller.h"
 #include "scripter.h"
 #include "logger.h"
 #include "colors.h"
@@ -280,7 +281,7 @@ int main() {
   add_selector_command(  scripts, 'e', "Example"         , (lambda)  execute_script,  (void *)    "example.x");
   add_selector_command(  scripts, 't', "Tuner"           , (lambda)  execute_script,  (void *)      "tuner.x");
 
-  add_selector_command(auto_menu, 'x', "Ramp 0-100%"     , (lambda)          rotate,                     NULL);
+  add_selector_command(auto_menu, 'x', "Ramp 0-100%"     , (lambda)         ramp_up,                     NULL);
   add_selector_command(auto_menu, 'y', "Pyramid 0-100-0%", (lambda)          rotate,                     NULL);
   add_selector_command(auto_menu, 'z', "Configuration"   , (lambda)          rotate,                     NULL);
 

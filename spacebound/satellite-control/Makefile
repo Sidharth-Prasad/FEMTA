@@ -1,16 +1,19 @@
 
-CFLAGS = -lpigpio -lrt -lpthread -lncurses -lmenu   # C linking flags
+CFLAGS = -lpigpio -lrt -lpthread -lncurses -lmenu -lm   # C linking flags
 
-GFLAGS=                                             # Granular flags
+GFLAGS=                                                 # Granular flags
 
 femta-debug: GFLAGS += -g
 femta-debug: femta
 
-femta: femta.o i2c-interface.o temperature-monitoring.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o error.o
-	gcc $(CFLAGS) $(GFLAGS) -o femta femta.o i2c-interface.o temperature-monitoring.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o error.o
+femta: femta.o controller.o i2c-interface.o temperature-monitoring.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o quaternion.o error.o
+	gcc $(CFLAGS) $(GFLAGS) -o femta femta.o controller.o i2c-interface.o temperature-monitoring.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o quaternion.o  error.o
 
-femta.o: femta.c femta.h i2c-interface.h temperature-monitoring.h graphics.h selector.h scripter.h logger.h colors.h
-	gcc $(GFLAGS) -c femta.c femta.h i2c-interface.h temperature-monitoring.h graphics.h selector.h scripter.h logger.h colors.h
+femta.o: femta.c femta.h controller.h i2c-interface.h temperature-monitoring.h graphics.h selector.h scripter.h logger.h colors.h
+	gcc $(GFLAGS) -c femta.c femta.h controller.h i2c-interface.h temperature-monitoring.h graphics.h selector.h scripter.h logger.h colors.h
+
+controller.o: controller.c controller.h femta.h quaternion.h graphics.h selector.h colors.h
+	gcc $(GFLAGS) -c controller.c controller.h femta.h quaternion.h graphics.h selector.h colors.h
 
 i2c-interface.o: i2c-interface.c i2c-interface.h femta.h graphics.h timing.h logger.h colors.h
 	gcc $(GFLAGS) -c i2c-interface.c i2c-interface.h femta.h graphics.h timing.h logger.h colors.h
@@ -38,6 +41,9 @@ hashmap.o: hashmap.c hashmap.h linked-list.h
 
 linked-list.o: linked-list.c linked-list.h
 	gcc $(GFLAGS) -c linked-list.c linked-list.h 
+
+quaternion.o: quaternion.c quaternion.h
+	gcc $(GFLAGS) -c quaternion.c quaternion.h
 
 error.o: error.c error.h
 	gcc $(GFLAGS) -c error.c error.h

@@ -8,6 +8,10 @@
 #include "graphics.h"
 #include "femta.h"
 
+#include "controller.h"
+#include "quaternion.h"
+
+
 void change_selector(void * selector);   // promise
 
 Selector * create_selector(Selector * parent) {
@@ -18,6 +22,7 @@ Selector * create_selector(Selector * parent) {
   
   selector -> entries = create_list(0, false);
 
+  // Adds a back button if this isn't the main menu
   if (parent) add_selector_command(selector, 'b', "back", (lambda) change_selector, (void *) parent);
 
   return selector;

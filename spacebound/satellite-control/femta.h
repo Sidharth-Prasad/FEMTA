@@ -40,5 +40,7 @@ time_t start_time;
 
 void set_voltage(pin * p, char voltage);
 
+void set_pwm(pin * p, unsigned char duty_cycle);
+
 #include "i2c-interface.h"       // Promise fulfilled for the compiler
 #endif
