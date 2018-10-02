@@ -256,10 +256,10 @@ void initialize_graphics() {
   else                              print(2, "I2C   FAILURE"          , 4);*/
   
 
-  print(0, "5 Threads are running", 0);
-  print(0, "  - MPU is being sampled at 10 Hz", 0);
-  print(0, "  - CPU is being sampled at 1 Hz", 0);
-  print(0, "Logging 3 files asynchronously", 0);
+  //print(0, "5 Threads are running", 0);
+  //print(0, "  - MPU is being sampled at 10 Hz", 0);
+  //print(0, "  - CPU is being sampled at 1 Hz", 0);
+  //print(0, "Logging 3 files asynchronously", 0);
   //print(0, "The OS is running 21 threads", 0);
   //print(1, "c: cycle graphs"             , 0);
   //print(1, "m: manual control"           , 0);
@@ -377,6 +377,16 @@ void erase_print_window(unsigned char window_number) {
   for (unsigned char l = 0; l < print_views[window_number] -> number_of_lines; l++) {
     print(window_number, "", 0);
   }
+}
+
+void stomp_printer(unsigned char window_number, char * string, unsigned int color) {
+  // Destroys and replaces the last line of the printer
+  // This is useful for taking user input and printing over a blank line
+  
+  print_view * printer = print_views[window_number];
+
+  printer -> lines  -> head -> value = (void *) strdup(string);   // Another leak
+  printer -> colors -> head -> value = (void *) color;
 }
 
 void update_state_graphic(unsigned char line, bool state) {

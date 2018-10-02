@@ -70,6 +70,7 @@ setup_view ** setup_views;
 void initialize_graphics();
 void terminate_graphics();
 void print(unsigned char window_number, char * string, unsigned int color);
+void stomp_printer(unsigned char window_number, char * string, unsigned int color);
 void clear_print_window(unsigned char window_number);
 void erase_print_window(unsigned char window_number);
 void update_state_graphic(unsigned char line, bool state);

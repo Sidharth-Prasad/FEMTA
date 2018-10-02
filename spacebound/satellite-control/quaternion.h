@@ -11,5 +11,4 @@ void get_DCM_angles321(float * angles, float * q);
 
 
 
-
 #endif

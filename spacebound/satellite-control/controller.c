@@ -39,20 +39,21 @@ void ramp_up(void * nil) {
 
   char answer[8];
   wgetstr(print_views[CONTROL_WINDOW] -> view -> window, answer);
-
+  stomp_printer(CONTROL_WINDOW, answer, 1);
+  
   if (answer[0] == 'n') {
     // User wants to use new default value
 
     print(CONTROL_WINDOW, "Please enter time between steps:", 5);
-    //print(CONTROL_WINDOW, "", 1);
+    print(CONTROL_WINDOW, "", 1);
     wgetstr(print_views[CONTROL_WINDOW] -> view -> window, default_string);
-    print(CONTROL_WINDOW, default_string, 1);
+    stomp_printer(CONTROL_WINDOW, default_string, 1);
     step_size = atoi(default_string);
     
     print(CONTROL_WINDOW, "Please enter the step size:", 5);
     print(CONTROL_WINDOW, "", 1);
     wgetstr(print_views[CONTROL_WINDOW] -> view -> window, default_string);
-    print(CONTROL_WINDOW, default_string, 1);
+    stomp_printer(CONTROL_WINDOW, default_string, 1);
     time_between = atoi(default_string);
     
     print(CONTROL_WINDOW, "Save these as the new defaults? [y/n]", 5);
