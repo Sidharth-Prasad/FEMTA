@@ -53,7 +53,7 @@ void initialize_graphics() {
   for (unsigned char p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) print_views[p] = malloc(sizeof(print_view));
   for (unsigned char g = 0; g < NUMBER_OF_GRAPH_VIEWS; g++) graph_views[g] = malloc(sizeof(graph_view));
   for (unsigned char s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] = malloc(sizeof(setup_view));
-
+  
   for (unsigned char p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) print_views[p] -> view = malloc(sizeof(View));
   for (unsigned char g = 0; g < NUMBER_OF_GRAPH_VIEWS; g++) graph_views[g] -> view = malloc(sizeof(View));
   for (unsigned char s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] -> view = malloc(sizeof(View));
@@ -413,7 +413,9 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
   else {
     
     // The graphics library might not be finished initializing at this point
-    while (number_of_data_points_plottable == 0);   // Spin lock threads until library is set up
+    while (number_of_data_points_plottable == 0) {   // Spin lock threads until library is set up
+      sleep(0);
+    }
 
     // Update all lists in the plot to the initialized value
     for (unsigned char l = 0; l < plot -> number_of_lists; l++) {

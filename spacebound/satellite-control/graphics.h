@@ -80,7 +80,7 @@ void plot_add_value(Plot * plot, List * list, Node * node);
 
 Plot * create_plot(char * name, unsigned char number_of_lists);
 
-unsigned char number_of_data_points_plottable;
+unsigned char number_of_data_points_plottable;  // = 0
 
 Plot *  graph_owner;              // The stream in control of the plot area
 Plot ** all_possible_owners;      // All possible plots that could be in control

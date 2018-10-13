@@ -13,16 +13,14 @@
 #include "quaternion.h"
 #include "graphics.h"
 #include "selector.h"
+#include "logger.h"
 #include "colors.h"
 
 int default_step_size = 0;
 int default_time_between = 0;
 
-void ramp_up(void * nil) {
+void configure_ramping_and_pyramid(int * step_size, int * time_between) {
 
-  int step_size    = default_step_size;
-  int time_between = default_time_between;
-  
   erase_print_window(1);
   echo();
 
@@ -31,9 +29,9 @@ void ramp_up(void * nil) {
   print(CONTROL_WINDOW, "About to execute. Use defaults below? [y/n]", 5);
 
   char default_string[256];
-  sprintf(default_string, "step size:   %d", default_step_size);
+  sprintf(default_string, "step size:    %d", default_step_size);
   print(CONTROL_WINDOW, default_string, 1);
-  sprintf(default_string, "timebetween: %d", default_time_between);
+  sprintf(default_string, "time between: %d", default_time_between);
   print(CONTROL_WINDOW, default_string, 1);
   print(CONTROL_WINDOW, "", 1);
 
@@ -48,13 +46,13 @@ void ramp_up(void * nil) {
     print(CONTROL_WINDOW, "", 1);
     wgetstr(print_views[CONTROL_WINDOW] -> view -> window, default_string);
     stomp_printer(CONTROL_WINDOW, default_string, 1);
-    step_size = atoi(default_string);
+    *step_size = atoi(default_string);
     
     print(CONTROL_WINDOW, "Please enter the step size:", 5);
     print(CONTROL_WINDOW, "", 1);
     wgetstr(print_views[CONTROL_WINDOW] -> view -> window, default_string);
     stomp_printer(CONTROL_WINDOW, default_string, 1);
-    time_between = atoi(default_string);
+    *time_between = atoi(default_string);
     
     print(CONTROL_WINDOW, "Save these as the new defaults? [y/n]", 5);
     print(CONTROL_WINDOW, "", 1);
@@ -62,17 +60,38 @@ void ramp_up(void * nil) {
     wgetstr(print_views[CONTROL_WINDOW] -> view -> window, answer);
 
     if (answer[0] == 'y') {
-      default_step_size    = step_size;
-      default_time_between = time_between;
+      default_step_size    = *step_size;
+      default_time_between = *time_between;
+      
+      print(GENERAL_WINDOW, "Changed defaults", 5);
+      char default_string[256];
+      sprintf(default_string, "step size:    %d", default_step_size);
+      print(GENERAL_WINDOW, default_string, 1);
+      sprintf(default_string, "time between: %d", default_time_between);
+      print(GENERAL_WINDOW, default_string, 1);
     }
   }
   noecho();
 
-  present_selector((void *) visible_selector);
+}
+
+void pause_execution() {
+  char pause_buffer[256];
+  print(CONTROL_WINDOW, "Press enter to continue", 5);
+  print(CONTROL_WINDOW, "", 1);
+  wgetstr(print_views[CONTROL_WINDOW] -> view -> window, pause_buffer);
+  stomp_printer(CONTROL_WINDOW, pause_buffer, 1);
+}
+
+void ramp_up(void * nil) {
+
+  int step_size    = default_step_size;
+  int time_between = default_time_between;
   
-  return;   // SHORT
+  configure_ramping_and_pyramid(&step_size, &time_between);
   
-  char dummy;
+  print(CONTROL_WINDOW, "First phase", 5);
+
   for (int j = 0; j <= 1; j++) {
 
     for (int i = MIN_SAT; i <= MAX_PWM; i += step_size) {
@@ -83,52 +102,70 @@ void ramp_up(void * nil) {
 
     set_pwm(QB -> pins + j, 0);
     set_pwm(QB -> pins + j + 2, 0);
-    scanf("%s", &dummy);
+
+    if (!j) {
+      pause_execution();
+      print(CONTROL_WINDOW, "Second phase", 5);
+    }
   }
+
+  present_selector((void *) visible_selector);
 }
 
-void pyramid(int stepsize, int timebtwn) {
+void pyramid(void * nil) {
   
-  char dummy;
+  int step_size    = default_step_size;
+  int time_between = default_time_between;
+  
+  configure_ramping_and_pyramid(&step_size, &time_between);
+  
+  print(CONTROL_WINDOW, "First phase", 5);
+  
   for (int j = 0; j <= 1; j++) {
-
-    for (int i = MIN_SAT; i <= MAX_PWM; i += stepsize) {
-      set_pwm(QB -> pins + j, i);
+    
+    for (int i = MIN_SAT; i <= MAX_PWM; i += step_size) {
+      set_pwm(QB -> pins + j    , i);
       set_pwm(QB -> pins + j + 2, i);
-      sleep(timebtwn);
+      sleep(time_between);
     }
     
-    for (int i = MAX_PWM; i >= MIN_SAT; i -= stepsize) {
-      set_pwm(QB -> pins + j, i);
+    for (int i = MAX_PWM; i >= MIN_SAT; i -= step_size) {
+      set_pwm(QB -> pins + j    , i);
       set_pwm(QB -> pins + j + 2, i);
-      sleep(timebtwn);
+      sleep(time_between);
     }
-
+    
     set_pwm(QB -> pins + j, 0);
     set_pwm(QB -> pins + j + 2, 0);
-    scanf("%s", &dummy);
+    
+    if (!j) {
+      pause_execution();
+      print(CONTROL_WINDOW, "Second phase", 5);
+    }
   }
+  
+  present_selector((void *) visible_selector);
 }
 
-void set_bank_speed(bool CW, bool CCW, int pwm_num) {
+void set_bank_speed(bool Clockwise, int pwm_num) {
 
-  if (CW) {
+  if (Clockwise) {
     set_pwm(QB -> pins + 1, pwm_num);
     set_pwm(QB -> pins + 2, pwm_num);
+    return;
   }
-  else if (CCW) {
-    set_pwm(QB -> pins + 0, pwm_num);
-    set_pwm(QB -> pins + 3, pwm_num);
-  }
+
+  set_pwm(QB -> pins + 0, pwm_num);
+  set_pwm(QB -> pins + 3, pwm_num);
 }
 
 
-float rise_time(float phi_des) {
+__attribute__((const)) float rise_time(float phi_des) {
   // estimates the rise time for the system's tracking signal
   return phi_des / 1.0; // linear scale for now, determine actual from testing
 }
 
-float tracking_signal_value(int phi_des, float t, float tr) {
+__attribute__((const)) float tracking_signal_value(int phi_des, float t, float tr) {
   /* Purpose of this is to get a live tracking signal value at any given time since start t
    * phi_des = desired final orientation, degrees
    * t = current time since start in seconds
@@ -142,57 +179,29 @@ float tracking_signal_value(int phi_des, float t, float tr) {
   return phi_tr;
 }
 
-
-float get_mpu_val() {
-
-  // Note from Noah - This will kill your PID: files cannot be opened and closed thousands of times each second
-  // Connecting to the MPU linked lists can get the values from RAM. If you need help with that, I'll write it.
-  // What you did here is clever but would work well only if this were executed once in a blue moon
-  
-  FILE * fhand = fopen("./logs/mpu-log.txt", "r");
-  char line[1024] = "";
-  char c = '1';
-  int max_back = -100;
-  int i = -2;
-  int mpu_read;
-  float gx, gy, gz, ax, ay, az, mx, my, mz, quoi;
-
-  // back up fseek until newline character is read
-  while (i >= max_back && c != '\n') {
-    fseek(fhand, i, SEEK_END);
-    c = fgetc(fhand);
-    i--;
-  }
-
-  fgets(line, sizeof(line), fhand);
-  sscanf(line, "%d %f %f %f %f %f %f %f %f %f %f", &mpu_read, &gx, &gy, &gz, &ax, &ay, &az, &mx, &my, &mz, &quoi);
-  fclose(fhand);
-  return gx;
-}
-
 void PID_controller(bool CW, bool CCW, float init_or, float dor) {
   // init_or will be defined as 0 degrees until data can be read from MPU
   // dor is the change in orientation (delta orientation)
-  /*
-  Logger * logger = create_logger("./logs/PID-log.txt");
-  logger -> open(logger);
-  fprintf(logger -> file,
+  
+  /*Logger * pid_logger = create_logger("./logs/pid-log.txt");
+  pid_logger -> open(pid_logger);
+  fprintf(pid_logger -> file,
 	  YELLOW "\nRecording PID Data\nDevice\tDevice State\tMPU Measures\tBNO Measures\tSystem Time\n" RESET);
-  logger -> close(logger);
+  pid_logger -> close(pid_logger);
 
   // declare variables
   int mpu_reads = 0;
   int bno_reads = 0;
   struct timeval start_time;
   struct timeval end_time;
-  float err1, prev_error, err_sum, KP, KI, KD, new_pwmf;
+  float err1, prev_error, err_sum, new_pwmf;
   int new_pwm;
   float q[4] = {1.0f, 0.0f, 0.0f, 0.0f}; // quaternion vector
 
   // define PID Constants
-  KP = 75;
-  KI = 18.75;
-  KD = 37.5;
+  float KP = 75;
+  float KI = 18.75;
+  float KD = 37.5;
 
   // initialize system
   prev_error = 0.0;
@@ -254,7 +263,7 @@ void PID_controller(bool CW, bool CCW, float init_or, float dor) {
     new_pwm = (int) (new_pwmf);
 
     if (err1 >= PID_ERR_TOL) { // err1 is already ABS'd, so if less than err tol, then it is close to target
-      if (new_pwm < MIN_SAT) new_pwm = MIN_SAT;
+      if      (new_pwm < MIN_SAT) new_pwm = MIN_SAT;
       else if (new_pwm > MAX_PWM) new_pwm = MAX_PWM;
     }
     else new_pwm = 0;
@@ -268,8 +277,8 @@ void PID_controller(bool CW, bool CCW, float init_or, float dor) {
     fprintf(logger -> file, "QB %d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\n",
 	    CCW, new_pwm, mpu_reads, bno_reads,tdiff, angles[0], phi_mpu, angles[2], phi_tr);
     logger -> close(logger);
-  }
-  */
+    }*/
+  
 }
 
 /*float yaw_angle(struct Logger * mpu_logger) {

@@ -32,6 +32,8 @@ typedef struct module {
   bool loaded;
   bool enabled;                 // Whether module is actually on the sat
 
+  char graphic;                 // The state graphic this module is represented with
+
 } module;
 
 module ** modules, * MPU, * Valve, * FEMTA, * QB;

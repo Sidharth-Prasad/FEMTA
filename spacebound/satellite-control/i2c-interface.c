@@ -53,8 +53,7 @@
 #define YA_OFFSET_H      0x7A
 #define ZA_OFFSET_H      0x7D
 
-FILE * mpu_log_file;
-char * mpu_log_file_name = "./logs/mpu-log.txt";
+
 pthread_t mpu_thread;
 bool mpu_termination_signal;       // used to terminate child thread
 int mpu_values_read = 0;
@@ -177,48 +176,47 @@ void readMagData(float * axes) {
 }
 
 void * log_mpu_data() {
+  
+  mpu_logger = create_logger("./logs/mpu-log.txt");
+  mpu_logger -> open(mpu_logger);
 
-  mpu_logger = create_logger(mpu_log_file_name);
+  fprintf(mpu_logger -> file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\tTemp °C\n" RESET);
   
   while (!mpu_termination_signal) {
 
-    mpu_log_file = fopen(mpu_log_file_name, "a");
-
-    float log_data[50][10];
+    float log_data[64][10];
     
-    for (unsigned char i = 0; i < 50; i++) {
+    for (unsigned char i = 0; i < 64; i++) {
 
       // Write data into log_data array
-      readGyroData(log_data[i]);
+      readGyroData (log_data[i]    );
       readAccelData(log_data[i] + 3);
-      readMagData(log_data[i] + 6);
+      readMagData  (log_data[i] + 6);
       log_data[i][9] = readTempData();
       
-      fprintf(mpu_log_file, "%d\t", mpu_values_read++);
-      mpu_logger -> values_read = mpu_values_read;
-      for (unsigned char f = 0; f < 10; f++) fprintf(mpu_log_file, "%.3f\t", log_data[i][f]);
-      for (unsigned char f = 0; f <  3; f++) {
+      fprintf(mpu_logger -> file, "%d\t", mpu_logger -> values_read++);
 
+      for (unsigned char f = 0; f < 10; f++) fprintf(mpu_logger -> file, "%.3f\t", log_data[i][f]);
+      for (unsigned char f = 0; f <  3; f++) {
+	
 	// Add the float values casted as void *s to the plot lists
 	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f    ]))));
 	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f + 3]))));
 	plot_add_value(mpu_magn_plot, mpu_magn_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f + 6]))));
       }
       
-      fprintf(mpu_log_file, "\n");
-
+      fprintf(mpu_logger -> file, "\n");
+      
       graph_plot(mpu_gyro_plot);
       graph_plot(mpu_acel_plot);
       graph_plot(mpu_magn_plot);
       nano_sleep(100000000);
     }
     
-    fflush(stdout);
-
-    //graph_plot(mpu_gyro_plot);
-    
-    fclose(mpu_log_file);
+    fflush(mpu_logger -> file);
   }
+
+  mpu_logger -> close(mpu_logger);
 }
 
 void initMPU9250() {
@@ -467,10 +465,7 @@ bool initialize_i2c(module * initialent) {
 
    initAK8963(magCalibration);
     
-    // Successful initialization, open log file for recording temperature data
-    mpu_log_file = fopen(mpu_log_file_name, "a");
-    fprintf(mpu_log_file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\tTemp °C\n" RESET);
-    fclose(mpu_log_file);
+   
 
     // Spawn a logging thread
     mpu_termination_signal = false;

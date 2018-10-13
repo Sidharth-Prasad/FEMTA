@@ -111,7 +111,6 @@ void MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, 
   q[1] = q2 * norm;
   q[2] = q3 * norm;
   q[3] = q4 * norm;
-
 }
 
 

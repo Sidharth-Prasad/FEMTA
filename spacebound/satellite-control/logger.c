@@ -16,11 +16,12 @@ Logger * create_logger(char * filename) {
   Logger * logger = malloc(sizeof(Logger));
   logger -> filename = filename;
   logger -> values_read = 0;
-
+  
   // Connect function pointers
   logger -> open    = &open_prototype;
   logger -> close   = &close_prototype;
   logger -> destroy = &destroy_prototype;
+  return logger;
 }
 
 
