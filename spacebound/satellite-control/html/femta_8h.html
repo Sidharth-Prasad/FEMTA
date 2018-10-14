@@ -86,11 +86,12 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="femta_8h__dep__incl.png" border="0" usemap="#femta_8hdep" alt=""/></div>
 <map name="femta_8hdep" id="femta_8hdep">
-<area shape="rect" id="node2" href="femta_8c.html" title="femta.c" alt="" coords="5,80,72,107"/>
-<area shape="rect" id="node3" href="graphics_8c.html" title="graphics.c" alt="" coords="96,80,179,107"/>
-<area shape="rect" id="node4" href="i2c-interface_8c.html" title="i2c&#45;interface.c" alt="" coords="203,80,307,107"/>
-<area shape="rect" id="node5" href="selector_8c.html" title="selector.c" alt="" coords="331,80,410,107"/>
-<area shape="rect" id="node6" href="temperature-monitoring_8c.html" title="temperature&#45;monitoring.c" alt="" coords="434,80,601,107"/>
+<area shape="rect" id="node2" href="controller_8c.html" title="controller.c" alt="" coords="5,80,92,107"/>
+<area shape="rect" id="node3" href="femta_8c.html" title="femta.c" alt="" coords="117,80,183,107"/>
+<area shape="rect" id="node4" href="graphics_8c.html" title="graphics.c" alt="" coords="207,80,290,107"/>
+<area shape="rect" id="node5" href="i2c-interface_8c.html" title="i2c&#45;interface.c" alt="" coords="314,80,418,107"/>
+<area shape="rect" id="node6" href="selector_8c.html" title="selector.c" alt="" coords="443,80,521,107"/>
+<area shape="rect" id="node7" href="temperature-monitoring_8c.html" title="temperature&#45;monitoring.c" alt="" coords="545,80,712,107"/>
 </map>
 </div>
 </div>
@@ -118,6 +119,8 @@ Typedefs</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:add8fcf74e11d6f54778931df2410cf3a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="femta_8h.html#add8fcf74e11d6f54778931df2410cf3a">set_voltage</a> (<a class="el" href="structpin.html">pin</a> *p, char voltage)</td></tr>
 <tr class="separator:add8fcf74e11d6f54778931df2410cf3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab77890d508b0b089793017f183a470cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="femta_8h.html#ab77890d508b0b089793017f183a470cd">set_pwm</a> (<a class="el" href="structpin.html">pin</a> *p, unsigned char duty_cycle)</td></tr>
+<tr class="separator:ab77890d508b0b089793017f183a470cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -129,6 +132,8 @@ Variables</h2></td></tr>
 <tr class="separator:a5391f686a31f8f821be08bf57774e4fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab98b7042e535dae4972a7e9a83dd773b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmodule.html">module</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="femta_8h.html#ab98b7042e535dae4972a7e9a83dd773b">FEMTA</a></td></tr>
 <tr class="separator:ab98b7042e535dae4972a7e9a83dd773b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96c523dc31e9e2892e26f20f3332ac89"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmodule.html">module</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="femta_8h.html#a96c523dc31e9e2892e26f20f3332ac89">QB</a></td></tr>
+<tr class="separator:a96c523dc31e9e2892e26f20f3332ac89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad20e89e0c86aa812dc3a8e2fb7b5777b"><td class="memItemLeft" align="right" valign="top">time_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="femta_8h.html#ad20e89e0c86aa812dc3a8e2fb7b5777b">start_time</a></td></tr>
 <tr class="separator:ad20e89e0c86aa812dc3a8e2fb7b5777b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -190,6 +195,53 @@ Variables</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="ab77890d508b0b089793017f183a470cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab77890d508b0b089793017f183a470cd">&#9670;&nbsp;</a></span>set_pwm()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void set_pwm </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structpin.html">pin</a> *&#160;</td>
+          <td class="paramname"><em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>duty_cycle</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="femta_8h_ab77890d508b0b089793017f183a470cd_cgraph.png" border="0" usemap="#femta_8h_ab77890d508b0b089793017f183a470cd_cgraph" alt=""/></div>
+<map name="femta_8h_ab77890d508b0b089793017f183a470cd_cgraph" id="femta_8h_ab77890d508b0b089793017f183a470cd_cgraph">
+<area shape="rect" id="node2" href="femta_8c.html#a38759a3aa9cf6e83e88637bb2554cf42" title="check_if_writeable" alt="" coords="128,5,259,32"/>
+</map>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="femta_8h_ab77890d508b0b089793017f183a470cd_icgraph.png" border="0" usemap="#femta_8h_ab77890d508b0b089793017f183a470cd_icgraph" alt=""/></div>
+<map name="femta_8h_ab77890d508b0b089793017f183a470cd_icgraph" id="femta_8h_ab77890d508b0b089793017f183a470cd_icgraph">
+<area shape="rect" id="node2" href="controller_8h.html#aeefc9e02ca647cde356037b5033166fd" title="ramp_up" alt="" coords="151,5,223,32"/>
+<area shape="rect" id="node4" href="controller_8h.html#a3d51d5067e0c5307f18a9145f3592fd0" title="pyramid" alt="" coords="153,56,221,83"/>
+<area shape="rect" id="node5" href="controller_8h.html#a79cb74a64d9173f1412a2b261d7ac82f" title="set_bank_speed" alt="" coords="128,107,245,133"/>
+<area shape="rect" id="node3" href="femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="293,5,344,32"/>
+</map>
+</div>
+
+</div>
+</div>
 <a id="add8fcf74e11d6f54778931df2410cf3a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#add8fcf74e11d6f54778931df2410cf3a">&#9670;&nbsp;</a></span>set_voltage()</h2>
 
@@ -263,6 +315,20 @@ Here is the call graph for this function:</div>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structmodule.html">module</a> * MPU</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a96c523dc31e9e2892e26f20f3332ac89"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96c523dc31e9e2892e26f20f3332ac89">&#9670;&nbsp;</a></span>QB</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmodule.html">module</a> * QB</td>
         </tr>
       </table>
 </div><div class="memdoc">

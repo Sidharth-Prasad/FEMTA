@@ -1,13 +1,16 @@
 var searchData=
 [
+  ['madgwickquaternionupdate',['MadgwickQuaternionUpdate',['../quaternion_8c.html#a21007b667639e7de252734fa227a3941',1,'MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, float deltat, float *q):&#160;quaternion.c'],['../quaternion_8h.html#a21007b667639e7de252734fa227a3941',1,'MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, float deltat, float *q):&#160;quaternion.c']]],
   ['magbias',['magBias',['../i2c-interface_8c.html#a1a620a5636dd84d145b489e421707aa4',1,'i2c-interface.c']]],
   ['magcalibration',['magCalibration',['../i2c-interface_8c.html#a4d41bf736f1c2b22106e031a60ab3380',1,'i2c-interface.c']]],
   ['magnetometers',['magnetometers',['../structI2C.html#a1d9c6b23b7f65aeeb371e56134e90472',1,'I2C']]],
   ['magscale',['magScale',['../i2c-interface_8c.html#ac6c758c16370b67ea0d9f64e5f86d45f',1,'i2c-interface.c']]],
   ['main',['main',['../femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4',1,'femta.c']]],
+  ['max_5fpwm',['MAX_PWM',['../controller_8h.html#a1df990f1a1fc97b95e8d53f719968026',1,'controller.h']]],
   ['max_5fvalue',['max_value',['../structPlot.html#ad174b1c447b62ea0e4a49fd3e324ddf0',1,'Plot']]],
   ['mfs_5f14bits',['MFS_14BITS',['../i2c-interface_8c.html#afaba316616b675d20293848d3f9a38d5a3705f173570e50afaff66e74f19e7d8e',1,'i2c-interface.c']]],
   ['mfs_5f16bits',['MFS_16BITS',['../i2c-interface_8c.html#afaba316616b675d20293848d3f9a38d5ad9a80484caabaa2febccdcc7c524a41a',1,'i2c-interface.c']]],
+  ['min_5fsat',['MIN_SAT',['../controller_8h.html#ad99541aad779a151a2ce44d12214e6a4',1,'controller.h']]],
   ['min_5fvalue',['min_value',['../structPlot.html#a2fdd041a89c93f3b540ce57a59bce41c',1,'Plot']]],
   ['mmode',['Mmode',['../i2c-interface_8c.html#adfdf06250d090c90f08451e8a0702f2f',1,'i2c-interface.c']]],
   ['module',['module',['../structmodule.html',1,'module'],['../femta_8h.html#af823706dd788a41282165a94f3a3d52c',1,'module():&#160;femta.h'],['../i2c-interface_8h.html#ae4419133e617ca792ba6419b38c7de46',1,'module():&#160;i2c-interface.h']]],

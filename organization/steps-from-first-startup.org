@@ -52,12 +52,12 @@
 ** Contains various dot files and an auxillery for cd named cdd and newcdd
 ** You need to have GitHub access to the repository. Ask noah for an invitation.
 * cp ~/Layer/.* .
-* sudo emacs /etc/config.txt
+* sudo emacs /boot/config.txt
 ** append dtoverlay=pi3-disable-bt
 * sudo systemctl disable hciuart
 ** this removes bluetooth, which is necessary for our serial configuration to work
 ** More info here https://hallard.me/enable-serial-port-on-raspberry-pi/
-* sudo emacs ssmtp.conf
+* sudo emacs /etc/ssmtp/ssmtp.conf
 ** alter the following
 *** root=FEMTAdirect@gmail.com
 *** mailhub=smtp.gmail.com:587

@@ -1,10 +1,12 @@
 <map id="logger.h" name="logger.h">
-<area shape="rect" id="node2" href="$i2c-interface_8h.html" title="i2c&#45;interface.h" alt="" coords="257,80,361,107"/>
-<area shape="rect" id="node4" href="$femta_8c.html" title="femta.c" alt="" coords="5,229,72,256"/>
-<area shape="rect" id="node6" href="$i2c-interface_8c.html" title="i2c&#45;interface.c" alt="" coords="499,229,603,256"/>
-<area shape="rect" id="node9" href="$logger_8c.html" title="logger.c" alt="" coords="469,80,537,107"/>
-<area shape="rect" id="node3" href="$femta_8h.html" title="femta.h" alt="" coords="276,155,343,181"/>
-<area shape="rect" id="node8" href="$temperature-monitoring_8c.html" title="temperature&#45;monitoring.c" alt="" coords="97,229,263,256"/>
-<area shape="rect" id="node5" href="$graphics_8c.html" title="graphics.c" alt="" coords="288,229,371,256"/>
-<area shape="rect" id="node7" href="$selector_8c.html" title="selector.c" alt="" coords="395,229,474,256"/>
+<area shape="rect" id="node2" href="$i2c-interface_8h.html" title="i2c&#45;interface.h" alt="" coords="325,80,429,107"/>
+<area shape="rect" id="node5" href="$femta_8c.html" title="femta.c" alt="" coords="5,229,72,256"/>
+<area shape="rect" id="node7" href="$i2c-interface_8c.html" title="i2c&#45;interface.c" alt="" coords="609,229,713,256"/>
+<area shape="rect" id="node10" href="$controller_8h.html" title="controller.h" alt="" coords="190,155,277,181"/>
+<area shape="rect" id="node11" href="$logger_8c.html" title="logger.c" alt="" coords="553,80,621,107"/>
+<area shape="rect" id="node3" href="$femta_8h.html" title="femta.h" alt="" coords="309,155,376,181"/>
+<area shape="rect" id="node9" href="$temperature-monitoring_8c.html" title="temperature&#45;monitoring.c" alt="" coords="418,229,585,256"/>
+<area shape="rect" id="node4" href="$controller_8c.html" title="controller.c" alt="" coords="199,229,286,256"/>
+<area shape="rect" id="node6" href="$graphics_8c.html" title="graphics.c" alt="" coords="311,229,393,256"/>
+<area shape="rect" id="node8" href="$selector_8c.html" title="selector.c" alt="" coords="97,229,175,256"/>
 </map>

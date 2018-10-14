@@ -12,6 +12,7 @@ Node * create_node(void * value) {
   node -> value = value;
   node -> next = NULL;
   node -> prev = NULL;
+  return node;
 }
 
 // Creates a list with potentially limited length

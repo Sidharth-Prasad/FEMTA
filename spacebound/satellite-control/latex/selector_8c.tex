@@ -7,6 +7,8 @@
 {\ttfamily \#include \char`\"{}selector.\+h\char`\"{}}\newline
 {\ttfamily \#include \char`\"{}graphics.\+h\char`\"{}}\newline
 {\ttfamily \#include \char`\"{}femta.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}controller.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}quaternion.\+h\char`\"{}}\newline
 Include dependency graph for selector.\+c\+:
 \nopagebreak
 \begin{figure}[H]
@@ -49,16 +51,14 @@ void \hyperlink{selector_8c_a95c0e0986b48dbb9e8945a9b8d91ab9e}{write\+\_\+messag
 \subsubsection{\texorpdfstring{add\+\_\+selector\+\_\+command()}{add\_selector\_command()}}
 {\footnotesize\ttfamily void add\+\_\+selector\+\_\+command (\begin{DoxyParamCaption}\item[{\hyperlink{structSelector}{Selector} $\ast$}]{selector,  }\item[{char}]{key,  }\item[{char $\ast$}]{text,  }\item[{\hyperlink{selector_8h_a000f79cad05446d9e5c143a0585b377a}{lambda}}]{action,  }\item[{void $\ast$}]{argument }\end{DoxyParamCaption})}
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=306pt]{selector_8c_a255f054a233ae9088c61f186820a2dea_cgraph}
 \end{center}
 \end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -71,16 +71,14 @@ Here is the caller graph for this function\+:
 \subsubsection{\texorpdfstring{change\+\_\+selector()}{change\_selector()}}
 {\footnotesize\ttfamily void change\+\_\+selector (\begin{DoxyParamCaption}\item[{void $\ast$}]{selector }\end{DoxyParamCaption})}
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=350pt]{selector_8c_a5dbc77744df9f365fe80912765933e71_cgraph}
 \end{center}
 \end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -93,16 +91,14 @@ Here is the caller graph for this function\+:
 \subsubsection{\texorpdfstring{create\+\_\+selector()}{create\_selector()}}
 {\footnotesize\ttfamily \hyperlink{structSelector}{Selector}$\ast$ create\+\_\+selector (\begin{DoxyParamCaption}\item[{\hyperlink{structSelector}{Selector} $\ast$}]{parent }\end{DoxyParamCaption})}
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=350pt]{selector_8c_aa0be9c44e18a4a88d05836979b032555_cgraph}
 \end{center}
 \end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -115,16 +111,14 @@ Here is the caller graph for this function\+:
 \subsubsection{\texorpdfstring{cycle\+\_\+graph()}{cycle\_graph()}}
 {\footnotesize\ttfamily void cycle\+\_\+graph (\begin{DoxyParamCaption}\item[{void $\ast$}]{nil }\end{DoxyParamCaption})}
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=350pt]{selector_8c_af52577609cb803ac1e0db975d7e24f43_cgraph}
 \end{center}
 \end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -137,8 +131,7 @@ Here is the caller graph for this function\+:
 \subsubsection{\texorpdfstring{execute\+\_\+selector()}{execute\_selector()}}
 {\footnotesize\ttfamily void execute\+\_\+selector (\begin{DoxyParamCaption}\item[{\hyperlink{structSelector}{Selector} $\ast$}]{selector,  }\item[{char}]{key }\end{DoxyParamCaption})}
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -151,8 +144,7 @@ Here is the caller graph for this function\+:
 \subsubsection{\texorpdfstring{flip\+\_\+bool()}{flip\_bool()}}
 {\footnotesize\ttfamily void flip\+\_\+bool (\begin{DoxyParamCaption}\item[{void $\ast$}]{pointer }\end{DoxyParamCaption})}
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -165,14 +157,6 @@ Here is the caller graph for this function\+:
 \subsubsection{\texorpdfstring{flip\+\_\+femta()}{flip\_femta()}}
 {\footnotesize\ttfamily void flip\+\_\+femta (\begin{DoxyParamCaption}\item[{void $\ast$}]{number }\end{DoxyParamCaption})}
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=213pt]{selector_8c_a98c1085d56f5c7fa3d2aa4152c4149f2_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{selector_8c_a9f01d18464a14ae5527061596c158546}\label{selector_8c_a9f01d18464a14ae5527061596c158546}} 
 \index{selector.\+c@{selector.\+c}!flip\+\_\+valve@{flip\+\_\+valve}}
 \index{flip\+\_\+valve@{flip\+\_\+valve}!selector.\+c@{selector.\+c}}
@@ -215,8 +199,7 @@ Here is the caller graph for this function\+:
 \subsubsection{\texorpdfstring{rotate()}{rotate()}}
 {\footnotesize\ttfamily void rotate (\begin{DoxyParamCaption}\item[{void $\ast$}]{nil }\end{DoxyParamCaption})}
 
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -229,16 +212,14 @@ Here is the caller graph for this function\+:
 \subsubsection{\texorpdfstring{write\+\_\+message()}{write\_message()}}
 {\footnotesize\ttfamily void write\+\_\+message (\begin{DoxyParamCaption}\item[{void $\ast$}]{logger }\end{DoxyParamCaption})}
 
-Here is the call graph for this function\+:
-\nopagebreak
+Here is the call graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
 \includegraphics[width=350pt]{selector_8c_a95c0e0986b48dbb9e8945a9b8d91ab9e_cgraph}
 \end{center}
 \end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
+Here is the caller graph for this function\+:\nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode

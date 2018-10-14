@@ -1,7 +1,8 @@
 <map id="erase_print_window" name="erase_print_window">
-<area shape="rect" id="node2" href="$selector_8h.html#aed1ec1657292441550d4f9c7884abcec" title="present_selector" alt="" coords="191,27,309,53"/>
-<area shape="rect" id="node6" href="$selector_8h.html#a91f19fa0a64a5300eb71dea13a36a389" title="write_message" alt="" coords="361,77,471,104"/>
-<area shape="rect" id="node3" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="681,27,732,53"/>
-<area shape="rect" id="node4" href="$selector_8h.html#a5dbc77744df9f365fe80912765933e71" title="change_selector" alt="" coords="357,27,475,53"/>
-<area shape="rect" id="node5" href="$selector_8c.html#aa0be9c44e18a4a88d05836979b032555" title="create_selector" alt="" coords="523,52,633,79"/>
+<area shape="rect" id="node2" href="$controller_8h.html#aeefc9e02ca647cde356037b5033166fd" title="ramp_up" alt="" coords="380,5,452,32"/>
+<area shape="rect" id="node4" href="$selector_8h.html#aed1ec1657292441550d4f9c7884abcec" title="present_selector" alt="" coords="191,69,309,96"/>
+<area shape="rect" id="node7" href="$selector_8h.html#a91f19fa0a64a5300eb71dea13a36a389" title="write_message" alt="" coords="361,157,471,184"/>
+<area shape="rect" id="node3" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="681,107,732,133"/>
+<area shape="rect" id="node5" href="$selector_8h.html#a5dbc77744df9f365fe80912765933e71" title="change_selector" alt="" coords="357,107,475,133"/>
+<area shape="rect" id="node6" href="$selector_8c.html#aa0be9c44e18a4a88d05836979b032555" title="create_selector" alt="" coords="523,157,633,184"/>
 </map>

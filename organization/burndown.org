@@ -1,12 +1,12 @@
 
 
 * TODO New menu system                                 [15 hr]
-** TODO Menu selection                                  [7 hr]
+** DONE Menu selection                                  [7 hr]
 *** DONE Function binding and execution
-*** DONE Ownership switching and hierarchy 
-*** DONE Graphical printing of choices                   [4 hr]
-*** TODO Scanning text                                   [2 hr]
-*** TODO Scanning floats and ints                        [1 hr]
+*** DONE Ownership switching and hierarchy
+*** DONE Graphical printing of choices
+*** DONE Scanning text
+*** DONE Scanning floats and ints
 ** DONE Integration                                     [4 hr]
 ** TODO Test cases                                      [4 hr]
 *** DONE Non-graphical

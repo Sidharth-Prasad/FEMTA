@@ -1,0 +1,4 @@
+<map id="set_bank_speed" name="set_bank_speed">
+<area shape="rect" id="node2" href="$femta_8c.html#ab77890d508b0b089793017f183a470cd" title="set_pwm" alt="" coords="171,5,245,32"/>
+<area shape="rect" id="node3" href="$femta_8c.html#a38759a3aa9cf6e83e88637bb2554cf42" title="check_if_writeable" alt="" coords="293,5,424,32"/>
+</map>

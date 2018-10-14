@@ -1,0 +1,6 @@
+<map id="set_pwm" name="set_pwm">
+<area shape="rect" id="node2" href="$controller_8h.html#aeefc9e02ca647cde356037b5033166fd" title="ramp_up" alt="" coords="151,5,223,32"/>
+<area shape="rect" id="node4" href="$controller_8h.html#a3d51d5067e0c5307f18a9145f3592fd0" title="pyramid" alt="" coords="153,56,221,83"/>
+<area shape="rect" id="node5" href="$controller_8h.html#a79cb74a64d9173f1412a2b261d7ac82f" title="set_bank_speed" alt="" coords="128,107,245,133"/>
+<area shape="rect" id="node3" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="293,5,344,32"/>
+</map>

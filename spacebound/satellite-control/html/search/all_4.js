@@ -2,6 +2,7 @@ var searchData=
 [
   ['elements',['elements',['../structHashmap.html#acf25511ea4f01ef33fa00e3b40fddfb8',1,'Hashmap::elements()'],['../structList.html#a388b6c8fff13e506d27071a318c9004f',1,'List::elements()']]],
   ['elements_5flimit',['elements_limit',['../structList.html#a3858093f64846444abc72e9b31e00e41',1,'List']]],
+  ['enabled',['enabled',['../structmodule.html#ac6281658345d8c0ebd189f10feca7f8c',1,'module']]],
   ['entries',['entries',['../structSelector.html#ad83f9e77b597630270e0fa403fcd25ca',1,'Selector']]],
   ['erase_5fprint_5fwindow',['erase_print_window',['../graphics_8c.html#af6f539f61823ed2e8ca170234076ef0a',1,'erase_print_window(unsigned char window_number):&#160;graphics.c'],['../graphics_8h.html#af6f539f61823ed2e8ca170234076ef0a',1,'erase_print_window(unsigned char window_number):&#160;graphics.c']]],
   ['error_2ec',['error.c',['../error_8c.html',1,'']]],

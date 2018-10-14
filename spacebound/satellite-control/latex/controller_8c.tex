@@ -1,0 +1,136 @@
+\hypertarget{controller_8c}{}\section{controller.\+c File Reference}
+\label{controller_8c}\index{controller.\+c@{controller.\+c}}
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}femta.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}controller.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}quaternion.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}graphics.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}selector.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}colors.\+h\char`\"{}}\newline
+Include dependency graph for controller.\+c\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{controller_8c__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{controller_8c_aeefc9e02ca647cde356037b5033166fd}{ramp\+\_\+up} (void $\ast$nil)
+\item 
+void \hyperlink{controller_8c_a3d51d5067e0c5307f18a9145f3592fd0}{pyramid} (int stepsize, int timebtwn)
+\item 
+void \hyperlink{controller_8c_a3478671fc5f77ca4e08ee1b5db9959bf}{set\+\_\+bank\+\_\+speed} (bool CW, bool C\+CW, int pwm\+\_\+num)
+\item 
+float \hyperlink{controller_8c_af32126493fe3a94e43889aaf5f28d564}{rise\+\_\+time} (float phi\+\_\+des)
+\item 
+float \hyperlink{controller_8c_a26016d59d4d9df342535c2af5439f3c6}{tracking\+\_\+signal\+\_\+value} (int phi\+\_\+des, float t, float tr)
+\item 
+float \hyperlink{controller_8c_a6500da947313d9327a5f4486abaf9b3c}{get\+\_\+mpu\+\_\+val} ()
+\item 
+void \hyperlink{controller_8c_a8cb8a5d01aea8b1d058f09bd99b92b69}{P\+I\+D\+\_\+controller} (bool CW, bool C\+CW, float init\+\_\+or, float dor)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{controller_8c_af3fe4c736af2b19d876092efa53b6387}{default\+\_\+step\+\_\+size} = 0
+\item 
+int \hyperlink{controller_8c_a8ce073b16d7d349ed4170223fa2a4520}{default\+\_\+time\+\_\+between} = 0
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{controller_8c_a6500da947313d9327a5f4486abaf9b3c}\label{controller_8c_a6500da947313d9327a5f4486abaf9b3c}} 
+\index{controller.\+c@{controller.\+c}!get\+\_\+mpu\+\_\+val@{get\+\_\+mpu\+\_\+val}}
+\index{get\+\_\+mpu\+\_\+val@{get\+\_\+mpu\+\_\+val}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{get\+\_\+mpu\+\_\+val()}{get\_mpu\_val()}}
+{\footnotesize\ttfamily float get\+\_\+mpu\+\_\+val (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{controller_8c_a8cb8a5d01aea8b1d058f09bd99b92b69}\label{controller_8c_a8cb8a5d01aea8b1d058f09bd99b92b69}} 
+\index{controller.\+c@{controller.\+c}!P\+I\+D\+\_\+controller@{P\+I\+D\+\_\+controller}}
+\index{P\+I\+D\+\_\+controller@{P\+I\+D\+\_\+controller}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{P\+I\+D\+\_\+controller()}{PID\_controller()}}
+{\footnotesize\ttfamily void P\+I\+D\+\_\+controller (\begin{DoxyParamCaption}\item[{bool}]{CW,  }\item[{bool}]{C\+CW,  }\item[{float}]{init\+\_\+or,  }\item[{float}]{dor }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{controller_8c_a3d51d5067e0c5307f18a9145f3592fd0}\label{controller_8c_a3d51d5067e0c5307f18a9145f3592fd0}} 
+\index{controller.\+c@{controller.\+c}!pyramid@{pyramid}}
+\index{pyramid@{pyramid}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{pyramid()}{pyramid()}}
+{\footnotesize\ttfamily void pyramid (\begin{DoxyParamCaption}\item[{int}]{stepsize,  }\item[{int}]{timebtwn }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{controller_8c_a3d51d5067e0c5307f18a9145f3592fd0_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{controller_8c_aeefc9e02ca647cde356037b5033166fd}\label{controller_8c_aeefc9e02ca647cde356037b5033166fd}} 
+\index{controller.\+c@{controller.\+c}!ramp\+\_\+up@{ramp\+\_\+up}}
+\index{ramp\+\_\+up@{ramp\+\_\+up}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{ramp\+\_\+up()}{ramp\_up()}}
+{\footnotesize\ttfamily void ramp\+\_\+up (\begin{DoxyParamCaption}\item[{void $\ast$}]{nil }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{controller_8c_aeefc9e02ca647cde356037b5033166fd_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=208pt]{controller_8c_aeefc9e02ca647cde356037b5033166fd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{controller_8c_af32126493fe3a94e43889aaf5f28d564}\label{controller_8c_af32126493fe3a94e43889aaf5f28d564}} 
+\index{controller.\+c@{controller.\+c}!rise\+\_\+time@{rise\+\_\+time}}
+\index{rise\+\_\+time@{rise\+\_\+time}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{rise\+\_\+time()}{rise\_time()}}
+{\footnotesize\ttfamily float rise\+\_\+time (\begin{DoxyParamCaption}\item[{float}]{phi\+\_\+des }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{controller_8c_a3478671fc5f77ca4e08ee1b5db9959bf}\label{controller_8c_a3478671fc5f77ca4e08ee1b5db9959bf}} 
+\index{controller.\+c@{controller.\+c}!set\+\_\+bank\+\_\+speed@{set\+\_\+bank\+\_\+speed}}
+\index{set\+\_\+bank\+\_\+speed@{set\+\_\+bank\+\_\+speed}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{set\+\_\+bank\+\_\+speed()}{set\_bank\_speed()}}
+{\footnotesize\ttfamily void set\+\_\+bank\+\_\+speed (\begin{DoxyParamCaption}\item[{bool}]{CW,  }\item[{bool}]{C\+CW,  }\item[{int}]{pwm\+\_\+num }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{controller_8c_a3478671fc5f77ca4e08ee1b5db9959bf_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{controller_8c_a26016d59d4d9df342535c2af5439f3c6}\label{controller_8c_a26016d59d4d9df342535c2af5439f3c6}} 
+\index{controller.\+c@{controller.\+c}!tracking\+\_\+signal\+\_\+value@{tracking\+\_\+signal\+\_\+value}}
+\index{tracking\+\_\+signal\+\_\+value@{tracking\+\_\+signal\+\_\+value}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{tracking\+\_\+signal\+\_\+value()}{tracking\_signal\_value()}}
+{\footnotesize\ttfamily float tracking\+\_\+signal\+\_\+value (\begin{DoxyParamCaption}\item[{int}]{phi\+\_\+des,  }\item[{float}]{t,  }\item[{float}]{tr }\end{DoxyParamCaption})}
+
+
+
+\subsection{Variable Documentation}
+\mbox{\Hypertarget{controller_8c_af3fe4c736af2b19d876092efa53b6387}\label{controller_8c_af3fe4c736af2b19d876092efa53b6387}} 
+\index{controller.\+c@{controller.\+c}!default\+\_\+step\+\_\+size@{default\+\_\+step\+\_\+size}}
+\index{default\+\_\+step\+\_\+size@{default\+\_\+step\+\_\+size}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{default\+\_\+step\+\_\+size}{default\_step\_size}}
+{\footnotesize\ttfamily int default\+\_\+step\+\_\+size = 0}
+
+\mbox{\Hypertarget{controller_8c_a8ce073b16d7d349ed4170223fa2a4520}\label{controller_8c_a8ce073b16d7d349ed4170223fa2a4520}} 
+\index{controller.\+c@{controller.\+c}!default\+\_\+time\+\_\+between@{default\+\_\+time\+\_\+between}}
+\index{default\+\_\+time\+\_\+between@{default\+\_\+time\+\_\+between}!controller.\+c@{controller.\+c}}
+\subsubsection{\texorpdfstring{default\+\_\+time\+\_\+between}{default\_time\_between}}
+{\footnotesize\ttfamily int default\+\_\+time\+\_\+between = 0}
+

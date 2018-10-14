@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['self',['self',['../structLogger.html#a220cd94b89be365dba07df9cbdf2d15f',1,'Logger']]],
-  ['setup_5fviews',['setup_views',['../graphics_8c.html#a455a28d7f50293e78a3a12f005fa9950',1,'graphics.c']]],
-  ['size',['size',['../structHashmap.html#acb5951c2662ce58e2196fcb465551e36',1,'Hashmap']]],
-  ['start_5ftime',['start_time',['../femta_8h.html#ad20e89e0c86aa812dc3a8e2fb7b5777b',1,'femta.h']]],
-  ['state',['state',['../structpin.html#a59c3020dc417fbda00ae4926db264a51',1,'pin']]]
+  ['ready_5fto_5fgraph',['ready_to_graph',['../graphics_8c.html#af633be7c36103ef95413839618e0558b',1,'graphics.c']]],
+  ['registers',['registers',['../structI2C.html#a0bf74755f449fe6216c70bea75367332',1,'I2C']]],
+  ['remove',['remove',['../structHashmap.html#a869ddf80d753042c35a4741a0bd5b10b',1,'Hashmap']]],
+  ['right',['right',['../structNode.html#a7328862eaa6dea28018326549b3294d3',1,'Node']]]
 ];

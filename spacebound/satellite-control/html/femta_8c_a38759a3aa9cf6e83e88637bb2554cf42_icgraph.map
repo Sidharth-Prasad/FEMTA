@@ -1,4 +1,8 @@
 <map id="check_if_writeable" name="check_if_writeable">
 <area shape="rect" id="node2" href="$femta_8h.html#add8fcf74e11d6f54778931df2410cf3a" title="set_voltage" alt="" coords="184,5,273,32"/>
-<area shape="rect" id="node3" href="$femta_8c.html#ab77890d508b0b089793017f183a470cd" title="set_pwm" alt="" coords="191,56,266,83"/>
+<area shape="rect" id="node3" href="$femta_8h.html#ab77890d508b0b089793017f183a470cd" title="set_pwm" alt="" coords="191,56,266,83"/>
+<area shape="rect" id="node4" href="$controller_8h.html#aeefc9e02ca647cde356037b5033166fd" title="ramp_up" alt="" coords="344,5,416,32"/>
+<area shape="rect" id="node6" href="$controller_8h.html#a3d51d5067e0c5307f18a9145f3592fd0" title="pyramid" alt="" coords="346,56,414,83"/>
+<area shape="rect" id="node7" href="$controller_8h.html#a79cb74a64d9173f1412a2b261d7ac82f" title="set_bank_speed" alt="" coords="321,107,439,133"/>
+<area shape="rect" id="node5" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="487,5,537,32"/>
 </map>
