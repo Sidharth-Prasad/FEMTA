@@ -53,7 +53,7 @@ void initialize_graphics() {
   for (unsigned char p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) print_views[p] = malloc(sizeof(print_view));
   for (unsigned char g = 0; g < NUMBER_OF_GRAPH_VIEWS; g++) graph_views[g] = malloc(sizeof(graph_view));
   for (unsigned char s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] = malloc(sizeof(setup_view));
-
+  
   for (unsigned char p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) print_views[p] -> view = malloc(sizeof(View));
   for (unsigned char g = 0; g < NUMBER_OF_GRAPH_VIEWS; g++) graph_views[g] -> view = malloc(sizeof(View));
   for (unsigned char s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] -> view = malloc(sizeof(View));
@@ -249,17 +249,21 @@ void initialize_graphics() {
   //print(2, "CPU   SPAWNED   SUCCESS", 2);
 
   print(2, "CPU    SPAWNED   SUCCESS", 2);
-  print(2, "I2C    SPAWNED   SUCCESS", 2);
   
-  /*
-  if (i2c_device -> initialized)    print(2, "I2C   SPAWNED   SUCCESS", 2);
-  else                              print(2, "I2C   FAILURE"          , 4);*/
+  if (i2c_device -> initialized) {
+    print(OPERATE_WINDOW, "I2C    SPAWNED   SUCCESS", 2);
+    print(GENERAL_WINDOW, "I2C thread spawned", 2);
+  }
+  else {
+    print(OPERATE_WINDOW, "I2C    FAILURE"             , 4);
+    print(GENERAL_WINDOW, "I2C thread failed to spawn", 4);
+  }
   
 
-  print(0, "5 Threads are running", 0);
-  print(0, "  - MPU is being sampled at 10 Hz", 0);
-  print(0, "  - CPU is being sampled at 1 Hz", 0);
-  print(0, "Logging 3 files asynchronously", 0);
+  //print(0, "5 Threads are running", 0);
+  //print(0, "  - MPU is being sampled at 10 Hz", 0);
+  //print(0, "  - CPU is being sampled at 1 Hz", 0);
+  //print(0, "Logging 3 files asynchronously", 0);
   //print(0, "The OS is running 21 threads", 0);
   //print(1, "c: cycle graphs"             , 0);
   //print(1, "m: manual control"           , 0);
@@ -379,6 +383,16 @@ void erase_print_window(unsigned char window_number) {
   }
 }
 
+void stomp_printer(unsigned char window_number, char * string, unsigned int color) {
+  // Destroys and replaces the last line of the printer
+  // This is useful for taking user input and printing over a blank line
+  
+  print_view * printer = print_views[window_number];
+
+  printer -> lines  -> head -> value = (void *) strdup(string);   // Another leak
+  printer -> colors -> head -> value = (void *) color;
+}
+
 void update_state_graphic(unsigned char line, bool state) {
   
   if (state) wattron(setup_views[0] -> view -> window, COLOR_PAIR(8));
@@ -403,7 +417,9 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
   else {
     
     // The graphics library might not be finished initializing at this point
-    while (number_of_data_points_plottable == 0);   // Spin lock threads until library is set up
+    while (number_of_data_points_plottable == 0) {   // Spin lock threads until library is set up
+      sleep(0);
+    }
 
     // Update all lists in the plot to the initialized value
     for (unsigned char l = 0; l < plot -> number_of_lists; l++) {

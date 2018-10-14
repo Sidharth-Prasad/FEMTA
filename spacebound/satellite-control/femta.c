@@ -10,7 +10,7 @@
 // Program headers, in compilation order
 #include "femta.h"
 #include "i2c-interface.h"
-#include "temperature-monitoring.h"
+#include "temperature.h"
 #include "graphics.h"
 #include "selector.h"
 #include "controller.h"
@@ -41,7 +41,7 @@ void initialize_satellite() {
     printf(RED "a critical error has occured\n" RESET);
     exit(1);
   }
-  
+
   // Get space for modules
   modules = malloc(NUMBER_OF_MODULES * sizeof(module *));
   for (char m = 0; m < NUMBER_OF_MODULES; m++) modules[m] = malloc(sizeof(module));
@@ -282,8 +282,8 @@ int main() {
   add_selector_command(  scripts, 't', "Tuner"           , (lambda)  execute_script,  (void *)      "tuner.x");
 
   add_selector_command(auto_menu, 'x', "Ramp 0-100%"     , (lambda)         ramp_up,                     NULL);
-  add_selector_command(auto_menu, 'y', "Pyramid 0-100-0%", (lambda)          rotate,                     NULL);
-  add_selector_command(auto_menu, 'z', "Configuration"   , (lambda)          rotate,                     NULL);
+  add_selector_command(auto_menu, 'y', "Pyramid 0-100-0%", (lambda)         pyramid,                     NULL);
+//add_selector_command(auto_menu, 'z', "Configuration"   , (lambda)          rotate,                     NULL);
 
   add_selector_command( pid_menu, 't', "test w/ data"    , (lambda)          rotate,                     NULL);
   add_selector_command( pid_menu, 'n', "Initialize PID"  , (lambda)          rotate,                     NULL);

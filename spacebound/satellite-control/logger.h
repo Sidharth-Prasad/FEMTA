@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 typedef struct Logger Logger;
 typedef struct Logger {
@@ -11,9 +12,9 @@ typedef struct Logger {
   FILE * file;
   char * filename;
   pthread_t thread;
-  bool termination_signal;       // used to terminate child thread
+  bool termination_signal;            // used to terminate child thread
   int values_read;
-
+  
   bool (* open   )(Logger * self);
   bool (* close  )(Logger * self);
   void (* destroy)(Logger * self);

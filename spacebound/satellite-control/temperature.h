@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "graphics.h"
+#include "logger.h"
 
 bool initialize_temperature_monitoring();
 void terminate_temperature_monitoring();

@@ -70,6 +70,7 @@ setup_view ** setup_views;
 void initialize_graphics();
 void terminate_graphics();
 void print(unsigned char window_number, char * string, unsigned int color);
+void stomp_printer(unsigned char window_number, char * string, unsigned int color);
 void clear_print_window(unsigned char window_number);
 void erase_print_window(unsigned char window_number);
 void update_state_graphic(unsigned char line, bool state);
@@ -79,7 +80,7 @@ void plot_add_value(Plot * plot, List * list, Node * node);
 
 Plot * create_plot(char * name, unsigned char number_of_lists);
 
-unsigned char number_of_data_points_plottable;
+unsigned char number_of_data_points_plottable;  // = 0
 
 Plot *  graph_owner;              // The stream in control of the plot area
 Plot ** all_possible_owners;      // All possible plots that could be in control
