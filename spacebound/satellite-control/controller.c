@@ -1,7 +1,6 @@
 
-// This file contains most of Tyler's summer work, slightly modified to fit into the restructured project
+// This file contains most of Tyler's summer work, modified to fit into the restructured project
 
-// Tyler, Icleaned a few things up and left notes -Noah
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,9 +28,9 @@ void configure_ramping_and_pyramid(int * step_size, int * time_between) {
   print(CONTROL_WINDOW, "About to execute. Use defaults below? [y/n]", 5);
 
   char default_string[256];
-  sprintf(default_string, "step size:    %d", default_step_size);
+  sprintf(default_string, "step size:    %d/255", default_step_size);
   print(CONTROL_WINDOW, default_string, 1);
-  sprintf(default_string, "time between: %d", default_time_between);
+  sprintf(default_string, "time between: %ds", default_time_between);
   print(CONTROL_WINDOW, default_string, 1);
   print(CONTROL_WINDOW, "", 1);
 
@@ -46,28 +45,30 @@ void configure_ramping_and_pyramid(int * step_size, int * time_between) {
     print(CONTROL_WINDOW, "", 1);
     wgetstr(print_views[CONTROL_WINDOW] -> view -> window, default_string);
     stomp_printer(CONTROL_WINDOW, default_string, 1);
-    *step_size = atoi(default_string);
+    *time_between = atoi(default_string);
     
     print(CONTROL_WINDOW, "Please enter the step size:", 5);
     print(CONTROL_WINDOW, "", 1);
     wgetstr(print_views[CONTROL_WINDOW] -> view -> window, default_string);
     stomp_printer(CONTROL_WINDOW, default_string, 1);
-    *time_between = atoi(default_string);
+    *step_size = atoi(default_string);
     
     print(CONTROL_WINDOW, "Save these as the new defaults? [y/n]", 5);
     print(CONTROL_WINDOW, "", 1);
 
     wgetstr(print_views[CONTROL_WINDOW] -> view -> window, answer);
+    stomp_printer(CONTROL_WINDOW, answer, 1);
 
     if (answer[0] == 'y') {
       default_step_size    = *step_size;
       default_time_between = *time_between;
+
       
       print(GENERAL_WINDOW, "Changed defaults", 5);
       char default_string[256];
-      sprintf(default_string, "step size:    %d", default_step_size);
+      sprintf(default_string, "step size:    %d/255", default_step_size);
       print(GENERAL_WINDOW, default_string, 1);
-      sprintf(default_string, "time between: %d", default_time_between);
+      sprintf(default_string, "time between: %ds", default_time_between);
       print(GENERAL_WINDOW, default_string, 1);
     }
   }

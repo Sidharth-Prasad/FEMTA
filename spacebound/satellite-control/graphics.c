@@ -249,11 +249,15 @@ void initialize_graphics() {
   //print(2, "CPU   SPAWNED   SUCCESS", 2);
 
   print(2, "CPU    SPAWNED   SUCCESS", 2);
-  print(2, "I2C    SPAWNED   SUCCESS", 2);
   
-  /*
-  if (i2c_device -> initialized)    print(2, "I2C   SPAWNED   SUCCESS", 2);
-  else                              print(2, "I2C   FAILURE"          , 4);*/
+  if (i2c_device -> initialized) {
+    print(OPERATE_WINDOW, "I2C    SPAWNED   SUCCESS", 2);
+    print(GENERAL_WINDOW, "I2C thread spawned", 2);
+  }
+  else {
+    print(OPERATE_WINDOW, "I2C    FAILURE"             , 4);
+    print(GENERAL_WINDOW, "I2C thread failed to spawn", 4);
+  }
   
 
   //print(0, "5 Threads are running", 0);

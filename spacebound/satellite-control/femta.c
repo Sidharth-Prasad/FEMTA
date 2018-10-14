@@ -41,7 +41,7 @@ void initialize_satellite() {
     printf(RED "a critical error has occured\n" RESET);
     exit(1);
   }
-  
+
   // Get space for modules
   modules = malloc(NUMBER_OF_MODULES * sizeof(module *));
   for (char m = 0; m < NUMBER_OF_MODULES; m++) modules[m] = malloc(sizeof(module));
