@@ -90,6 +90,13 @@ void cycle_graph(void * nil) {              // Change graph to display
     print(GENERAL_WINDOW, "Loaded MPU plots", 1);
   }
 
+  // Add MPRLS plot
+  if (MPRLS -> initialized && !MPRLS -> loaded) {
+    list_insert(owner_index_list, create_node((void *) 4));
+    MPRLS -> loaded = true;
+    print(GENERAL_WINDOW, "Loaded MPRLS plots", 1);
+  }
+
   graph_owner_index_node = graph_owner_index_node -> next;
   graph_owner = all_possible_owners[(int) (graph_owner_index_node -> value)];
   

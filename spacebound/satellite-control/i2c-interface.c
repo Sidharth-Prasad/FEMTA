@@ -128,8 +128,40 @@ void readBytes(uint8_t address, uint8_t location, uint8_t number, uint8_t * data
   }
 }
 
+uint32_t requestMPRLSPressureData() {
+  // Look at the MPRLS data sheet to see why this needs to happen.
+  // Basically, we have to wait for a value to be generated, so we'll request
+  // new data well in advance before reading. If we had the eoc pin, we'd know
+  // exactly when new data has arrived. This isn't necessary though, as we only
+  // wish to read at 1Hz.
+  
+  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0xAA);   // Command to read pressure
+  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);   // Command to read pressure
+  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);   // Command to read pressure
+}
 
-float readTempData() {
+float readMPRLSPressureData() {
+  // Reads the pressure from the MPRLS
+  
+  uint8_t rawData[4];
+  readBytes(MPRLS -> i2c -> i2c_address, 0x31, 4, &rawData[0]);   // Dump values into array
+  
+  uint32_t result;
+  result  = ((uint32_t) rawData[0]) << 16;
+  result += ((uint32_t) rawData[1]) << 8;
+  result += ((uint32_t) rawData[0]) << 0;
+  
+  // Ask sensor to get the next value ready now
+  // This way enough time will have passed before
+  // we try to read next time this is called.
+  requestMPRLSPressureData();
+  
+  return result * 68.947572932;    // Convert to hPA
+}
+
+float readMPUTempData() {
+  // Reads the temperature of the MPU
+  
   uint8_t low_bits  = i2cReadByteData(MPU -> i2c -> i2c_address, TEMP_OUT_L);
   uint8_t high_bits = i2cReadByteData(MPU -> i2c -> i2c_address, TEMP_OUT_H);
   int16_t bytes = (int16_t) (((int16_t) high_bits) << 8 | low_bits);  // Create 2-byte value
@@ -137,6 +169,7 @@ float readTempData() {
 }
 
 void readMPUGyroData(float * axes) {
+  
   uint8_t rawData[6];  // x/y/z gyro register data stored here
   int16_t gyroCount[3];
   readBytes(MPU -> i2c -> i2c_address, GYRO_XOUT_H, 6, &rawData[0]);  // Read the 6 data registers into data array
@@ -182,13 +215,16 @@ void readMPUMagnData(float * axes) {
 }
 
 void * log_i2c_data() {
+
+  // Ask MPRLS sensor to prepare for read ASAP
+  requestMPRLSPressureData();    // IT'S A RACE TO THE FIRST READ. GO GO GO GO!!!!!
   
   mpu_logger = create_logger("./logs/mpu-log.txt");
   mpu_logger -> open(mpu_logger);
 
   fprintf(mpu_logger -> file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\tTemp °C\n" RESET);
 
-  mprls_logger -> create_logger("./logs/mprls-log.txt");
+  mprls_logger = create_logger("./logs/mprls-log.txt");
   mprls_logger -> open(mprls_logger);
   
   fprintf(mprls_logger -> file, BLUE "\nRecording MPRLS Data\nTIME\tPressure\n" RESET);
@@ -210,8 +246,14 @@ void * log_i2c_data() {
       // Read the MPRLS for new data
       
       MPRLS -> i2c -> delays_passed = 0;
-
       
+      float pressure = readMPRLSPressureData();
+
+      fprintf(mprls_logger -> file, "%d\t%d\n", mprls_logger -> values_read++, pressure);
+
+      plot_add_value(mprls_plot, mprls_plot -> lists[0], create_node((void *) *((int *) &pressure)));
+
+      graph_plot(mprls_plot);
     }
     
     if (MPU -> i2c -> delays_passed == MPU -> i2c -> frequency) {
@@ -225,7 +267,7 @@ void * log_i2c_data() {
       readMPUGyroData(mpu_data    );
       readMPUAcelData(mpu_data + 3);
       readMPUMagnData(mpu_data + 6);
-      mpu_data[9] = readTempData();
+      mpu_data[9] = readMPUTempData();
       
       fprintf(mpu_logger -> file, "%d\t", mpu_logger -> values_read++);
       
@@ -492,8 +534,8 @@ bool initialize_i2c() {
 
   MPU   -> i2c -> delays_passed = 0;
   MPRLS -> i2c -> delays_passed = 0;
-  MPU   -> i2c -> frequency =  1;        //  10 Hz
-  MPRLS -> i2c -> frequency = 20;        // 0.2 Hz
+  MPU   -> i2c -> frequency =  1;        // 10 Hz
+  MPRLS -> i2c -> frequency = 10;        //  1 Hz
 
   
   if (i2cReadByteData(MPRLS -> i2c -> i2c_address, 0) >= 0) {
