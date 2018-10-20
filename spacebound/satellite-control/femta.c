@@ -21,6 +21,7 @@
 
 #define NUMBER_OF_MODULES 6
 
+
 #define I2C_STATE 2
 #define UART_STATE 3
 
@@ -98,6 +99,10 @@ void initialize_satellite() {
   // The MPU uses the I2C interface
   initialize_pin(&(MPU -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
   initialize_pin(&(MPU -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
+
+  // The MPRLS attatches to the I2C interface
+  initialize_pin(&(MPRLS -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
+  initialize_pin(&(MPRLS -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
   
   // The MPRLS uses the I2C interface
   initialize_pin(&(MPRLS -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
