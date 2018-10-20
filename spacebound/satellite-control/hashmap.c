@@ -32,7 +32,7 @@ Hashmap * create_hashmap(int expected_size) {
 
   // Create table of singlely linked lists
   for (int i = 0; i < map -> size; i++) {
-    map -> table[i] = create_list(0, true);
+    map -> table[i] = create_list(0, true, false);
   }
 
   // Connect function pointers

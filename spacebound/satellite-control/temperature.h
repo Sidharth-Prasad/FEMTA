@@ -9,6 +9,4 @@
 bool initialize_temperature_monitoring();
 void terminate_temperature_monitoring();
 
-Plot * temperature_plot;
-
 #endif

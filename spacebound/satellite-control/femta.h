@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <time.h>
 
+#include "linked-list.h"
+
+typedef unsigned char uchar;
+
 typedef struct pin {
 
   char state;                    // The input output state of the pin
@@ -15,6 +19,7 @@ typedef struct pin {
     unsigned char duty_cycle;    // The duty cycle for pulse width modulation
   };
 
+  uchar graphic;                 // The state graphic this pin is represented with
 } pin;
 
 typedef struct I2C I2C;          // Forward declaration
@@ -27,16 +32,17 @@ typedef struct module {
 
   I2C * i2c;
   UART * uart;
+  List * plots;                  // List of plots for graphing
 
   bool initialized;
   bool loaded;
-  bool enabled;                 // Whether module is actually on the sat
+  bool enabled;                  // Whether module is actually on the sat
 
-  char graphic;                 // The state graphic this module is represented with
+  bool show_pins;                // Whether pins should be drawn in the config pane
 
 } module;
 
-module ** modules, * MPU, * Valve, * MPRLS, * FEMTA, * QB;
+module ** modules, * CPU, * MPU, * Valve, * MPRLS, * FEMTA, * QB;
 
 time_t start_time;
 

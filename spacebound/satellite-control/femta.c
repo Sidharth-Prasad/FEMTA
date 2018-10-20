@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-// Program headers, in compilation order
+// Program headers
 #include "femta.h"
 #include "i2c-interface.h"
 #include "temperature.h"
@@ -15,10 +15,12 @@
 #include "selector.h"
 #include "controller.h"
 #include "scripter.h"
+#include "linked-list.h"
 #include "logger.h"
 #include "colors.h"
 
-#define NUMBER_OF_MODULES 5
+#define NUMBER_OF_MODULES 6
+
 
 #define I2C_STATE 2
 #define UART_STATE 3
@@ -44,41 +46,57 @@ void initialize_satellite() {
 
   // Get space for modules
   modules = malloc(NUMBER_OF_MODULES * sizeof(module *));
-  for (char m = 0; m < NUMBER_OF_MODULES; m++) modules[m] = malloc(sizeof(module));
-  for (char m = 0; m < NUMBER_OF_MODULES; m++) modules[m] -> loaded = false;
+  for (char m = 0; m < NUMBER_OF_MODULES; m++) {
+    modules[m] = malloc(sizeof(module));
+    modules[m] -> loaded = false;
+    modules[m] -> initialized = false;
+  }
   
   // All modules should be grouped together
-  MPU   = modules[0];
-  Valve = modules[1];
-  MPRLS = modules[2];
-  QB    = modules[3];
-  FEMTA = modules[4];
+  CPU   = modules[0];
+  MPU   = modules[1];
+  Valve = modules[2];
+  MPRLS = modules[3];
+  QB    = modules[4];
+  FEMTA = modules[5];
 
   // Set module identifiers for printing
+  CPU   -> identifier = "ARM 6L";
   MPU   -> identifier = "MPU 9250";
   Valve -> identifier = "Valve";
   MPRLS -> identifier = "MPRLS";
-  FEMTA -> identifier = "FEMTA";
   QB    -> identifier = "Quad Bank";
+  FEMTA -> identifier = "FEMTA";
 
   // Set each module's number of pins
+  CPU   -> n_pins = 0;
   MPU   -> n_pins = 2;
   Valve -> n_pins = 1;
-  FEMTA -> n_pins = 4;
-  QB    -> n_pins = 4;
   MPRLS -> n_pins = 2;
+  QB    -> n_pins = 4;
+  FEMTA -> n_pins = 4;
 
+  // Let system know which are present on the sat
+  CPU   -> enabled = true;
   MPU   -> enabled = true;
   Valve -> enabled = true;
   MPRLS -> enabled = true;
-  FEMTA -> enabled = false;
   QB    -> enabled = true;
+  FEMTA -> enabled = false;
 
+  // Let graphics know which configurations to print
+  CPU   -> show_pins = false;
+  MPU   -> show_pins = true;
+  Valve -> show_pins = true;
+  MPRLS -> show_pins = true;
+  QB    -> show_pins = true;
+  FEMTA -> show_pins = true;  
+  
   // Get space for module pin arrays
   for (char m = 0; m < NUMBER_OF_MODULES; m++)
     modules[m] -> pins = malloc((modules[m] -> n_pins) * sizeof(module));
 
-  // The MPU attatches to the I2C interface
+  // The MPU uses the I2C interface
   initialize_pin(&(MPU -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
   initialize_pin(&(MPU -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
 
@@ -86,6 +104,10 @@ void initialize_satellite() {
   initialize_pin(&(MPRLS -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
   initialize_pin(&(MPRLS -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
   
+  // The MPRLS uses the I2C interface
+  initialize_pin(&(MPRLS -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
+  initialize_pin(&(MPRLS -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
+
   // The Valve is controlled via digital states
   initialize_pin(&(Valve -> pins[0]), 17, 11, PI_OUTPUT);
   
@@ -103,11 +125,32 @@ void initialize_satellite() {
   initialize_pin(&(QB -> pins[2]), 24, 18, PI_OUTPUT);
   initialize_pin(&(QB -> pins[3]), 25, 22, PI_OUTPUT);
 
-  // Set up the interfaces
-  bool i2c_success    = initialize_i2c(MPU);
+  // Create the plot data for each module
+  CPU   -> plots = create_list_from(1,
+				    create_plot("    Temperatures v.s. Time     ", 1));
+  MPU   -> plots = create_list_from(3,
+				    create_plot("    MPU Gyro Axes v.s. Time    ", 3),
+				    create_plot("MPU Acelerometer Axes v.s. Time", 3),
+				    create_plot("MPU Magnetometer Axes v.s. Time", 3));
+  Valve -> plots = NULL;
+  MPRLS -> plots = create_list_from(1,
+				    create_plot("    MPRLS Pressure v.s. Time   ", 1));
+  QB    -> plots = NULL;
+  FEMTA -> plots = NULL;
 
+  // Load plots into array of all possible owners
+  all_possible_owners    = malloc(5 * sizeof(Plot *));
+  all_possible_owners[0] = (Plot *) CPU   -> plots -> head                 -> value;
+  all_possible_owners[1] = (Plot *) MPU   -> plots -> head                 -> value;
+  all_possible_owners[2] = (Plot *) MPU   -> plots -> head -> next         -> value;
+  all_possible_owners[3] = (Plot *) MPU   -> plots -> head -> next -> next -> value;
+  all_possible_owners[4] = (Plot *) MPRLS -> plots -> head                 -> value;
+  
+  // Set up the interfaces
+  bool i2c_success    = initialize_i2c();
+  
   // Set each module's initialization state
-  MPU   -> initialized = i2c_success;
+  //  MPU   -> initialized = i2c_success;
   Valve -> initialized = true;
   FEMTA -> initialized = true;
   QB    -> initialized = true;
@@ -170,7 +213,7 @@ void terminate_satellite() {
   }
   
   terminate_temperature_monitoring();
-  terminate_mpu_logging();
+  terminate_i2c();
   gpioTerminate();
 }
 
@@ -239,14 +282,8 @@ int main() {
   initialize_graphics(); 
 
   initialize_scripter();
-  
-  all_possible_owners    = malloc(4 * sizeof(Plot *));
-  all_possible_owners[0] = temperature_plot;
-  all_possible_owners[1] = mpu_gyro_plot;
-  all_possible_owners[2] = mpu_acel_plot;
-  all_possible_owners[3] = mpu_magn_plot;
 
-  owner_index_list = create_list(0, true);   // Doublly linked list of owners
+  owner_index_list = create_list(0, true, false);   // Doublly linked list of owners
 
   // Temperature plot no matter what
   list_insert(owner_index_list, create_node((void *) 0));
