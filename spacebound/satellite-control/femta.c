@@ -18,7 +18,7 @@
 #include "logger.h"
 #include "colors.h"
 
-#define NUMBER_OF_MODULES 4
+#define NUMBER_OF_MODULES 5
 
 #define I2C_STATE 2
 #define UART_STATE 3
@@ -50,12 +50,14 @@ void initialize_satellite() {
   // All modules should be grouped together
   MPU   = modules[0];
   Valve = modules[1];
-  FEMTA = modules[3];
-  QB    = modules[2];
+  MPRLS = modules[2];
+  QB    = modules[3];
+  FEMTA = modules[4];
 
   // Set module identifiers for printing
   MPU   -> identifier = "MPU 9250";
   Valve -> identifier = "Valve";
+  MPRLS -> identifier = "MPRLS";
   FEMTA -> identifier = "FEMTA";
   QB    -> identifier = "Quad Bank";
 
@@ -64,9 +66,11 @@ void initialize_satellite() {
   Valve -> n_pins = 1;
   FEMTA -> n_pins = 4;
   QB    -> n_pins = 4;
+  MPRLS -> n_pins = 2;
 
   MPU   -> enabled = true;
   Valve -> enabled = true;
+  MPRLS -> enabled = true;
   FEMTA -> enabled = false;
   QB    -> enabled = true;
 
@@ -74,9 +78,13 @@ void initialize_satellite() {
   for (char m = 0; m < NUMBER_OF_MODULES; m++)
     modules[m] -> pins = malloc((modules[m] -> n_pins) * sizeof(module));
 
-  // The MPU has the I2C interface
+  // The MPU attatches to the I2C interface
   initialize_pin(&(MPU -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
   initialize_pin(&(MPU -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
+
+  // The MPRLS attatches to the I2C interface
+  initialize_pin(&(MPRLS -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
+  initialize_pin(&(MPRLS -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
   
   // The Valve is controlled via digital states
   initialize_pin(&(Valve -> pins[0]), 17, 11, PI_OUTPUT);

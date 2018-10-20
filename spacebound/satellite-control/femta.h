@@ -36,7 +36,7 @@ typedef struct module {
 
 } module;
 
-module ** modules, * MPU, * Valve, * FEMTA, * QB;
+module ** modules, * MPU, * Valve, * MPRLS, * FEMTA, * QB;
 
 time_t start_time;
 
