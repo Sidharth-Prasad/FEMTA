@@ -136,7 +136,7 @@ float readTempData() {
   return ((float) bytes) / 333.87 + 21.0; //  Convert to Centigrade
 }
 
-void readGyroData(float * axes) {
+void readMPUGyroData(float * axes) {
   uint8_t rawData[6];  // x/y/z gyro register data stored here
   int16_t gyroCount[3];
   readBytes(MPU -> i2c -> i2c_address, GYRO_XOUT_H, 6, &rawData[0]);  // Read the 6 data registers into data array
@@ -149,7 +149,7 @@ void readGyroData(float * axes) {
   //for (int8_t i = 0; i < 3; i++) axes[i] = ((float) gyroCount[i] - gyroBias[i]) * gRes;
 }
 
-void readAccelData(float * axes) {
+void readMPUAcelData(float * axes) {
   uint8_t rawData[6];  // x/y/z accel register data stored here
   int16_t accelCount[3];
   readBytes(MPU -> i2c -> i2c_address, ACCEL_XOUT_H, 6, &rawData[0]);  // Read the 6 data registers into data array
@@ -161,7 +161,7 @@ void readAccelData(float * axes) {
   for (int8_t i = 0; i < 3; i++) axes[i] = (float) accelCount[i] * aRes - accelBias[i];
 }
 
-void readMagData(float * axes) {
+void readMPUMagnData(float * axes) {
   
   uint8_t rawData[7];  // x y z gyro register data, ST2 register stored here, must read ST2 at end of data acquisition
   int16_t magCount[3];
@@ -194,31 +194,48 @@ void * log_i2c_data() {
   fprintf(mprls_logger -> file, BLUE "\nRecording MPRLS Data\nTIME\tPressure\n" RESET);
 
   // Get plot pointers
-  Plot * mpu_gyro_plot = (Plot *) MPU -> plots -> head -> value;
-  Plot * mpu_acel_plot = (Plot *) MPU -> plots -> head -> next -> value;
-  Plot * mpu_magn_plot = (Plot *) MPU -> plots -> head -> next -> next -> value;
+  Plot * mpu_gyro_plot = (Plot *) MPU   -> plots -> head -> value;
+  Plot * mpu_acel_plot = (Plot *) MPU   -> plots -> head -> next -> value;
+  Plot * mpu_magn_plot = (Plot *) MPU   -> plots -> head -> next -> next -> value;
+  Plot * mprls_plot    = (Plot *) MPRLS -> plots -> head -> value;
   
   while (!i2c_termination_signal) {
-    
-    float log_data[64][10];
-    
-    for (unsigned char i = 0; i < 64; i++) {
+
+    nano_sleep(i2c_delay);
+
+    MPU   -> i2c -> delays_passed++;
+    MPRLS -> i2c -> delays_passed++;
+
+    if (MPRLS -> i2c -> delays_passed == MPRLS -> i2c -> frequency) {
+      // Read the MPRLS for new data
       
-      // Write data into log_data array
-      readGyroData (log_data[i]    );
-      readAccelData(log_data[i] + 3);
-      readMagData  (log_data[i] + 6);
-      log_data[i][9] = readTempData();
+      MPRLS -> i2c -> delays_passed = 0;
+
+      
+    }
+    
+    if (MPU -> i2c -> delays_passed == MPU -> i2c -> frequency) {
+      // Read the MPU for new data
+      
+      MPU -> i2c -> delays_passed = 0;
+      
+      float mpu_data[10];
+      
+      // Write data into mpu_data array
+      readMPUGyroData(mpu_data    );
+      readMPUAcelData(mpu_data + 3);
+      readMPUMagnData(mpu_data + 6);
+      mpu_data[9] = readTempData();
       
       fprintf(mpu_logger -> file, "%d\t", mpu_logger -> values_read++);
       
-      for (unsigned char f = 0; f < 10; f++) fprintf(mpu_logger -> file, "%.3f\t", log_data[i][f]);
+      for (unsigned char f = 0; f < 10; f++) fprintf(mpu_logger -> file, "%.3f\t", mpu_data[f]);
       for (unsigned char f = 0; f <  3; f++) {
 	
 	// Add the float values casted as void *s to the plot lists
-	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f    ]))));
-	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f + 3]))));
-	plot_add_value(mpu_magn_plot, mpu_magn_plot -> lists[f], create_node((void *)(*((int *) &log_data[i][f + 6]))));
+	plot_add_value(mpu_gyro_plot, mpu_gyro_plot -> lists[f], create_node((void *)(*((int *) &mpu_data[f    ]))));
+	plot_add_value(mpu_acel_plot, mpu_acel_plot -> lists[f], create_node((void *)(*((int *) &mpu_data[f + 3]))));
+	plot_add_value(mpu_magn_plot, mpu_magn_plot -> lists[f], create_node((void *)(*((int *) &mpu_data[f + 6]))));
       }
       
       fprintf(mpu_logger -> file, "\n");
@@ -226,12 +243,14 @@ void * log_i2c_data() {
       graph_plot(mpu_gyro_plot);
       graph_plot(mpu_acel_plot);
       graph_plot(mpu_magn_plot);
-      nano_sleep(i2c_delay);
     }
     
-    fflush(mpu_logger -> file);
+    // Buffer out the writes
+    if (mpu_logger   -> values_read % 64) fflush(  mpu_logger -> file);
+    if (mprls_logger -> values_read %  1) fflush(mprls_logger -> file);
   }
 
+  // Close and terminate
   mpu_logger   -> close(  mpu_logger);
   mprls_logger -> close(mprls_logger);
 }
