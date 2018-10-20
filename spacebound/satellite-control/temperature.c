@@ -14,11 +14,8 @@
 #include "logger.h"
 #include "colors.h"
 
-FILE * cpu_temperature_log_file;
 pthread_t cpu_temperature_thread;
 bool termination_signal;       // used to terminate child thread
-
-//Plot * temperature_plot = NULL;
 
 void * read_cpu_temperature() {
   
@@ -29,16 +26,18 @@ void * read_cpu_temperature() {
   temperature_logger -> open(temperature_logger);
   fprintf(temperature_logger -> file, RED "\nRecording temperature\nTIME\tCPU\tMPU\n" RESET);  
 
-  if (temperature_plot == NULL) {
+  /*if (temperature_plot == NULL) {
     temperature_plot = malloc(sizeof(Plot));
     temperature_plot -> name = "     Temperatures v.s. Time     ";
     temperature_plot -> number_of_lists = 1;// + (i2c_device -> initialized) + (serial_device -> initialized);
     temperature_plot -> lists = malloc(temperature_plot -> number_of_lists * sizeof(List *));
     temperature_plot -> has_data = false;
     for (int l = 0; l < temperature_plot -> number_of_lists; l++) {
-      temperature_plot -> lists[l] = create_list(number_of_data_points_plottable, true);   // Might not have been set
+      temperature_plot -> lists[l] = create_list(number_of_data_points_plottable, true, false);   // Might not have been set
     }
-  }
+    }*/
+
+  Plot * temperature_plot = (Plot *) CPU -> plots -> head -> value;
   
   while (!termination_signal) {
     input_stream = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
@@ -75,8 +74,6 @@ void * read_cpu_temperature() {
 }
 
 bool initialize_temperature_monitoring() {
-
-  temperature_plot = NULL;
   
   // Attempt to read temperature to make sure sensor works
   FILE * input_stream = fopen("/sys/class/thermal/thermal_zone0/temp", "r");

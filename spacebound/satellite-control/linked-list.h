@@ -3,9 +3,7 @@
 
 #include <stdbool.h>
 
-#define INTEGER_NODE 0
-#define FLOAT_NODE   1
-#define STRING_NODE  2
+typedef unsigned int uint;
 
 typedef struct Node Node;
 typedef struct Node {
@@ -27,17 +25,27 @@ typedef struct Node {
 
 typedef struct List {
 
-  Node * head;
-  unsigned int elements;
-  unsigned int elements_limit;
+  Node * head;                    // The head of the list (has a value)
+  Node * tail;                    // The tail of the list (has a value) [Only SLL!]
+  unsigned int elements;          // Number of elements in the list
+  unsigned int elements_limit;    // Turns list into DLL Ring if not 0
 
-  bool doublely_linked;
+  bool doublely_linked;           // SLL or DLL (DLL ring if elements limit)
+  bool auto_free;                 // Do not use with element limits!
   
 } List;
 
+
 Node * create_node(void * value);
-List * create_list(unsigned int limit, bool doublely_linked);
+List * create_list(uint limit, bool doublely_linked, bool auto_free);
+
+List * create_list_from(uint vargs, ...);
+
 void list_insert(List * list, Node * node);
 void list_remove(List * list, Node * node);
+
+void list_insert_last(List * list, void * datum);
+
+void list_destroy(List * list);
 
 #endif
