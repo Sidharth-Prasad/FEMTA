@@ -127,14 +127,14 @@ void initialize_satellite() {
 
   // Create the plot data for each module
   CPU   -> plots = create_list_from(1,
-				    create_plot("    Temperatures v.s. Time     ", 1));
+				    create_plot("    Temperatures v.s. Time     ", 1, 8));
   MPU   -> plots = create_list_from(3,
-				    create_plot("    MPU Gyro Axes v.s. Time    ", 3),
-				    create_plot("MPU Acelerometer Axes v.s. Time", 3),
-				    create_plot("MPU Magnetometer Axes v.s. Time", 3));
+				    create_plot("    MPU Gyro Axes v.s. Time    ", 3, 8),
+				    create_plot("MPU Acelerometer Axes v.s. Time", 3, 8),
+				    create_plot("MPU Magnetometer Axes v.s. Time", 3, 8));
   Valve -> plots = NULL;
   MPRLS -> plots = create_list_from(1,
-				    create_plot("    MPRLS Pressure v.s. Time   ", 1));
+				    create_plot("    MPRLS Pressure v.s. Time   ", 1, 8));
   QB    -> plots = NULL;
   FEMTA -> plots = NULL;
 

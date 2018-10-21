@@ -34,10 +34,17 @@ typedef struct Plot {
 
   char * name;
   
-  List ** lists;
+  List ** lists;            // List of recent values for each sensor axis
+  List ** averages;         // List of average values for each sensor axis
+  
   uchar number_of_lists;
   float min_value;
   float max_value;
+  
+  float * next_averages;    // Next average for each list in the making
+  uint number_to_average;   // Number of points required to create an average
+  uint * next_numbers;      // How much progress has been made in creating average
+  
   bool has_data;
   
 } Plot;
@@ -90,11 +97,12 @@ void switch_to_normal(void * nil);          // ------------
 void clear_and_redraw(void * nil);          // ------------
 
 
-Plot * create_plot(char * name, uchar number_of_lists);
+Plot * create_plot(char * name, uchar number_of_lists, uint number_to_average);
 
 uchar presentation_mode;    // What are we showing
 
-uchar number_of_data_points_plottable;  // = 0
+uchar number_of_data_points_plottable;  // number of points small plot can show
+uchar number_of_data_points_graphable;  // number of points large plot can show
 
 Plot *  graph_owner;              // The stream in control of the plot area
 Plot ** all_possible_owners;      // All possible plots that could be in control

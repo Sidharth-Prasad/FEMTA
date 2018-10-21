@@ -60,6 +60,10 @@ void initialize_graphics() {
   for (uchar s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] -> view = malloc(sizeof(View));
 
   
+  // Let everyone know how wide the graph will be
+  number_of_data_points_graphable = COLS - 14;
+
+  
   // Draw the System Congifuration window
   View * view = setup_views[0] -> view;
   view -> inner_width  = 40;
@@ -438,7 +442,8 @@ void switch_to_full_graph(void * graph) {
   erase();
 
   attron(COLOR_PAIR(1));
-  mvaddstr(0, 0, "Sensor Overview"  );
+  mvaddstr(0, 0, "Sensor Overview");
+  mvprintw(0, COLS / 2 - 16, "%s", graph_owner -> name);
   mvaddstr(LINES - 3,  1, "Legend"  );
   mvaddstr(LINES - 2,  4,   "0th:"  );
   mvaddstr(LINES - 2, 10, ", 1st:"  );
@@ -448,11 +453,11 @@ void switch_to_full_graph(void * graph) {
   mvaddstr(LINES - 1, 18, ", 1&2:"  );
   mvaddstr(LINES - 1, 26, ", all: *");
 
-  mvaddstr(LINES - 3, COLS - 45, "Controls");
-  mvaddstr(LINES - 2, COLS - 42, "i: increase scale");
-  mvaddstr(LINES - 1, COLS - 42, "d: decrease scale");
-  mvaddstr(LINES - 2, COLS - 19, "f: full experiment");
-  mvaddstr(LINES - 1, COLS - 19, "b: back");
+  mvaddstr(LINES - 3, COLS - 39, "Controls");
+  mvaddstr(LINES - 2, COLS - 36, "c: cycle graph");
+  mvaddstr(LINES - 2, COLS - 18, "r: repair graph");
+  //mvaddstr(LINES - 2, COLS - 1 "f: full experiment");
+  mvaddstr(LINES - 1, COLS - 36, "b: back");
 
   mvaddstr(0, COLS - 6, "FEMTA"  );
   attroff(COLOR_PAIR(1));
@@ -510,16 +515,23 @@ void print_window_title(WINDOW * win, int starty, int startx, int width, char * 
   refresh();
 }
 
-Plot * create_plot(char * name, uchar number_of_lists) {
+Plot * create_plot(char * name, uchar number_of_lists, uint number_to_average) {
 
   Plot * plot = malloc(sizeof(Plot));
   plot -> name = name;
   plot -> has_data = false;
   plot -> number_of_lists = number_of_lists;
-  plot -> lists = malloc(number_of_lists * sizeof(Plot *));
+
+  plot -> number_to_average = number_to_average;
+  plot -> next_averages = calloc(number_of_lists, sizeof(float));
+  plot -> next_numbers  = calloc(number_of_lists, sizeof(float));
+  
+  plot -> lists    = malloc(number_of_lists * sizeof(List *));
+  plot -> averages = malloc(number_of_lists * sizeof(List *));
   
   for (uchar l = 0; l < number_of_lists; l++) {
-    plot -> lists[l] = create_list(number_of_data_points_plottable, true, false);   // DLL Ring
+    plot -> lists[l]    = create_list(number_of_data_points_plottable, true, false);   // DLL Ring
+    plot -> averages[l] = create_list(number_of_data_points_plottable, true, false);   // --------
   }
   return plot;
 }
@@ -634,14 +646,38 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
 
     // Update all lists in the plot to the initialized value
     for (uchar l = 0; l < plot -> number_of_lists; l++) {
-      plot -> lists[l] -> elements_limit = number_of_data_points_plottable;
+      plot -> lists[l]    -> elements_limit = number_of_data_points_plottable;
+      plot -> averages[l] -> elements_limit = number_of_data_points_graphable;
     }
     
     plot -> min_value = *(float *) &node -> value;
     plot -> max_value = *(float *) &node -> value;
     plot -> has_data = true;
   }
+
+  // Insert for normal list
   list_insert(list, node);
+
+  
+  // Contribute to average for average list
+
+  uchar index;
+  for (index = 0; true; index++) {
+    if (list == plot -> lists[index]) break;    // Get the right index for averaging
+  }
+  
+  plot -> next_numbers[index]++;
+  plot -> next_averages[index] += (*(float *) &node -> value);
+
+  if (plot -> next_numbers[index] == plot -> number_to_average) {    
+
+    float average = plot -> next_averages[index] / plot -> number_to_average;
+    list_insert(plot -> averages[index], create_node((void *) *((int *) &average)));
+
+    plot -> next_numbers[index] = 0;
+    plot -> next_averages[index] = 0;
+
+  }
 }
 
 void graph_plot(Plot * plot) {
@@ -653,13 +689,144 @@ void graph_plot(Plot * plot) {
   if (presentation_mode != PRESENT_NORMAL) {
     // System is presenting full graph
     
+    uchar points_available = number_of_data_points_graphable;
+    for (uchar n = 0; n < plot -> number_of_lists; n++) {
+      // Get min number of points
+      
+      if (plot -> averages[n] -> elements < points_available) {
+	points_available = plot -> averages[n] -> elements;
+      }
+    }
+    
+    if (!points_available) {
+      // No data, so bail out
+      
+      refresh();
+      return;
+    }
+    
+    // Get min and max averages
+    float min_average = plot -> max_value;    // DANGEROUS
+    float max_average = plot -> min_value;    // ---------
+    for (uchar l = 0; l < plot -> number_of_lists; l++) {
+      
+      Node * node = (Node *) 0x1;    // Bypass first for-loop check
+      
+      for (; node && node != plot -> averages[l] -> head; node = node -> next) {
+
+	if (node == (Node *) 0x1) node = plot -> averages[l] -> head;    // Bypass complete
+
+	float average = (*(float *) &node -> value);
+
+	if (average < min_average) min_average = average;
+	if (average > max_average) max_average = average;
+      }      
+    }
+
+    if (min_average == max_average) {
+      // Uniform data, bail out
+      
+      refresh();
+      return;
+    }
+    
+    // Draw y labels
     for (uchar l = 2; l < LINES - 5; l++) {
 
-      float left_label = l * (plot -> max_value - plot -> min_value) / (LINES - 5 - 2) + plot -> min_value;
+      float left_label = l * (max_average - min_average) / (LINES - 5 - 2) + min_average;
       
       mvprintw(LINES - 4 - l, 2 + (left_label >= 0), "%.2f", left_label);
-      
     }
+
+    for (uchar y = 2; y < LINES - 5; y++) {
+      for (uchar x = 10; x < COLS - 3; x++) {
+	mvaddch(y, x, ' ');
+      }
+    }
+    
+    // Plot points    
+
+    Node * nodes[plot -> number_of_lists];
+    for (uchar n = 0; n < plot -> number_of_lists; n++) {
+      nodes[n] = plot -> averages[n] -> head;
+    }
+    
+    for (uchar c = 0; c < number_of_data_points_graphable; c++) {
+
+      if (c > points_available - 1) break;
+      
+      //float left_label = 0 * (plot -> max_value - plot -> min_value) / (LINES - 5 - 2) + plot -> min_value;
+
+      uchar heights[plot -> number_of_lists];
+      for (uchar h = 0; h < plot -> number_of_lists; h++) {
+	float relative = (*(float *) &nodes[h] -> value);
+
+	//mvprintw(LINES - 5 + h, 8, "%.2f", relative);
+	
+	relative = (relative - min_average) / (max_average - min_average);
+	//relative = 1;
+	
+	if (relative < 0) relative = 0;
+	if (relative > 1) relative = 1;
+	
+        relative *= LINES - 8;
+
+	heights[h] = (uchar) relative;
+      }
+
+      if (plot -> number_of_lists == 1) {
+	attron(COLOR_PAIR(4));
+	mvaddch(LINES - 6 - heights[0], 8 + number_of_data_points_graphable - c, '*');
+	attroff(COLOR_PAIR(4));
+      }
+      if (plot -> number_of_lists == 3) {
+
+	attron(COLOR_PAIR(4));
+	mvaddch(LINES - 6 - heights[0], 8 + number_of_data_points_graphable - c, '*');
+	attroff(COLOR_PAIR(4));
+
+	attron(COLOR_PAIR(2));
+	mvaddch(LINES - 6 - heights[1], 9 + number_of_data_points_graphable - c, '*');
+	attroff(COLOR_PAIR(2));
+
+	attron(COLOR_PAIR(6));
+	mvaddch(LINES - 6 - heights[2], 9 + number_of_data_points_graphable - c, '*');
+	attroff(COLOR_PAIR(6));
+
+	if (heights[0] == heights[1]) {
+	  attron(COLOR_PAIR(5));
+	  mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	  attroff(COLOR_PAIR(5));
+	}
+
+	if (heights[1] == heights[2]) {
+	  attron(COLOR_PAIR(7));
+	  mvaddch(LINES - 6 - heights[1], 9 + number_of_data_points_graphable - c, '*');
+	  attroff(COLOR_PAIR(7));
+	}
+
+	if (heights[0] == heights[2]) {
+	  attron(COLOR_PAIR(3));
+	  mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	  attroff(COLOR_PAIR(3));
+	}
+
+	if (heights[0] == heights[1] && heights[0] == heights[2]) {
+	  attron(COLOR_PAIR(1));
+	  mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	  attroff(COLOR_PAIR(1));
+	}
+      }
+      
+      /*for (uchar h = 0; h < plot -> number_of_lists; h++) {
+	mvprintw(LINES - 7 - heights[h], number_of_data_points_graphable - c, "*");
+	}*/
+      
+      for (uchar n = 0; n < plot -> number_of_lists; n++) {
+	nodes[n] = nodes[n] -> next;
+      }
+    }
+    
     refresh();
     return;
   }
