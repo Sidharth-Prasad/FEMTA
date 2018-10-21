@@ -7,11 +7,16 @@
 
 #include "linked-list.h"
 
+#define PRESENT_NORMAL 0
+#define PRESENT_GRAPH  1
+
 #define GENERAL_WINDOW 0
 #define CONTROL_WINDOW 1
 #define OPERATE_WINDOW 2
 
 typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned int uint;
 
 typedef struct View {
 
@@ -80,7 +85,14 @@ void update_state_graphic(uchar line, bool state);
 void graph_plot(Plot * plot);
 void plot_add_value(Plot * plot, List * list, Node * node);
 
+void switch_to_full_graph(void * graph);    // For selector
+void switch_to_normal(void * nil);          // ------------
+void clear_and_redraw(void * nil);          // ------------
+
+
 Plot * create_plot(char * name, uchar number_of_lists);
+
+uchar presentation_mode;    // What are we showing
 
 uchar number_of_data_points_plottable;  // = 0
 

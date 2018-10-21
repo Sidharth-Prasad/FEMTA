@@ -23,8 +23,8 @@ i2c-interface.o: i2c-interface.c i2c-interface.h femta.h graphics.h timing.h log
 temperature.o: temperature.c temperature.h femta.h i2c-interface.h linked-list.h graphics.h logger.h colors.h
 	gcc $(GFLAGS) -c temperature.c temperature.h femta.h i2c-interface.h linked-list.h graphics.h logger.h colors.h
 
-graphics.o: graphics.c graphics.h femta.h
-	gcc $(GFLAGS) -c graphics.c graphics.h femta.h
+graphics.o: graphics.c graphics.h femta.h selector.h
+	gcc $(GFLAGS) -c graphics.c graphics.h femta.h selector.h
 
 selector.o: selector.c selector.h linked-list.h femta.h
 	gcc $(GFLAGS) -c selector.c selector.h linked-list.h femta.h
