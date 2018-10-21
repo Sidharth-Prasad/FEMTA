@@ -6,6 +6,7 @@
 ./FEMTA/spacebound/satellite-control/unified-controller
 ./FEMTA/spacebound/satellite-control/femta
 ./FEMTA/spacebound/unintegrated/test
+spacebound/onboard-sensors/cpu_log*.txt
 *log.txt
 *.o
 *.gch
