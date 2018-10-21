@@ -242,7 +242,7 @@ void * log_i2c_data() {
     MPU   -> i2c -> delays_passed++;
     MPRLS -> i2c -> delays_passed++;
 
-    if (MPRLS -> i2c -> delays_passed == MPRLS -> i2c -> frequency) {
+    if (MPRLS -> initialized && MPRLS -> i2c -> delays_passed == MPRLS -> i2c -> frequency) {
       // Read the MPRLS for new data
       
       MPRLS -> i2c -> delays_passed = 0;
@@ -254,9 +254,12 @@ void * log_i2c_data() {
       plot_add_value(mprls_plot, mprls_plot -> lists[0], create_node((void *) *((int *) &pressure)));
 
       graph_plot(mprls_plot);
+
+      // Buffer out the writes
+      if (!(mprls_logger -> values_read %  1)) fflush(mprls_logger -> file);
     }
     
-    if (MPU -> i2c -> delays_passed == MPU -> i2c -> frequency) {
+    if (MPU -> initialized && MPU -> i2c -> delays_passed == MPU -> i2c -> frequency) {
       // Read the MPU for new data
       
       MPU -> i2c -> delays_passed = 0;
@@ -285,11 +288,10 @@ void * log_i2c_data() {
       graph_plot(mpu_gyro_plot);
       graph_plot(mpu_acel_plot);
       graph_plot(mpu_magn_plot);
+
+      // Buffer out the writes
+      if (!(mpu_logger -> values_read % 64)) fflush(mpu_logger -> file);
     }
-    
-    // Buffer out the writes
-    if (mpu_logger   -> values_read % 64) fflush(  mpu_logger -> file);
-    if (mprls_logger -> values_read %  1) fflush(mprls_logger -> file);
   }
 
   // Close and terminate
