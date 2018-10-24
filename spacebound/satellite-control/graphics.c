@@ -11,7 +11,7 @@
 #include "femta.h"
 
 // Unified Controller Macros
-#define NUMBER_OF_MODULES 4
+#define NUMBER_OF_MODULES 5
 #define I2C_STATE 2
 #define UART_STATE 3
 
@@ -50,19 +50,19 @@ void initialize_graphics() {
   graph_views = malloc(NUMBER_OF_GRAPH_VIEWS * sizeof(graph_view *));
   setup_views = malloc(NUMBER_OF_SETUP_VIEWS * sizeof(setup_view *));
   
-  for (unsigned char p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) print_views[p] = malloc(sizeof(print_view));
-  for (unsigned char g = 0; g < NUMBER_OF_GRAPH_VIEWS; g++) graph_views[g] = malloc(sizeof(graph_view));
-  for (unsigned char s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] = malloc(sizeof(setup_view));
+  for (uchar p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) print_views[p] = malloc(sizeof(print_view));
+  for (uchar g = 0; g < NUMBER_OF_GRAPH_VIEWS; g++) graph_views[g] = malloc(sizeof(graph_view));
+  for (uchar s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] = malloc(sizeof(setup_view));
   
-  for (unsigned char p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) print_views[p] -> view = malloc(sizeof(View));
-  for (unsigned char g = 0; g < NUMBER_OF_GRAPH_VIEWS; g++) graph_views[g] -> view = malloc(sizeof(View));
-  for (unsigned char s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] -> view = malloc(sizeof(View));
+  for (uchar p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) print_views[p] -> view = malloc(sizeof(View));
+  for (uchar g = 0; g < NUMBER_OF_GRAPH_VIEWS; g++) graph_views[g] -> view = malloc(sizeof(View));
+  for (uchar s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] -> view = malloc(sizeof(View));
 
   
   // Draw the System Congifuration window
   View * view = setup_views[0] -> view;
   view -> inner_width  = 40;
-  view -> inner_height = 20;
+  view -> inner_height = 24;
   view -> outer_width  = view -> inner_width + 2;
   view -> outer_height = view -> inner_height + 4;
   
@@ -76,8 +76,8 @@ void initialize_graphics() {
   mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
   mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_RTEE);
 
-  unsigned char line = 4;
-  unsigned char offset = 10;
+  uchar line = 4;
+  uchar offset = 10;
 
   wattron(view -> window, COLOR_PAIR(5));
   mvwprintw(view -> window, line++, offset, "logical   physical   state");
@@ -224,8 +224,8 @@ void initialize_graphics() {
 
   // Instantiate printing lists of the proper sizes
   for (uint8_t p = 0; p < NUMBER_OF_PRINT_VIEWS; p++) {
-    print_views[p] -> lines = create_list(print_views[p] -> view -> inner_height, true);    // DLL Ring
-    print_views[p] -> colors = create_list(print_views[p] -> view -> inner_height, true);   // DLL Ring
+    print_views[p] -> lines  = create_list(print_views[p] -> view -> inner_height, true, false);    // DLL Ring
+    print_views[p] -> colors = create_list(print_views[p] -> view -> inner_height, true, false);   // DLL Ring
   }
   
   // Let everyone know
@@ -250,7 +250,15 @@ void initialize_graphics() {
 
   print(2, "CPU    SPAWNED   SUCCESS", 2);
   
-  if (i2c_device -> initialized) {
+  if (!MPU -> initialized) {
+    print(GENERAL_WINDOW, "MPU failed initialization", 4);
+  }
+
+  if (!MPRLS -> initialized) {
+    print(GENERAL_WINDOW, "MPRLS failed initialization", 4);
+  }
+  
+  if (MPU -> initialized || MPRLS -> initialized) {
     print(OPERATE_WINDOW, "I2C    SPAWNED   SUCCESS", 2);
     print(GENERAL_WINDOW, "I2C thread spawned", 2);
   }
@@ -265,9 +273,6 @@ void initialize_graphics() {
   //print(0, "  - CPU is being sampled at 1 Hz", 0);
   //print(0, "Logging 3 files asynchronously", 0);
   //print(0, "The OS is running 21 threads", 0);
-  //print(1, "c: cycle graphs"             , 0);
-  //print(1, "m: manual control"           , 0);
-  //print(1, "q: quit"                     , 0);
   
   //print(2, "The universe appears flat :)", 2);
   
@@ -299,7 +304,7 @@ void print_window_title(WINDOW *win, int starty, int startx, int width, char *st
   refresh();
 }
 
-Plot * create_plot(char * name, unsigned char number_of_lists) {
+Plot * create_plot(char * name, uchar number_of_lists) {
 
   Plot * plot = malloc(sizeof(Plot));
   plot -> name = name;
@@ -307,28 +312,28 @@ Plot * create_plot(char * name, unsigned char number_of_lists) {
   plot -> number_of_lists = number_of_lists;
   plot -> lists = malloc(number_of_lists * sizeof(Plot *));
   
-  for (unsigned char l = 0; l < number_of_lists; l++) {
-    plot -> lists[l] = create_list(number_of_data_points_plottable, true);   // DLL Ring
+  for (uchar l = 0; l < number_of_lists; l++) {
+    plot -> lists[l] = create_list(number_of_data_points_plottable, true, false);   // DLL Ring
   }
   return plot;
 }
 
-void clear_print_window(unsigned char window_number) {
+void clear_print_window(uchar window_number) {
   // Clears the print window by writing a space character to every location
   
   // Space buffer
-  unsigned char line_length = print_views[window_number] -> view -> inner_width - 2;
+  uchar line_length = print_views[window_number] -> view -> inner_width - 2;
   char spaces[line_length + 1];
-  for (unsigned char x = 0; x < line_length; x++) spaces[x] = ' ';
+  for (uchar x = 0; x < line_length; x++) spaces[x] = ' ';
   spaces[line_length] = '\0';
 
   // Print buffer over lines
-  for (unsigned char l = 0; l < print_views[window_number] -> number_of_lines; l++) {
+  for (uchar l = 0; l < print_views[window_number] -> number_of_lines; l++) {
     mvwprintw(print_views[window_number] -> view -> window, 3 + l, 2, "%s", spaces);
   }
 }
 
-void print(unsigned char window_number, char * string, unsigned int color) {
+void print(uchar window_number, char * string, unsigned int color) {
   // Prints a string to the window provided
   
   if (window_number >= NUMBER_OF_PRINT_VIEWS) return;   // Ensure print view exists
@@ -377,13 +382,13 @@ void print(unsigned char window_number, char * string, unsigned int color) {
   wrefresh(printer -> view -> window);
 }
 
-void erase_print_window(unsigned char window_number) {
-  for (unsigned char l = 0; l < print_views[window_number] -> number_of_lines; l++) {
+void erase_print_window(uchar window_number) {
+  for (uchar l = 0; l < print_views[window_number] -> number_of_lines; l++) {
     print(window_number, "", 0);
   }
 }
 
-void stomp_printer(unsigned char window_number, char * string, unsigned int color) {
+void stomp_printer(uchar window_number, char * string, unsigned int color) {
   // Destroys and replaces the last line of the printer
   // This is useful for taking user input and printing over a blank line
   
@@ -393,7 +398,7 @@ void stomp_printer(unsigned char window_number, char * string, unsigned int colo
   printer -> colors -> head -> value = (void *) color;
 }
 
-void update_state_graphic(unsigned char line, bool state) {
+void update_state_graphic(uchar line, bool state) {
   
   if (state) wattron(setup_views[0] -> view -> window, COLOR_PAIR(8));
 
@@ -422,7 +427,7 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
     }
 
     // Update all lists in the plot to the initialized value
-    for (unsigned char l = 0; l < plot -> number_of_lists; l++) {
+    for (uchar l = 0; l < plot -> number_of_lists; l++) {
       plot -> lists[l] -> elements_limit = number_of_data_points_plottable;
     }
     
@@ -451,8 +456,8 @@ void graph_plot(Plot * plot) {
   if (y_axis_position < 7) y_axis_position = 7;
 
   // Clear the screen
-  for (unsigned char r = 0; r < view -> inner_height; r++) {
-    for (unsigned char c = 0; c < view -> inner_width; c++) {
+  for (uchar r = 0; r < view -> inner_height; r++) {
+    for (uchar c = 0; c < view -> inner_width; c++) {
       mvwprintw(view -> window, r + 3, c + 1, " ");
     }
   }
@@ -464,7 +469,7 @@ void graph_plot(Plot * plot) {
   float vertical_range = plot -> max_value - plot -> min_value;
   float vertical_scale = (float) view -> inner_height / vertical_range;   // Single vertical space
   
-  for (unsigned char c = 0; c < graph -> vertical_tick_marks; c++) {
+  for (uchar c = 0; c < graph -> vertical_tick_marks; c++) {
     
     mvwprintw(view -> window,
 	      view -> inner_height - c * vertical_interval + 2,
@@ -478,7 +483,7 @@ void graph_plot(Plot * plot) {
   }
   
   int graph_color = 2;
-  for (unsigned char l = 0; l < plot -> number_of_lists; l++) {
+  for (uchar l = 0; l < plot -> number_of_lists; l++) {
     wattron(view -> window, COLOR_PAIR(graph_color));
     List * list = plot -> lists[l];
     Node * node = list -> head;
@@ -503,7 +508,7 @@ void graph_plot(Plot * plot) {
   // draw x-axis tick marks
   int horizontal_interval = (number_of_data_points_plottable) / graph -> horizontal_tick_marks;
   
-  for (unsigned char h = 0; h < graph -> horizontal_tick_marks; h++) {
+  for (uchar h = 0; h < graph -> horizontal_tick_marks; h++) {
     int tick_position = view -> inner_width - number_of_data_points_plottable - 1 + h * horizontal_interval;
     if (tick_position < y_axis_position) continue;
     mvwaddch(view -> window, x_axis_position, tick_position, ACS_PLUS);

@@ -20,7 +20,7 @@ Selector * create_selector(Selector * parent) {
   
   selector -> parent  = parent;
   
-  selector -> entries = create_list(0, false);
+  selector -> entries = create_list(0, false, false);
 
   // Adds a back button if this isn't the main menu
   if (parent) add_selector_command(selector, 'b', "back", (lambda) change_selector, (void *) parent);
@@ -88,6 +88,13 @@ void cycle_graph(void * nil) {              // Change graph to display
     for (int p = 1; p <= 3; p++) list_insert(owner_index_list, create_node((void *) p));
     MPU -> loaded = true;
     print(GENERAL_WINDOW, "Loaded MPU plots", 1);
+  }
+
+  // Add MPRLS plot
+  if (MPRLS -> initialized && !MPRLS -> loaded) {
+    list_insert(owner_index_list, create_node((void *) 4));
+    MPRLS -> loaded = true;
+    print(GENERAL_WINDOW, "Loaded MPRLS plots", 1);
   }
 
   graph_owner_index_node = graph_owner_index_node -> next;

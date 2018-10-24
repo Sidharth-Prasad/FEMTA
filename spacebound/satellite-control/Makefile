@@ -11,8 +11,8 @@ femta-debug: femta
 femta: femta.o controller.o i2c-interface.o temperature.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o quaternion.o error.o
 	gcc $(CFLAGS) $(GFLAGS) -o femta femta.o controller.o i2c-interface.o temperature.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o quaternion.o  error.o
 
-femta.o: femta.c femta.h controller.h i2c-interface.h temperature.h graphics.h selector.h scripter.h logger.h colors.h
-	gcc $(GFLAGS) -c femta.c femta.h controller.h i2c-interface.h temperature.h graphics.h selector.h scripter.h logger.h colors.h
+femta.o: femta.c femta.h controller.h i2c-interface.h temperature.h graphics.h selector.h scripter.h linked-list.h logger.h colors.h
+	gcc $(GFLAGS) -c femta.c femta.h controller.h i2c-interface.h temperature.h graphics.h selector.h linked-list.h scripter.h logger.h colors.h
 
 controller.o: controller.c controller.h femta.h quaternion.h graphics.h selector.h colors.h
 	gcc $(GFLAGS) -c controller.c controller.h femta.h quaternion.h graphics.h selector.h colors.h
@@ -32,6 +32,9 @@ selector.o: selector.c selector.h linked-list.h femta.h
 scripter.o: scripter.c scripter.h hashmap.h error.h colors.h
 	gcc $(GFLAGS) -c scripter.c scripter.h hashmap.h error.h colors.h
 
+linked-list.o: linked-list.c linked-list.h
+	gcc $(GFLAGS) -c linked-list.c linked-list.h 
+
 logger.o: logger.c logger.h
 	gcc $(GFLAGS) -c logger.c logger.h
 
@@ -40,9 +43,6 @@ timing.o: timing.c timing.h
 
 hashmap.o: hashmap.c hashmap.h linked-list.h
 	gcc $(GFLAGS) -c hashmap.c hashmap.h linked-list.h
-
-linked-list.o: linked-list.c linked-list.h
-	gcc $(GFLAGS) -c linked-list.c linked-list.h 
 
 quaternion.o: quaternion.c quaternion.h
 	gcc $(GFLAGS) -c quaternion.c quaternion.h
