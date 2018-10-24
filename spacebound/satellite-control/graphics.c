@@ -9,9 +9,10 @@
 
 #include "graphics.h"
 #include "femta.h"
+#include "selector.h"
 
 // Unified Controller Macros
-#define NUMBER_OF_MODULES 5
+#define NUMBER_OF_MODULES 6
 #define I2C_STATE 2
 #define UART_STATE 3
 
@@ -59,6 +60,10 @@ void initialize_graphics() {
   for (uchar s = 0; s < NUMBER_OF_SETUP_VIEWS; s++) setup_views[s] -> view = malloc(sizeof(View));
 
   
+  // Let everyone know how wide the graph will be
+  number_of_data_points_graphable = COLS - 14;
+
+  
   // Draw the System Congifuration window
   View * view = setup_views[0] -> view;
   view -> inner_width  = 40;
@@ -84,6 +89,7 @@ void initialize_graphics() {
   wattroff(view -> window, COLOR_PAIR(5));
   
   for (char m = 0; m < NUMBER_OF_MODULES; m++) {
+    if (! modules[m] -> show_pins) continue;
     if (! modules[m] -> enabled) wattron(view -> window, A_DIM);
     wattron(view -> window, COLOR_PAIR(5));
     mvwprintw(view -> window, line++, 2, modules[m] -> identifier);
@@ -285,7 +291,212 @@ void terminate_graphics() {
   endwin();
 }
 
-void print_window_title(WINDOW *win, int starty, int startx, int width, char *string, chtype color) {
+void reprint_interface() {
+
+  // Reprint configuration pane
+  View * view = setup_views[0] -> view;
+  box(view -> window, 0, 0);
+  print_window_title(view -> window, 1, 0, view -> outer_width, "System Configuration", COLOR_PAIR(5));
+
+  mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
+  mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_RTEE);
+
+  uchar line = 4;
+  uchar offset = 10;
+
+  wattron(view -> window, COLOR_PAIR(5));
+  mvwprintw(view -> window, line++, offset, "logical   physical   state");
+  wattroff(view -> window, COLOR_PAIR(5));
+  
+  for (char m = 0; m < NUMBER_OF_MODULES; m++) {
+    if (! modules[m] -> show_pins) continue;
+    if (! modules[m] -> enabled) wattron(view -> window, A_DIM);
+    wattron(view -> window, COLOR_PAIR(5));
+    mvwprintw(view -> window, line++, 2, modules[m] -> identifier);
+    wattroff(view -> window, COLOR_PAIR(5));
+    for (char p = 0; p < modules[m] -> n_pins; p++) {
+      offset = 7;
+      if (modules[m] -> pins[p].logical < 10) offset += 1;
+      offset += 8;
+      mvwprintw(view -> window, line, offset, "%d", modules[m] -> pins[p].logical);
+      if (modules[m] -> pins[p].logical < 10) offset -= 1;
+      
+      if (modules[m] -> pins[p].physical < 10) offset += 1;
+      offset += 11;
+      mvwprintw(view -> window, line, offset, "%d", modules[m] -> pins[p].physical);
+      if (modules[m] -> pins[p].physical < 10) offset -= 1;
+      
+      // print out the human-readable state
+      offset += 7;
+      if      (modules[m] -> pins[p].state == PI_INPUT)   mvwprintw(view -> window, line, offset, "Input" );
+      else if (modules[m] -> pins[p].state == PI_OUTPUT)  mvwprintw(view -> window, line, offset, "Output");
+
+      int color = 2;
+      if (modules[m] -> initialized == false) color = 4;
+
+      wattron(view -> window, COLOR_PAIR(color));
+      if (modules[m] -> pins[p].state == I2C_STATE)  mvwprintw(view -> window, line, offset, "I2C"   );
+      else if (modules[m] -> pins[p].state == UART_STATE) mvwprintw(view -> window, line, offset, "UART"  );
+      wattroff(view -> window, COLOR_PAIR(color));
+      line++;
+    }
+    line++;
+    if (! modules[m] -> enabled) wattroff(view -> window, A_DIM);
+  }
+
+  refresh();
+  wrefresh(setup_views[0] -> view -> window);
+
+  // Reprint general window
+  view = print_views[0] -> view;
+  box(view -> window, 0, 0);
+  mvwaddch(view -> window, 0, 0, ACS_LTEE);
+  mvwaddch(view -> window, 0, view -> outer_width - 1, ACS_RTEE);
+
+  print_window_title(view -> window, 1, 0, view -> outer_width, "System log", COLOR_PAIR(3));
+  mvwaddch(view -> window, 2, 0, ACS_LTEE);
+  mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
+  mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_RTEE);
+  
+  refresh();
+  wrefresh(view -> window);
+
+  // Reprint control pane
+  view = print_views[1] -> view;
+  
+  box(view -> window, 0, 0);
+  mvwaddch(view -> window, 0, view -> outer_width - 1, ACS_TTEE);
+  mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_PLUS);
+  mvwaddch(view -> window, view -> outer_height - 1, view -> outer_width - 1, ACS_RTEE);
+
+  print_window_title(view -> window, 1, 0, view -> outer_width, "Controls", COLOR_PAIR(5));
+  mvwaddch(view -> window, 2, 0, ACS_LTEE);
+  mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
+  mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_RTEE);
+  
+  refresh();
+  wrefresh(view -> window);
+
+  // Reprint pane
+  view = print_views[2] -> view;
+
+  box(view -> window, 0, 0);
+  mvwaddch(view -> window, 0, 0, ACS_TTEE);
+  mvwaddch(view -> window, 0, view -> outer_width - 1, ACS_TTEE);
+  mvwaddch(view -> window, view -> outer_height - 1, 0, ACS_BTEE);
+  mvwaddch(view -> window, view -> outer_height - 1, view -> outer_width - 1, ACS_RTEE);
+
+  print_window_title(view -> window, 1, 0, view -> outer_width, "Operating System Status", COLOR_PAIR(7));
+  mvwaddch(view -> window, 2, 0, ACS_PLUS);
+  mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
+  mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_PLUS);
+
+  refresh();
+  wrefresh(view -> window);
+
+  // Reprint the graphing window
+  view = graph_views[0] -> view;
+  box(view -> window, 0, 0);
+  mvwaddch(view -> window, 0, 0, ACS_LTEE);
+  mvwaddch(view -> window, 0, view -> outer_width - 1, ACS_RTEE);
+  mvwaddch(view -> window, view -> outer_height - 1, view -> outer_width - 1, ACS_BTEE);
+
+  print_window_title(view -> window, 1, 0, view -> outer_width, "Temperatures v.s. Time", COLOR_PAIR(7));
+  mvwaddch(view -> window, 2, 0, ACS_LTEE);
+  mvwhline(view -> window, 2, 1, ACS_HLINE, view -> outer_width - 2);
+  mvwaddch(view -> window, 2, view -> outer_width - 1, ACS_RTEE);
+
+  refresh();
+  wrefresh(view -> window);
+
+  // Final window corrections
+  mvwaddch(print_views[0] -> view -> window, 0, 0, ACS_LTEE);
+  mvwaddch(print_views[0] -> view -> window, 2, 0, ACS_LTEE);
+  refresh();
+  wrefresh(print_views[0] -> view -> window);
+  
+  mvwaddch(print_views[2] -> view -> window, print_views[2] -> view -> outer_height - 1, 0, ACS_BTEE);
+  
+  refresh();
+  wrefresh(print_views[2] -> view -> window);
+}
+
+void clear_and_redraw(void * nil) {
+
+  Plot * old_owner = graph_owner;
+  graph_owner = NULL;
+
+  erase();
+  refresh();
+
+  graph_owner = old_owner;
+  reprint_interface();
+}
+
+void switch_to_full_graph(void * graph) {
+
+  visible_selector = (Selector *) graph;
+  
+  presentation_mode = PRESENT_GRAPH;
+  
+  erase();
+
+  attron(COLOR_PAIR(1));
+  mvaddstr(0, 0, "Sensor Overview");
+  mvprintw(0, COLS / 2 - 16, "%s", graph_owner -> name);
+  mvaddstr(LINES - 3,  1, "Legend"  );
+  mvaddstr(LINES - 2,  4,   "0th:"  );
+  mvaddstr(LINES - 2, 10, ", 1st:"  );
+  mvaddstr(LINES - 2, 18, ", 2nd:"  );
+  mvaddstr(LINES - 1,  4,   "0&1:"  );
+  mvaddstr(LINES - 1, 10, ", 0&2:"  );
+  mvaddstr(LINES - 1, 18, ", 1&2:"  );
+  mvaddstr(LINES - 1, 26, ", all: *");
+
+  mvaddstr(LINES - 3, COLS - 39, "Controls");
+  mvaddstr(LINES - 2, COLS - 36, "c: cycle graph");
+  mvaddstr(LINES - 2, COLS - 18, "r: repair graph");
+  //mvaddstr(LINES - 2, COLS - 1 "f: full experiment");
+  mvaddstr(LINES - 1, COLS - 36, "b: back");
+
+  mvaddstr(0, COLS - 6, "FEMTA"  );
+  attroff(COLOR_PAIR(1));
+
+  attron(COLOR_PAIR(4));
+  mvaddstr(LINES - 2, 9, "*");
+  attroff(COLOR_PAIR(4));
+
+  attron(COLOR_PAIR(2));
+  mvaddstr(LINES - 2, 17, "*");
+  attroff(COLOR_PAIR(2));
+
+  attron(COLOR_PAIR(6));
+  mvaddstr(LINES - 2, 25, "*");
+  attroff(COLOR_PAIR(6));
+
+  attron(COLOR_PAIR(5));
+  mvaddstr(LINES - 1, 9, "*");
+  attroff(COLOR_PAIR(5));
+
+  attron(COLOR_PAIR(3));
+  mvaddstr(LINES - 1, 17, "*");
+  attroff(COLOR_PAIR(3));
+
+  attron(COLOR_PAIR(7));
+  mvaddstr(LINES - 1, 25, "*");
+  attroff(COLOR_PAIR(7));
+  
+  refresh();
+}
+
+void switch_to_normal(void * nil) {
+
+  presentation_mode = PRESENT_NORMAL;
+
+  reprint_interface();
+}
+
+void print_window_title(WINDOW * win, int starty, int startx, int width, char * string, chtype color) {
   int length, x, y;
   float temp;
 
@@ -304,16 +515,23 @@ void print_window_title(WINDOW *win, int starty, int startx, int width, char *st
   refresh();
 }
 
-Plot * create_plot(char * name, uchar number_of_lists) {
+Plot * create_plot(char * name, uchar number_of_lists, uint number_to_average) {
 
   Plot * plot = malloc(sizeof(Plot));
   plot -> name = name;
   plot -> has_data = false;
   plot -> number_of_lists = number_of_lists;
-  plot -> lists = malloc(number_of_lists * sizeof(Plot *));
+
+  plot -> number_to_average = number_to_average;
+  plot -> next_averages = calloc(number_of_lists, sizeof(float));
+  plot -> next_numbers  = calloc(number_of_lists, sizeof(float));
+  
+  plot -> lists    = malloc(number_of_lists * sizeof(List *));
+  plot -> averages = malloc(number_of_lists * sizeof(List *));
   
   for (uchar l = 0; l < number_of_lists; l++) {
-    plot -> lists[l] = create_list(number_of_data_points_plottable, true, false);   // DLL Ring
+    plot -> lists[l]    = create_list(number_of_data_points_plottable, true, false);   // DLL Ring
+    plot -> averages[l] = create_list(number_of_data_points_plottable, true, false);   // --------
   }
   return plot;
 }
@@ -333,7 +551,7 @@ void clear_print_window(uchar window_number) {
   }
 }
 
-void print(uchar window_number, char * string, unsigned int color) {
+void print(uchar window_number, char * string, uint color) {
   // Prints a string to the window provided
   
   if (window_number >= NUMBER_OF_PRINT_VIEWS) return;   // Ensure print view exists
@@ -388,7 +606,7 @@ void erase_print_window(uchar window_number) {
   }
 }
 
-void stomp_printer(uchar window_number, char * string, unsigned int color) {
+void stomp_printer(uchar window_number, char * string, uint color) {
   // Destroys and replaces the last line of the printer
   // This is useful for taking user input and printing over a blank line
   
@@ -428,14 +646,38 @@ void plot_add_value(Plot * plot, List * list, Node * node) {
 
     // Update all lists in the plot to the initialized value
     for (uchar l = 0; l < plot -> number_of_lists; l++) {
-      plot -> lists[l] -> elements_limit = number_of_data_points_plottable;
+      plot -> lists[l]    -> elements_limit = number_of_data_points_plottable;
+      plot -> averages[l] -> elements_limit = number_of_data_points_graphable;
     }
     
     plot -> min_value = *(float *) &node -> value;
     plot -> max_value = *(float *) &node -> value;
     plot -> has_data = true;
   }
+
+  // Insert for normal list
   list_insert(list, node);
+
+  
+  // Contribute to average for average list
+
+  uchar index;
+  for (index = 0; true; index++) {
+    if (list == plot -> lists[index]) break;    // Get the right index for averaging
+  }
+  
+  plot -> next_numbers[index]++;
+  plot -> next_averages[index] += (*(float *) &node -> value);
+
+  if (plot -> next_numbers[index] == plot -> number_to_average) {    
+
+    float average = plot -> next_averages[index] / plot -> number_to_average;
+    list_insert(plot -> averages[index], create_node((void *) *((int *) &average)));
+
+    plot -> next_numbers[index] = 0;
+    plot -> next_averages[index] = 0;
+
+  }
 }
 
 void graph_plot(Plot * plot) {
@@ -443,6 +685,151 @@ void graph_plot(Plot * plot) {
   if (!ready_to_graph) return;                          // Ensure race condition doesn't slaughter the terminal
   if (plot -> max_value == plot -> min_value) return;   // Can't plot uniform data
   if (plot != graph_owner) return;                      // If not owner, don't plot
+  
+  if (presentation_mode != PRESENT_NORMAL) {
+    // System is presenting full graph
+    
+    uchar points_available = number_of_data_points_graphable;
+    for (uchar n = 0; n < plot -> number_of_lists; n++) {
+      // Get min number of points
+      
+      if (plot -> averages[n] -> elements < points_available) {
+	points_available = plot -> averages[n] -> elements;
+      }
+    }
+    
+    if (!points_available) {
+      // No data, so bail out
+      
+      refresh();
+      return;
+    }
+    
+    // Get min and max averages
+    float min_average = plot -> max_value;    // DANGEROUS
+    float max_average = plot -> min_value;    // ---------
+    for (uchar l = 0; l < plot -> number_of_lists; l++) {
+      
+      Node * node = (Node *) 0x1;    // Bypass first for-loop check
+      
+      for (; node && node != plot -> averages[l] -> head; node = node -> next) {
+
+	if (node == (Node *) 0x1) node = plot -> averages[l] -> head;    // Bypass complete
+
+	float average = (*(float *) &node -> value);
+
+	if (average < min_average) min_average = average;
+	if (average > max_average) max_average = average;
+      }      
+    }
+
+    if (min_average == max_average) {
+      // Uniform data, bail out
+      
+      refresh();
+      return;
+    }
+    
+    // Draw y labels
+    for (uchar l = 2; l < LINES - 5; l++) {
+
+      float left_label = l * (max_average - min_average) / (LINES - 5 - 2) + min_average;
+      
+      mvprintw(LINES - 4 - l, 2 + (left_label >= 0), "%.2f", left_label);
+    }
+
+    for (uchar y = 2; y < LINES - 5; y++) {
+      for (uchar x = 10; x < COLS - 3; x++) {
+	mvaddch(y, x, ' ');
+      }
+    }
+    
+    // Plot points    
+
+    Node * nodes[plot -> number_of_lists];
+    for (uchar n = 0; n < plot -> number_of_lists; n++) {
+      nodes[n] = plot -> averages[n] -> head;
+    }
+    
+    for (uchar c = 0; c < number_of_data_points_graphable; c++) {
+
+      if (c > points_available - 1) break;
+      
+      //float left_label = 0 * (plot -> max_value - plot -> min_value) / (LINES - 5 - 2) + plot -> min_value;
+
+      uchar heights[plot -> number_of_lists];
+      for (uchar h = 0; h < plot -> number_of_lists; h++) {
+	float relative = (*(float *) &nodes[h] -> value);
+
+	//mvprintw(LINES - 5 + h, 8, "%.2f", relative);
+	
+	relative = (relative - min_average) / (max_average - min_average);
+	//relative = 1;
+	
+	if (relative < 0) relative = 0;
+	if (relative > 1) relative = 1;
+	
+        relative *= LINES - 8;
+
+	heights[h] = (uchar) relative;
+      }
+
+      if (plot -> number_of_lists == 1) {
+	attron(COLOR_PAIR(4));
+	mvaddch(LINES - 6 - heights[0], 8 + number_of_data_points_graphable - c, '*');
+	attroff(COLOR_PAIR(4));
+      }
+      if (plot -> number_of_lists == 3) {
+
+	attron(COLOR_PAIR(4));
+	mvaddch(LINES - 6 - heights[0], 8 + number_of_data_points_graphable - c, '*');
+	attroff(COLOR_PAIR(4));
+
+	attron(COLOR_PAIR(2));
+	mvaddch(LINES - 6 - heights[1], 9 + number_of_data_points_graphable - c, '*');
+	attroff(COLOR_PAIR(2));
+
+	attron(COLOR_PAIR(6));
+	mvaddch(LINES - 6 - heights[2], 9 + number_of_data_points_graphable - c, '*');
+	attroff(COLOR_PAIR(6));
+
+	if (heights[0] == heights[1]) {
+	  attron(COLOR_PAIR(5));
+	  mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	  attroff(COLOR_PAIR(5));
+	}
+
+	if (heights[1] == heights[2]) {
+	  attron(COLOR_PAIR(7));
+	  mvaddch(LINES - 6 - heights[1], 9 + number_of_data_points_graphable - c, '*');
+	  attroff(COLOR_PAIR(7));
+	}
+
+	if (heights[0] == heights[2]) {
+	  attron(COLOR_PAIR(3));
+	  mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	  attroff(COLOR_PAIR(3));
+	}
+
+	if (heights[0] == heights[1] && heights[0] == heights[2]) {
+	  attron(COLOR_PAIR(1));
+	  mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	  attroff(COLOR_PAIR(1));
+	}
+      }
+      
+      /*for (uchar h = 0; h < plot -> number_of_lists; h++) {
+	mvprintw(LINES - 7 - heights[h], number_of_data_points_graphable - c, "*");
+	}*/
+      
+      for (uchar n = 0; n < plot -> number_of_lists; n++) {
+	nodes[n] = nodes[n] -> next;
+      }
+    }
+    
+    refresh();
+    return;
+  }
   
   graph_view * graph = graph_views[0];
   View * view = graph -> view;

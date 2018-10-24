@@ -4,6 +4,13 @@
 #include "graphics.h"
 #include "logger.h"
 
+#define I2C_ACK   0x1
+#define I2C_NACK  0x0
+#define I2C_START 0x1
+#define I2C_STOP  0x0
+#define I2C_READ  0x1
+#define I2C_Write 0x0
+
 typedef unsigned char uchar;
 
 typedef struct I2C {

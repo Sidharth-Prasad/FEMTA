@@ -60,7 +60,6 @@
 // MPRLS definitions
 #define MPRLS_DEFAULT_ADDR 0x18
 
-
 pthread_t i2c_thread;
 bool i2c_termination_signal;       // used to terminate child thread
 
@@ -128,35 +127,89 @@ void readBytes(uint8_t address, uint8_t location, uint8_t number, uint8_t * data
   }
 }
 
-uint32_t requestMPRLSPressureData() {
+
+void requestMPRLSPressureData() {
   // Look at the MPRLS data sheet to see why this needs to happen.
   // Basically, we have to wait for a value to be generated, so we'll request
   // new data well in advance before reading. If we had the eoc pin, we'd know
   // exactly when new data has arrived. This isn't necessary though, as we only
   // wish to read at 1Hz.
   
-  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0xAA);   // Command to read pressure
-  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);   // Command to read pressure
-  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);   // Command to read pressure
+  /*i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0xAA);   // Command to read pressure
+    i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);   // Command to read pressure
+  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);   // Command to read pressure*/
+
+  /*i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_START);
+  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0xAA);
+  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);
+  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);
+  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_STOP);*/
+  
+  //i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0xAA);
+
+  /*char command[3] = {0xAA, 0x00, 0x00};
+
+  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_START);
+  i2cWriteBlockData(MPRLS -> i2c -> i2c_address, 0x30, command, 3);
+  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_STOP);*/
+
+  char command[2] = {0x00, 0x00};
+  i2cWriteWordData(MPRLS -> i2c -> i2c_address, 0xAA, 0x0000);
 }
+
 
 float readMPRLSPressureData() {
   // Reads the pressure from the MPRLS
   
   uint8_t rawData[4];
-  readBytes(MPRLS -> i2c -> i2c_address, 0x31, 4, &rawData[0]);   // Dump values into array
+
+  i2cReadDevice(MPRLS -> i2c -> i2c_address, rawData, 4);
+
+  // I don't even know anymore
+  
+  //readBytes(MPRLS -> i2c -> i2c_address, 0x31, 4, &rawData[0]);   // Dump values into array
+
+  /*i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_START);
+  
+  rawData[0] = i2cReadByteData(MPRLS -> i2c -> i2c_address, 0x31);
+  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_ACK);
+  
+  rawData[1] = i2cReadByteData(MPRLS -> i2c -> i2c_address, 0x31);
+  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_ACK);
+  
+  rawData[2] = i2cReadByteData(MPRLS -> i2c -> i2c_address, 0x31);
+  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_ACK);
+  
+  rawData[3] = i2cReadByteData(MPRLS -> i2c -> i2c_address, 0x31);
+  
+  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_NACK);
+  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_STOP);*/
+  //char returned = i2cReadBlockData(MPRLS -> i2c -> i2c_address, 0x31, rawData);
+  
+  uint8_t status = rawData[0];
   
   uint32_t result;
-  result  = ((uint32_t) rawData[0]) << 16;
-  result += ((uint32_t) rawData[1]) << 8;
-  result += ((uint32_t) rawData[0]) << 0;
+  result  = ((uint32_t) rawData[1]) << 16;
+  result += ((uint32_t) rawData[2]) <<  8;
+  result += ((uint32_t) rawData[3]) <<  0;
+
+  //uint32_t result = rawData[0];
   
+  float pressure = (result - 0x19999A) * (250 - 6);
+  pressure /= (float) (0xE66666 - 0x19999A);
+  pressure += 6;
+  
+  //return result;
   // Ask sensor to get the next value ready now
   // This way enough time will have passed before
   // we try to read next time this is called.
   requestMPRLSPressureData();
+  //return pressure;
+  //return pressure * 6.8947572932;    // Convert to kPA
+  return pressure;
+  //return status;
   
-  return result * 68.947572932;    // Convert to hPA
+  //return returned;
 }
 
 float readMPUTempData() {
@@ -215,19 +268,24 @@ void readMPUMagnData(float * axes) {
 }
 
 void * log_i2c_data() {
-
-  // Ask MPRLS sensor to prepare for read ASAP
-  requestMPRLSPressureData();    // IT'S A RACE TO THE FIRST READ. GO GO GO GO!!!!!
   
-  mpu_logger = create_logger("./logs/mpu-log.txt");
-  mpu_logger -> open(mpu_logger);
+  if (MPRLS -> initialized) {
+    
+    // Ask MPRLS sensor to prepare for read ASAP
+    requestMPRLSPressureData();    // IT'S A RACE TO THE FIRST READ. GO GO GO GO!!!!!
 
-  fprintf(mpu_logger -> file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\tTemp °C\n" RESET);
-
-  mprls_logger = create_logger("./logs/mprls-log.txt");
-  mprls_logger -> open(mprls_logger);
+    mprls_logger = create_logger("./logs/mprls-log.txt");
+    mprls_logger -> open(mprls_logger);
   
-  fprintf(mprls_logger -> file, BLUE "\nRecording MPRLS Data\nTIME\tPressure\n" RESET);
+    fprintf(mprls_logger -> file, BLUE "\nRecording MPRLS Data\nTIME\tPressure\n" RESET);
+  }
+
+  if (MPU -> initialized) {
+    mpu_logger = create_logger("./logs/mpu-log.txt");
+    mpu_logger -> open(mpu_logger);
+
+    fprintf(mpu_logger -> file, GREEN "\nRecording MPU Data\nTIME\tGyro x\tGyro y\tGyro z\tAcel x\tAcel y\tAcel z\tMagn x\tMagn y\tMagn z\tTemp °C\n" RESET);
+  }
 
   // Get plot pointers
   Plot * mpu_gyro_plot = (Plot *) MPU   -> plots -> head -> value;
@@ -239,8 +297,8 @@ void * log_i2c_data() {
 
     nano_sleep(i2c_delay);
 
-    MPU   -> i2c -> delays_passed++;
-    MPRLS -> i2c -> delays_passed++;
+    if (MPU   -> initialized) MPU   -> i2c -> delays_passed++;
+    if (MPRLS -> initialized) MPRLS -> i2c -> delays_passed++;
 
     if (MPRLS -> initialized && MPRLS -> i2c -> delays_passed == MPRLS -> i2c -> frequency) {
       // Read the MPRLS for new data
@@ -248,16 +306,17 @@ void * log_i2c_data() {
       MPRLS -> i2c -> delays_passed = 0;
       
       float pressure = readMPRLSPressureData();
-
-      fprintf(mprls_logger -> file, "%d\t%d\n", mprls_logger -> values_read++, pressure);
-
+      
+      fprintf(mprls_logger -> file, "%d\t%.8f\n", mprls_logger -> values_read++, pressure);
+      
       plot_add_value(mprls_plot, mprls_plot -> lists[0], create_node((void *) *((int *) &pressure)));
 
       graph_plot(mprls_plot);
 
       // Buffer out the writes
-      if (!(mprls_logger -> values_read %  1)) fflush(mprls_logger -> file);
+      if (!(mprls_logger -> values_read % 1)) fflush(mprls_logger -> file);
     }
+
     
     if (MPU -> initialized && MPU -> i2c -> delays_passed == MPU -> i2c -> frequency) {
       // Read the MPU for new data
@@ -295,8 +354,8 @@ void * log_i2c_data() {
   }
 
   // Close and terminate
-  mpu_logger   -> close(  mpu_logger);
-  mprls_logger -> close(mprls_logger);
+  if (MPU   -> initialized) mpu_logger   -> close(  mpu_logger);
+  if (MPRLS -> initialized) mprls_logger -> close(mprls_logger);
 }
 
 void initMPU9250() {
@@ -522,37 +581,46 @@ void initAK8963(float * destination) {
 
 bool initialize_i2c() {
 
-  // Set up MPU communications
-  MPU -> i2c = malloc(sizeof(I2C));
-  MPU -> i2c -> i2c_address       = i2cOpen(1, MPU9250_ADDRESS, 0);
-  MPU -> i2c -> i2c_slave_address = i2cOpen(1,  AK8963_ADDRESS, 0);
-  
-  // Set up MPRLS communications
-  MPRLS -> i2c = malloc(sizeof(I2C));
-  MPRLS -> i2c -> i2c_address     = i2cOpen(1, MPRLS_DEFAULT_ADDR, 0);
-
   // Set up timings
   i2c_delay = 100000000;   // 10 Hz i2c bursts
 
-  MPU   -> i2c -> delays_passed = 0;
-  MPRLS -> i2c -> delays_passed = 0;
-  MPU   -> i2c -> frequency =  1;        // 10 Hz
-  MPRLS -> i2c -> frequency = 10;        //  1 Hz
-
   
-  if (i2cReadByteData(MPRLS -> i2c -> i2c_address, 0) >= 0) {
-    MPRLS -> initialized = true;
+  // Set up MPU communications
+  if (MPU -> enabled) {
+    MPU -> i2c = malloc(sizeof(I2C));
+    MPU -> i2c -> i2c_address       = i2cOpen(1, MPU9250_ADDRESS, 0);
+    MPU -> i2c -> i2c_slave_address = i2cOpen(1,  AK8963_ADDRESS, 0);
+
+    MPU   -> i2c -> delays_passed = 0;
+    MPU   -> i2c -> frequency =  1;        // 10 Hz
+
+    if (i2cReadByteData(MPU -> i2c -> i2c_address, 0) >= 0) {
+      
+      calibrateMPU9250(gyroBias, accelBias);
+      initMPU9250();
+      
+      initAK8963(magCalibration);
+      
+      MPU -> initialized = true;
+    }
   }
   
+  // Set up MPRLS communications
+  if (MPRLS -> enabled) {
+    MPRLS -> i2c = malloc(sizeof(I2C));
+    MPRLS -> i2c -> i2c_address     = i2cOpen(1, MPRLS_DEFAULT_ADDR, 0);
+
+    MPRLS -> i2c -> delays_passed = 0;
+    MPRLS -> i2c -> frequency = 10;        //  1 Hz
+
+    if (i2cReadByteData(MPRLS -> i2c -> i2c_address, 0) >= 0) {
+      MPRLS -> initialized = true;
+    }
+  }
+  
+  
   // Connection established
-  if (i2cReadByteData(MPU -> i2c -> i2c_address, 0) >= 0) {
-
-    calibrateMPU9250(gyroBias, accelBias);
-    initMPU9250();
-    
-    initAK8963(magCalibration);
-
-    MPU -> initialized = true;
+  if (MPU -> initialized || MPRLS -> initialized) {
     
     // Spawn a logging thread
     i2c_termination_signal = false;

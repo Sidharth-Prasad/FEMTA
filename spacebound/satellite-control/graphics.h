@@ -7,11 +7,16 @@
 
 #include "linked-list.h"
 
+#define PRESENT_NORMAL 0
+#define PRESENT_GRAPH  1
+
 #define GENERAL_WINDOW 0
 #define CONTROL_WINDOW 1
 #define OPERATE_WINDOW 2
 
 typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned int uint;
 
 typedef struct View {
 
@@ -29,10 +34,17 @@ typedef struct Plot {
 
   char * name;
   
-  List ** lists;
+  List ** lists;            // List of recent values for each sensor axis
+  List ** averages;         // List of average values for each sensor axis
+  
   uchar number_of_lists;
   float min_value;
   float max_value;
+  
+  float * next_averages;    // Next average for each list in the making
+  uint number_to_average;   // Number of points required to create an average
+  uint * next_numbers;      // How much progress has been made in creating average
+  
   bool has_data;
   
 } Plot;
@@ -80,9 +92,17 @@ void update_state_graphic(uchar line, bool state);
 void graph_plot(Plot * plot);
 void plot_add_value(Plot * plot, List * list, Node * node);
 
-Plot * create_plot(char * name, uchar number_of_lists);
+void switch_to_full_graph(void * graph);    // For selector
+void switch_to_normal(void * nil);          // ------------
+void clear_and_redraw(void * nil);          // ------------
 
-uchar number_of_data_points_plottable;  // = 0
+
+Plot * create_plot(char * name, uchar number_of_lists, uint number_to_average);
+
+uchar presentation_mode;    // What are we showing
+
+uchar number_of_data_points_plottable;  // number of points small plot can show
+uchar number_of_data_points_graphable;  // number of points large plot can show
 
 Plot *  graph_owner;              // The stream in control of the plot area
 Plot ** all_possible_owners;      // All possible plots that could be in control

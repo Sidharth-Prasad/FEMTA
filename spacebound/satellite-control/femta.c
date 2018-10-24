@@ -127,14 +127,14 @@ void initialize_satellite() {
 
   // Create the plot data for each module
   CPU   -> plots = create_list_from(1,
-				    create_plot("    Temperatures v.s. Time     ", 1));
+				    create_plot("    Temperatures v.s. Time     ", 1, 8));
   MPU   -> plots = create_list_from(3,
-				    create_plot("    MPU Gyro Axes v.s. Time    ", 3),
-				    create_plot("MPU Acelerometer Axes v.s. Time", 3),
-				    create_plot("MPU Magnetometer Axes v.s. Time", 3));
+				    create_plot("    MPU Gyro Axes v.s. Time    ", 3, 32),
+				    create_plot("MPU Acelerometer Axes v.s. Time", 3, 32),
+				    create_plot("MPU Magnetometer Axes v.s. Time", 3, 32));
   Valve -> plots = NULL;
   MPRLS -> plots = create_list_from(1,
-				    create_plot("    MPRLS Pressure v.s. Time   ", 1));
+				    create_plot("    MPRLS Pressure v.s. Time   ", 1, 64));
   QB    -> plots = NULL;
   FEMTA -> plots = NULL;
 
@@ -302,13 +302,16 @@ int main() {
   Selector * scripts   = create_selector(main_menu);
   Selector * auto_menu = create_selector(main_menu);
   Selector * pid_menu  = create_selector(main_menu);
+  Selector * graph     = create_selector(main_menu);
 
   // Make the menus
   add_selector_command(main_menu, 'q', "Quit"            , (lambda)       flip_bool,  (void *)    &user_input);
+  add_selector_command(main_menu, 'r', "Redraw"          ,         clear_and_redraw,                     NULL);  
   add_selector_command(main_menu, 's', "Run script"      , (lambda) change_selector,  (void *)        scripts);
   add_selector_command(main_menu, 'm', "Manual control"  , (lambda) change_selector,  (void *)         manual);
   add_selector_command(main_menu, 'a', "Auto control"    , (lambda) change_selector,  (void *)      auto_menu);
   add_selector_command(main_menu, 'p', "PID control"     , (lambda) change_selector,  (void *)       pid_menu);
+  add_selector_command(main_menu, 'f', "Flip views"      ,     switch_to_full_graph,                    graph);
   add_selector_command(main_menu, 'c', "Cycle graph"     , (lambda)     cycle_graph,                     NULL);
   
   add_selector_command(   manual, 'm', "Write message"   , (lambda)   write_message,  (void *) message_logger);
@@ -332,6 +335,10 @@ int main() {
 
   add_selector_command( pid_menu, 't', "test w/ data"    , (lambda)          rotate,                     NULL);
   add_selector_command( pid_menu, 'n', "Initialize PID"  , (lambda)          rotate,                     NULL);
+
+  add_selector_command(    graph, 'f', "full experiment" , (lambda) change_selector,  (void *)       pid_menu);
+  add_selector_command(    graph, 'i', "Increase scale"  , (lambda) change_selector,  (void *)       pid_menu);
+  add_selector_command(    graph, 'd', "Decrease scale"  , (lambda) change_selector,  (void *)       pid_menu);
 
   
   visible_selector = main_menu;
