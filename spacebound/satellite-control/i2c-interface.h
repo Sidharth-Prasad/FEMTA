@@ -1,5 +1,7 @@
-#ifndef HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_I2C_INTERFACE
-#define HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_I2C_INTERFACE
+#ifndef HEADER_GAURD_I2C_INTERFACE
+#define HEADER_GAURD_I2C_INTERFACE
+
+#include <stdbool.h>
 
 #include "graphics.h"
 #include "logger.h"

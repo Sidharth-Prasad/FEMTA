@@ -19,7 +19,7 @@
 #include "logger.h"
 #include "colors.h"
 
-#define NUMBER_OF_MODULES 6
+#define NUMBER_OF_MODULES 7
 
 
 #define I2C_STATE 2
@@ -55,14 +55,16 @@ void initialize_satellite() {
   // All modules should be grouped together
   CPU   = modules[0];
   MPU   = modules[1];
-  Valve = modules[2];
-  MPRLS = modules[3];
-  QB    = modules[4];
-  FEMTA = modules[5];
+  UM7   = modules[2];
+  Valve = modules[3];
+  MPRLS = modules[4];
+  QB    = modules[5];
+  FEMTA = modules[6];
 
   // Set module identifiers for printing
   CPU   -> identifier = "ARM 6L";
   MPU   -> identifier = "MPU 9250";
+  UM7   -> identifier = "UM7";
   Valve -> identifier = "Valve";
   MPRLS -> identifier = "MPRLS";
   QB    -> identifier = "Quad Bank";
@@ -71,6 +73,7 @@ void initialize_satellite() {
   // Set each module's number of pins
   CPU   -> n_pins = 0;
   MPU   -> n_pins = 2;
+  UM7   -> n_pins = 0;    // NEED NUMBER OF PINS
   Valve -> n_pins = 1;
   MPRLS -> n_pins = 2;
   QB    -> n_pins = 4;
@@ -79,6 +82,7 @@ void initialize_satellite() {
   // Let system know which are present on the sat
   CPU   -> enabled = true;
   MPU   -> enabled = true;
+  UM7   -> enabled = false;    // NEED TO ENABLE
   Valve -> enabled = true;
   MPRLS -> enabled = true;
   QB    -> enabled = true;
@@ -87,6 +91,7 @@ void initialize_satellite() {
   // Let graphics know which configurations to print
   CPU   -> show_pins = false;
   MPU   -> show_pins = true;
+  UM7   -> show_pins = false;   // NEED TO SHOW PINS
   Valve -> show_pins = true;
   MPRLS -> show_pins = true;
   QB    -> show_pins = true;
@@ -132,6 +137,10 @@ void initialize_satellite() {
 				    create_plot("    MPU Gyro Axes v.s. Time    ", 3, 32),
 				    create_plot("MPU Acelerometer Axes v.s. Time", 3, 32),
 				    create_plot("MPU Magnetometer Axes v.s. Time", 3, 32));
+  UM7   -> plots = create_list_from(3,
+                                    create_plot("     UM7 Magnitometer Axes     ", 3, 32),
+                                    create_plot("       UM7 Gyroscope Axes      ", 3, 32),
+                                    create_plot("     UM7 Acelerometer Axes     ", 3, 32));
   Valve -> plots = NULL;
   MPRLS -> plots = create_list_from(1,
 				    create_plot("    MPRLS Pressure v.s. Time   ", 1, 64));
@@ -139,7 +148,7 @@ void initialize_satellite() {
   FEMTA -> plots = NULL;
 
   // Load plots into array of all possible owners
-  all_possible_owners    = malloc(5 * sizeof(Plot *));
+  all_possible_owners    = malloc(5 * sizeof(Plot *));                                  // NEED TO ADD UM7
   all_possible_owners[0] = (Plot *) CPU   -> plots -> head                 -> value;
   all_possible_owners[1] = (Plot *) MPU   -> plots -> head                 -> value;
   all_possible_owners[2] = (Plot *) MPU   -> plots -> head -> next         -> value;
@@ -148,12 +157,13 @@ void initialize_satellite() {
   
   // Set up the interfaces
   bool i2c_success    = initialize_i2c();
+  bool serial_success = initialize_serial();
   
   // Set each module's initialization state
   //  MPU   -> initialized = i2c_success;
-  Valve -> initialized = true;
-  FEMTA -> initialized = true;
-  QB    -> initialized = true;
+  if (Valve -> enabled) Valve -> initialized = true;
+  if (FEMTA -> enabled) FEMTA -> initialized = true;
+  if (QB    -> enabled) QB    -> initialized = true;
 
   bool thermal_success = initialize_temperature_monitoring();
   
@@ -204,14 +214,16 @@ void print_configuration() {
 }
 
 void terminate_satellite() {
-
+  
+  
   // Set all output pins to 0 before exit
   for (char m = 0; m < NUMBER_OF_MODULES; m++) {
     for (char p = 0; p < modules[m] -> n_pins; p++) {
       if (modules[m] -> pins[p].state == PI_OUTPUT) gpioWrite(modules[m] -> pins[p].logical, 0);
     }
   }
-  
+
+  // Tell the sensor threads and pigpio library to terminate
   terminate_temperature_monitoring();
   terminate_i2c();
   gpioTerminate();
@@ -261,11 +273,11 @@ int main() {
   start_time = time(NULL);
 
   // Create the control logger
-  Logger * logger = create_logger("./logs/control-log.txt");
-  logger -> open(logger);
-  fprintf(logger -> file,
+  Logger * control_logger = create_logger("./logs/control-log.txt");
+  control_logger -> open(control_logger);
+  fprintf(control_logger -> file,
 	  YELLOW "\nRecording Control Data\nDevice\tDevice State\tMPU Measures\tSystem Time\n" RESET);
-  logger -> close(logger);
+  control_logger -> close(control_logger);
 
   // Create message logger
   Logger * message_logger = create_logger("./logs/message-log.txt");
@@ -275,13 +287,12 @@ int main() {
   message_logger -> close(message_logger);
   
   // Initializations
+  initialize_error_handling();    // Set up the error log
+  initialize_satellite();         // Set up sensors and start their threads
+  print_configuration();          // Print configuration to console in case of crash
   
-  initialize_satellite();
-  print_configuration();    // Print configuration to console in case of crash
-  
-  initialize_graphics(); 
-
-  initialize_scripter();
+  initialize_graphics();          // Set up the graphical system
+  initialize_scripter();          // Set up the menu system
 
   owner_index_list = create_list(0, true, false);   // Doublly linked list of owners
 
@@ -418,11 +429,12 @@ int main() {
 
   terminate_satellite();
   terminate_graphics();
+  terminate_error_handling();
   
-  logger -> open(logger);
-  fprintf(logger -> file, YELLOW "\nTerminated gracefully at time %d seconds" RESET "\n\n", time(NULL) - start_time);
-  logger -> close(logger);
-  logger -> destroy(logger);
+  control_logger -> open(control_logger);
+  fprintf(control_logger -> file, YELLOW "\nTerminated gracefully at time %d seconds" RESET "\n\n", time(NULL) - start_time);
+  control_logger -> close(control_logger);
+  control_logger -> destroy(control_logger);
 
   message_logger -> open(message_logger);
   fprintf(message_logger -> file, PURPLE "\nTerminated gracefully at time %d seconds" RESET "\n\n", time(NULL) - start_time);

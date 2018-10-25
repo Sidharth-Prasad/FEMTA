@@ -7,7 +7,7 @@
  * https://github.com/adafruit/Adafruit_MPRLS
  *
  * Alterations have been made by Noah Franks to integrate these files into the FEMTA Cubesat
- * program. Additional code exists for specific use within FEMTA's prjoject requirments,
+ * program. Additional code exists for specific use within FEMTA's project requirments,
  * but many of the functions can be copied as they are over to future projects involving 
  * communication with the MPU 9250 and the MPRLS over I2C.
  */
@@ -60,7 +60,10 @@
 // MPRLS definitions
 #define MPRLS_DEFAULT_ADDR 0x18
 
-pthread_t i2c_thread;
+typedef pthread_t         pthread;
+typedef pthread_mutex_t   pmutex;
+
+pthread i2c_thread;
 bool i2c_termination_signal;       // used to terminate child thread
 
 float gyroBias[3]  = {0, 0, 0};   // Gyro bias calculated at startup
@@ -624,6 +627,7 @@ bool initialize_i2c() {
     
     // Spawn a logging thread
     i2c_termination_signal = false;
+    i2c_thread = malloc(sizeof(pthread));
     pthread_create(&i2c_thread, NULL, log_i2c_data, NULL);
     
     return true;
