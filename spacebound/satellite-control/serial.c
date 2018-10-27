@@ -10,9 +10,15 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <pigpio.h>
 
 #include "serial.h"
+#include "femta.h"
+#include "timing.h"
 #include "error.h"
+
+#include "graphics.h"
+#include "colors.h"
 
 // UM7 Configuration Registers
 #define CREG_COM_SETTINGS     0x00    // General communication settings
@@ -147,13 +153,169 @@ void configure_serial() {
   
 }
 
-void initialize_serial() {
+/*void write_serial_register(uint8_t address, uint8_t type, uint8_t bytes[4]) {
 
-  UM7 -> handle = serOpen("/dev/ttyAMA0", 115200, 0);
+  uint8_t request[24];
+  
+  request[0] = 's';
+  request[1] = 'n';
+  request[2] = 'p';
+  request[3] = type;
+  request[4] = address;
+  request[5] = bytes[0];
+  request[6] = bytes[1];
+  request[7] = bytes[2];
+  request[8] = bytes[3];
 
-  send_serial_command(0xAA);
+  uint16_t checksum = 's' + 'n' + 'p' + type + address + bytes[0] + bytes[1] + bytes[2] + bytes[3];
+  
+  request[9]  = (uint8_t) (checksum  <<  8);       // Checksum high byte
+  request[10] = (uint8_t) (checksum & 0xFF);       // Checksum low byte
+  
+  if (serWrite(UM7 -> serial -> handle, request, 11)) {
+    log_error("Serial write failed\n");
+    return;
+  }
+  
+  nano_sleep(1000000000);   // Wait 1000 ms
+  
+  
+  }*/
+void print_transmission(uint8_t * transmission, schar length) {
+  
+  uint8_t hex_str[96];
+  uint8_t chr_str[96];
+  uint8_t int_str[96];
+  uint8_t bin_str[96];
+    
+  if (length <= 0) {
+    fprintf(serial_logger -> file, "Transmission Failure: %d\n", length);
+  }
+
+  fprintf(serial_logger -> file, "Transmission\nPacket Length: %d\n", length);
+  
+  uint8_t index  = 0;    // Data index
+  
+  while (index < length) {
+    
+    sprintf(hex_str, "Hex:   ");
+    sprintf(int_str, "Int:   ");
+    sprintf(chr_str, "Chr:   ");
+    sprintf(bin_str, "Bin:   ");
+    
+    uint8_t start = 7;
+    
+    uint8_t offset = 7;    // Print offset
+    
+    while (offset < 96 - 9 && index < length) {
+      sprintf(hex_str + offset, "    0x%02x ", transmission[index]);
+      sprintf(int_str + offset, "     %03d ", transmission[index]);
+      
+      if (transmission[index]) sprintf(chr_str + offset, "       %c " , transmission[index]);
+      else                     sprintf(chr_str + offset, "         ");
+
+
+      uint8_t copy = transmission[index];
+      char binary[9] = {'0', '0', '0', '0', '0', '0', '0', '0', 0x00};
+      char bin_index = 7;
+      while (copy) {
+	binary[bin_index--] = '0' + (copy & 0x01);
+	copy >>= 1;
+      }
+      sprintf(bin_str + offset, "%s ", binary);      
+      
+      offset += 9;
+      index++;
+    }
+    
+    fprintf(serial_logger -> file, "%s\n", hex_str);
+    fprintf(serial_logger -> file, "%s\n", int_str);
+    fprintf(serial_logger -> file, "%s\n", chr_str);
+    fprintf(serial_logger -> file, "%s\n", bin_str);
+    fprintf(serial_logger -> file,   "\n");
+  }
+  
+  fprintf(serial_logger -> file,   "\n");
+  fflush(serial_logger -> file);
 }
 
+void send_serial_command(uint8_t command);
+
+bool initialize_serial() {
+
+  serial_logger = create_logger("./logs/serial-log.txt");
+  serial_logger -> open(serial_logger);
+  fprintf(serial_logger -> file, YELLOW "Serial Transmission Log\n" RESET);
+  
+  if (UM7 -> enabled) {
+
+    UM7 -> serial = malloc(sizeof(Serial));
+    
+    UM7 -> serial -> handle = serOpen("/dev/ttyAMA0", 115200, 0);
+    //UM7 -> serial -> handle = serOpen("/dev/serial0", 115200, 0);
+    //UM7 -> serial -> handle = serOpen("/dev/ttyS0", 115200, 0);
+
+    if (UM7 -> serial -> handle < 0) {
+      log_error("Unable to open serial connection for the UM7\n");
+      return false;
+    }
+
+    send_serial_command(RESET_TO_FACTORY);
+    
+    nano_sleep(1000000000);   // Wait 1000 ms
+    send_serial_command(GET_FW_REVISION);
+    
+    
+    
+    
+    //uint8_t bytes[4] = {0x00, 0x00, 0x01, 0x00};
+    
+    nano_sleep(1000000000);   // Wait 1000 ms
+    //write_serial_register(CREG_COM_RATES3, 0x01, bytes);
+    
+    uint8_t response[256];
+    
+    schar response_length;
+    
+    for (int i = 0; i < 4; i++) {
+      response_length = serRead(UM7 -> serial -> handle, response, 256);
+      nano_sleep(100000000);   // Wait 100 ms
+
+      print_transmission(response, response_length);
+      
+      char str[32];
+      sprintf(str, "length: %d", response_length);
+      log_error(str);
+      log_error("\n");
+
+      if (response_length) {
+	log_error("Hex:  0x");
+	for (schar i = 0; i < response_length; i++) {
+	  sprintf(str, "%x ", response[i]);
+	  log_error(str);
+	}
+	log_error("\n");
+	
+	log_error("Char:   ");
+	for (schar i = 0; i < response_length; i++) {
+	  sprintf(str, " %c ", response[i]);
+	  log_error(str);
+	}
+	log_error("\n");
+      }
+      
+    }
+
+    return true;    // FOR NOW
+  }
+
+  return false;
+}
+
+void terminate_serial() {
+  serial_logger -> close(serial_logger);
+}
+    
 void send_serial_command(uint8_t command) {
   
   uint8_t request[24];
@@ -161,33 +323,80 @@ void send_serial_command(uint8_t command) {
   request[0] = 's';
   request[1] = 'n';
   request[2] = 'p';
-  request[3] = 0x00;       // Type
+  request[3] = 0x00;       // Command Type
   request[4] = command;    // 
-  request[5] = 0x01;       // Checksum high byte
-  request[6] = 0xFB;       // Checksum low byte
 
-  serWrite(UM7 -> handle, request, 7);
+  uint16_t checksum = 's' + 'n' + 'p' + 0x00 + command;
+  
+  request[5] = (uint8_t) (checksum << 8);         // Checksum high byte
+  request[6] = (uint8_t) (checksum & 0xFF);       // Checksum low byte
 
+  nano_sleep(1000000000);   // Wait 1000 ms
+
+  
+  if (serWrite(UM7 -> serial -> handle, request, 7)) {
+    log_error("Serial write failed\n");
+  }
+  
+  
+  nano_sleep(2000000000);   // Wait 1000 ms
+  
   uint8_t response[256];
   
-  schar response_length = serRead(UM7 -> handle, response, 256);
+  schar response_length = serRead(UM7 -> serial -> handle, response, 256);
 
+  print_transmission(response, response_length);
+  
+  char str[32];
+  sprintf(str, "length: %d\n", response_length);
+  log_error(str);
+
+  if (response_length) {
+    log_error("Hex:  0x");
+    for (schar i = 0; i < response_length; i++) {
+      sprintf(str, "%x ", response[i]);
+      log_error(str);
+    }
+    log_error("\n");
+    
+    log_error("Char:   ");
+    for (schar i = 0; i < response_length; i++) {
+      sprintf(str, " %c ", response[i]);
+      log_error(str);
+    }
+    log_error("\n");
+  }
+  
+  //print(GENERAL_WINDOW, str, 1);
+  
+  
   Packet packet;
   
-  if (parse_packet(response, response_length, &packet) {
+  if (parse_packet(response, response_length, &packet)) {
 
-      if (packet.address == 0xAA) {
-
-        char string[5];
-
-        string[0] = packet.data[0];
-        string[1] = packet.data[1];
-        string[2] = packet.data[3];
-        string[3] = packet.data[4];
-        string[4] = '\0';
-
-        printf("Firmware revision: %s\n", string);
+    switch (packet.address) {
+    case GET_FW_REVISION:
+      ;
+      
+      char string[5];
+      
+      string[0] = packet.data[0];
+      string[1] = packet.data[1];
+      string[2] = packet.data[3];
+      string[3] = packet.data[4];
+      string[4] = '\0';
+      
+      //printf("Firmware revision: %s\n", string);
+      log_error(string);
+      break;
+      
+    case 0xAD:
+      
+      log_error("Reset to factory\n");
+      
+      break;
     }
 
-  
+      
+  }
 }

@@ -10,6 +10,7 @@
 // Program headers
 #include "femta.h"
 #include "i2c-interface.h"
+#include "serial.h"
 #include "temperature.h"
 #include "graphics.h"
 #include "selector.h"
@@ -18,6 +19,7 @@
 #include "linked-list.h"
 #include "logger.h"
 #include "colors.h"
+#include "error.h"
 
 #define NUMBER_OF_MODULES 7
 
@@ -73,7 +75,7 @@ void initialize_satellite() {
   // Set each module's number of pins
   CPU   -> n_pins = 0;
   MPU   -> n_pins = 2;
-  UM7   -> n_pins = 0;    // NEED NUMBER OF PINS
+  UM7   -> n_pins = 2;
   Valve -> n_pins = 1;
   MPRLS -> n_pins = 2;
   QB    -> n_pins = 4;
@@ -82,7 +84,7 @@ void initialize_satellite() {
   // Let system know which are present on the sat
   CPU   -> enabled = true;
   MPU   -> enabled = true;
-  UM7   -> enabled = false;    // NEED TO ENABLE
+  UM7   -> enabled = true;
   Valve -> enabled = true;
   MPRLS -> enabled = true;
   QB    -> enabled = true;
@@ -91,11 +93,11 @@ void initialize_satellite() {
   // Let graphics know which configurations to print
   CPU   -> show_pins = false;
   MPU   -> show_pins = true;
-  UM7   -> show_pins = false;   // NEED TO SHOW PINS
+  UM7   -> show_pins = true;
   Valve -> show_pins = true;
   MPRLS -> show_pins = true;
   QB    -> show_pins = true;
-  FEMTA -> show_pins = true;  
+  FEMTA -> show_pins = false;
   
   // Get space for module pin arrays
   for (char m = 0; m < NUMBER_OF_MODULES; m++)
@@ -108,11 +110,11 @@ void initialize_satellite() {
   // The MPRLS attatches to the I2C interface
   initialize_pin(&(MPRLS -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
   initialize_pin(&(MPRLS -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
-  
-  // The MPRLS uses the I2C interface
-  initialize_pin(&(MPRLS -> pins[0]),  2,  3, I2C_STATE);  // I2C SDA
-  initialize_pin(&(MPRLS -> pins[1]),  3,  5, I2C_STATE);  // I2C SCL
 
+  // The UM7 uses the Serial UART interface
+  initialize_pin(&(UM7 -> pins[0]), 14,  8, UART_STATE);   // UART TXD
+  initialize_pin(&(UM7 -> pins[1]), 15, 10, UART_STATE);   // UART RXD
+  
   // The Valve is controlled via digital states
   initialize_pin(&(Valve -> pins[0]), 17, 11, PI_OUTPUT);
   
@@ -226,6 +228,7 @@ void terminate_satellite() {
   // Tell the sensor threads and pigpio library to terminate
   terminate_temperature_monitoring();
   terminate_i2c();
+  terminate_serial();
   gpioTerminate();
 }
 

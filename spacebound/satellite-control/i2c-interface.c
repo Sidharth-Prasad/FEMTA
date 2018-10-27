@@ -588,8 +588,9 @@ bool initialize_i2c() {
   i2c_delay = 100000000;   // 10 Hz i2c bursts
 
   
-  // Set up MPU communications
   if (MPU -> enabled) {
+    // Set up MPU communications
+    
     MPU -> i2c = malloc(sizeof(I2C));
     MPU -> i2c -> i2c_address       = i2cOpen(1, MPU9250_ADDRESS, 0);
     MPU -> i2c -> i2c_slave_address = i2cOpen(1,  AK8963_ADDRESS, 0);
@@ -608,8 +609,10 @@ bool initialize_i2c() {
     }
   }
   
-  // Set up MPRLS communications
+  
   if (MPRLS -> enabled) {
+    // Set up MPRLS communications
+    
     MPRLS -> i2c = malloc(sizeof(I2C));
     MPRLS -> i2c -> i2c_address     = i2cOpen(1, MPRLS_DEFAULT_ADDR, 0);
 
@@ -627,7 +630,7 @@ bool initialize_i2c() {
     
     // Spawn a logging thread
     i2c_termination_signal = false;
-    i2c_thread = malloc(sizeof(pthread));
+    //i2c_thread = malloc(sizeof(pthread));
     pthread_create(&i2c_thread, NULL, log_i2c_data, NULL);
     
     return true;

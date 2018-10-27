@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "linked-list.h"
+#include "serial.h"
 
 typedef unsigned char uchar;
 
@@ -31,7 +32,7 @@ typedef struct module {
   char n_pins;                   // The number of pins bound to the module
 
   I2C * i2c;
-  UART * uart;
+  Serial * serial;
   List * plots;                  // List of plots for graphing
 
   bool initialized;

@@ -12,7 +12,7 @@
 #include "selector.h"
 
 // Unified Controller Macros
-#define NUMBER_OF_MODULES 6
+#define NUMBER_OF_MODULES 7
 #define I2C_STATE 2
 #define UART_STATE 3
 
@@ -67,7 +67,7 @@ void initialize_graphics() {
   // Draw the System Congifuration window
   View * view = setup_views[0] -> view;
   view -> inner_width  = 40;
-  view -> inner_height = 24;
+  view -> inner_height = 22;
   view -> outer_width  = view -> inner_width + 2;
   view -> outer_height = view -> inner_height + 4;
   

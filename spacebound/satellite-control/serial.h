@@ -22,7 +22,7 @@ typedef struct Packet {
   uint8_t  type;
   uint16_t checksum;
   uint8_t  data_length;
-  uint8_t  data[30];
+  uint8_t  data[32];
 } Packet;
 
 
