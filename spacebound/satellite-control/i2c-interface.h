@@ -5,8 +5,7 @@
 
 #include "graphics.h"
 #include "logger.h"
-
-typedef unsigned char uchar;
+#include "types.h"
 
 typedef struct I2C {
 

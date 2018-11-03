@@ -6,8 +6,7 @@
 
 #include "graphics.h"
 #include "logger.h"
-
-typedef signed char schar;
+#include "types.h"
 
 
 typedef struct Serial {

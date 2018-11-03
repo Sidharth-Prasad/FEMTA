@@ -2,8 +2,7 @@
 #define COMPILER_GAURD_SCRIPTER
 
 #include "hashmap.h"
-
-typedef void (*lambda)(void *);
+#include "types.h"
 
 void initialize_scripter();
 void define_script_action(char * symbol, lambda action);

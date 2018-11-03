@@ -6,6 +6,7 @@
 #include <menu.h>
 
 #include "linked-list.h"
+#include "types.h"
 
 #define PRESENT_NORMAL 0
 #define PRESENT_GRAPH  1
@@ -14,9 +15,6 @@
 #define CONTROL_WINDOW 1
 #define OPERATE_WINDOW 2
 
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
 
 typedef struct View {
 

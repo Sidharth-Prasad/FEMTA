@@ -11,8 +11,6 @@ typedef struct Logger {
   Logger * self;
   FILE * file;
   char * filename;
-  pthread_t thread;
-  bool termination_signal;            // used to terminate child thread
   int values_read;
   
   bool (* open   )(Logger * self);

@@ -27,6 +27,7 @@
 #include "timing.h"
 #include "logger.h"
 #include "colors.h"
+#include "types.h"
 
 // MPU 9250 definitions
 #define AK8963_ST1       0x02
@@ -59,9 +60,6 @@
 
 // MPRLS definitions
 #define MPRLS_DEFAULT_ADDR 0x18
-
-typedef pthread_t         pthread;
-typedef pthread_mutex_t   pmutex;
 
 pthread i2c_thread;
 bool i2c_termination_signal;       // used to terminate child thread
@@ -319,7 +317,7 @@ void * log_i2c_data() {
       // Buffer out the writes
       if (!(mprls_logger -> values_read % 1)) fflush(mprls_logger -> file);
     }
-
+    
     
     if (MPU -> initialized && MPU -> i2c -> delays_passed == MPU -> i2c -> frequency) {
       // Read the MPU for new data

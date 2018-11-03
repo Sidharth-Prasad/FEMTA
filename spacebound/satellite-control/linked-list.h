@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-typedef unsigned int uint;
+#include "types.h"
 
 typedef struct Node Node;
 typedef struct Node {

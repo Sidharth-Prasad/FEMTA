@@ -2,8 +2,7 @@
 #define COMPILER_GAURD_SELECTOR
 
 #include "linked-list.h"
-
-typedef void (*lambda)(void *);
+#include "types.h"
 
 typedef struct Command {
 

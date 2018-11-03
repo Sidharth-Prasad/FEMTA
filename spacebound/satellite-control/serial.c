@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <pigpio.h>
+#include <pthread.h>
 
 #include "serial.h"
 #include "femta.h"
@@ -19,6 +20,7 @@
 
 #include "graphics.h"
 #include "colors.h"
+#include "types.h"
 
 // UM7 Configuration Registers
 #define CREG_COM_SETTINGS     0x00    // General communication settings
@@ -79,6 +81,10 @@
 #define RESET_EKF             0xB3    // Resets the EKF
 
 
+pthread serial_thread;                // thread for all serial communication
+bool serial_termination_signal;       // used to terminate child thread
+
+
 bool parse_packet(uint8_t * data, uint8_t length, Packet * packet) {
   // Parses the rx data by finding the packet (if it exists) and extracting
   // it's information. Returns NULL upon failures, which are logged to the error log.
@@ -87,7 +93,7 @@ bool parse_packet(uint8_t * data, uint8_t length, Packet * packet) {
     log_error("UM7 packet was not long enough for parsing\n");
     return false;
   }
-
+  
   uint8_t packet_index;
 
   // Look for where packet header starts by finding the header starting string, "snp"
@@ -239,9 +245,9 @@ void print_transmission(uint8_t * transmission, schar length) {
   fflush(serial_logger -> file);
 }
 
-void send_serial_command(uint8_t command);
 
-bool initialize_serial() {
+
+/*bool initialize_serial() {
 
   serial_logger = create_logger("./logs/serial-log.txt");
   serial_logger -> open(serial_logger);
@@ -310,11 +316,7 @@ bool initialize_serial() {
   }
 
   return false;
-}
-
-void terminate_serial() {
-  serial_logger -> close(serial_logger);
-}
+  }*/
     
 void send_serial_command(uint8_t command) {
   
@@ -399,4 +401,61 @@ void send_serial_command(uint8_t command) {
 
       
   }
+}
+
+void * serial_main() {
+
+  Logger * raw_serial_logger = create_logger("./logs/raw_serial-log.txt");
+  raw_serial_logger -> open(raw_serial_logger);
+  fprintf(raw_serial_logger -> file, YELLOW "Raw Serial Transmission Log\n" RESET);
+  
+  // Set up timings
+  long serial_delay = 100000000;   // 10 Hz
+
+  while (!serial_termination_signal) {
+    
+    nano_sleep(serial_delay);
+    
+    uint8_t raw_transmission_data[256];
+    schar communications_length = serRead(UM7 -> serial -> handle, raw_transmission_data, 256);
+    
+    print_transmission(raw_transmission_data, communications_length);
+  }
+
+  serial_logger -> close(serial_logger);
+  rawserial_logger -> close(raw_serial_logger);
+}
+
+
+bool initialize_serial() {
+  
+  serial_logger = create_logger("./logs/serial-log.txt");
+  serial_logger -> open(serial_logger);
+  fprintf(serial_logger -> file, YELLOW "Serial Transmission Log\n" RESET);
+  
+  if (UM7 -> enabled) {
+    
+    UM7 -> serial = malloc(sizeof(Serial));
+    
+    UM7 -> serial -> handle = serOpen("/dev/ttyAMA0", 115200, 0);
+    
+    if (UM7 -> serial -> handle < 0) {
+      log_error("Unable to open serial connection for the UM7\n");
+      return false;
+    }
+    
+    send_serial_command(RESET_TO_FACTORY);
+    send_serial_command(GET_FW_REVISION);
+    
+    serial_termination_signal = false;
+    pthread_create(&serial_thread, NULL, serial_main, NULL);
+
+    return true;
+  }
+  
+  return false;
+}
+
+void terminate_serial() {
+  serial_termination_signal = true;
 }
