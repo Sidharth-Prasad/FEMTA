@@ -423,7 +423,7 @@ void * serial_main() {
   }
 
   serial_logger -> close(serial_logger);
-  rawserial_logger -> close(raw_serial_logger);
+  raw_serial_logger -> close(raw_serial_logger);
 }
 
 

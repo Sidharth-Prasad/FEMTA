@@ -10,3 +10,4 @@ spacebound/onboard-sensors/cpu_log*.txt
 *log.txt
 *.o
 *.gch
+*.x

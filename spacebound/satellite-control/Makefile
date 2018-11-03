@@ -9,7 +9,7 @@ femta-debug: GFLAGS += -g
 femta-debug: femta
 
 femta: femta.o controller.o i2c-interface.o serial.o temperature.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o quaternion.o error.o
-	gcc $(CFLAGS) $(GFLAGS) -o femta femta.o controller.o i2c-interface.o serial.o temperature.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o quaternion.o error.o
+	gcc $(CFLAGS) $(GFLAGS) -o femta.x femta.o controller.o i2c-interface.o serial.o temperature.o graphics.o selector.o scripter.o logger.o timing.o hashmap.o linked-list.o quaternion.o error.o
 
 femta.o: femta.c femta.h controller.h i2c-interface.h serial.h temperature.h graphics.h selector.h scripter.h linked-list.h logger.h error.h colors.h
 	gcc $(GFLAGS) -c femta.c femta.h controller.h i2c-interface.h serial.h temperature.h graphics.h selector.h linked-list.h scripter.h logger.h error.h colors.h
@@ -56,5 +56,5 @@ error.o: error.c error.h logger.h
 clean:
 	rm -f *.o *.gch                          # blow away compiled objects
 	mv *~ \#* backups/ 2>/dev/null || true   # blow away old backups
-	rm -f femta                              # blow away binary
+	rm -f *.x                                # blow away binaries
 
