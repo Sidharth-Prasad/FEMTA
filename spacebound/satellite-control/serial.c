@@ -80,10 +80,15 @@
 #define SET_MAG_REFERENCE     0xB0    // Sets the magnetometer reference vector
 #define RESET_EKF             0xB3    // Resets the EKF
 
+// UM7 Batch addresses
+#define BATCH_PROCESSED       0x61    // Processed gyro, accel, and magn batch start address
+#define BATCH_QUATERNION      0x6D    // Quaternion batch start address
 
 pthread serial_thread;                // thread for all serial communication
 bool serial_termination_signal;       // used to terminate child thread
 
+uint8_t trans_buffer[1024];           // Stores completted UM7 packet
+short   write_head;                   // trans_buffer's write head
 
 bool parse_packet(uint8_t * data, uint8_t length, Packet * packet) {
   // Parses the rx data by finding the packet (if it exists) and extracting
@@ -152,14 +157,82 @@ bool parse_packet(uint8_t * data, uint8_t length, Packet * packet) {
   return true;
 }
 
-void configure_serial() {
+void parse_UM7_data() {
+  // Parses the trasmission data up to the write head
 
-  // 
+  if (write_head < 6) {
+    log_error("UM7 Packet too short\n");
+    return;    // Packet not long enough
+  }
   
+  uint8_t address = trans_buffer[3];
+  
+  switch (address) {
+  case BATCH_PROCESSED:
+
+    ;    // Epsilon
+    
+    uint16_t checksum = 0;
+    
+    for (short b = 0; b < write_head - 5; b++) {
+      checksum += trans_buffer[b];
+    }
+
+    if (checksum != (trans_buffer[write_head - 4] << 8) | (trans_buffer[write_head - 3])) {
+      log_error("UM7 packet checksum didn't match\n");
+      return;
+    }
+
+    // Data is correct
+    uint8_t data_bytes[12][4];
+
+    for (char reg = 0; reg < 12; reg++) {
+      for (char byte = 0; byte < 4; byte++) {
+	data_bytes[reg][byte] = trans_buffer[2 + reg * 4 + byte];
+      }
+    }
+
+    char b = 0;
+    float gyro_x = *(float *) &data_bytes[b++];
+    float gyro_y = *(float *) &data_bytes[b++];
+    float gyro_z = *(float *) &data_bytes[b++];
+    float gyro_t = *(float *) &data_bytes[b++];
+    
+    float acel_x = *(float *) &data_bytes[b++];
+    float acel_y = *(float *) &data_bytes[b++];
+    float acel_z = *(float *) &data_bytes[b++];
+    float acel_t = *(float *) &data_bytes[b++];
+    
+    float magn_x = *(float *) &data_bytes[b++];
+    float magn_y = *(float *) &data_bytes[b++];
+    float magn_z = *(float *) &data_bytes[b++];
+    float magn_t = *(float *) &data_bytes[b++];
+    
+    fprintf(UM7_logger -> file, "%s\t%s\t%\t%s\t%s\t%s\t%\t%s\t%s\t%s\t%\t%s\t%s\t%s\t%\t%s\n",
+	    gyro_t, gyro_x, gyro_y, gyro_z,
+	    acel_t, acel_x, acel_y, acel_z,
+	    magn_t, magn_x, magn_y, magn_z);
+
+    
+    break;
+  }
   
 }
 
-void print_transmission(uint8_t * transmission, schar length) {
+
+uchar packet_header_symbol = 0x0;    // used to find "s n p" header (global due to packet splitting)
+
+void process_transmission(uint8_t * transmission, schar length) {
+  // Performs two functions at the same time for performance purposes
+  //
+  // Raw printing
+  // Prints the transmission to the serial log. This includes tiles representing each
+  // byte for easy reading in various representations.
+  //
+  // Data parsing
+  // Builds completed transmission packets using the trans_buffer global. As each is
+  // completed, parse_UM7_data() is called to extract the relavent information. Because
+  // the trans_buffer global exists, it's okay for a packet to be split into two reads.
   
   uint8_t hex_str[96];
   uint8_t chr_str[96];
@@ -186,20 +259,32 @@ void print_transmission(uint8_t * transmission, schar length) {
     uint8_t offset = 7;    // Print offset
     
     while (offset < 96 - 9 && index < length) {
+      
+      trans_buffer[write_head++] = transmission[index];
+      
+      // Look to see if packet ended
+      if      (transmission[index] == 's'                               ) packet_header_symbol = 's';
+      else if (transmission[index] == 'n' && packet_header_symbol == 's') packet_header_symbol = 'n';
+      else if (transmission[index] == 'p' && packet_header_symbol == 'n') {
+	// Packet ended, process the data
+	parse_UM7_data();
+	packet_header_symbol = 0x0;
+	write_head = 0;
+      }
+
+      // Print integer representation
       sprintf(hex_str + offset, "    0x%02x ", transmission[index]);
       sprintf(int_str + offset, "     %03d ", transmission[index]);
-
       
+      // Print character representation
       if      (transmission[index] == '\n') sprintf(chr_str + offset, "      \\n ");
       else if (transmission[index] == '\t') sprintf(chr_str + offset, "      \\t ");
       else if (transmission[index] == '\r') sprintf(chr_str + offset, "      \\r ");
       else if (transmission[index]  <  ' ') sprintf(chr_str + offset, "         ");
       else if (transmission[index]  >  '~') sprintf(chr_str + offset, "         ");
       else                                  sprintf(chr_str + offset, "       %c " , transmission[index]);
-      /*if (transmission[index]) sprintf(chr_str + offset, "       %c " , transmission[index]);
-	else                     sprintf(chr_str + offset, "         ");*/
 
-
+      // Print binary representation
       uint8_t copy = transmission[index];
       char binary[9] = {'0', '0', '0', '0', '0', '0', '0', '0', 0x00};
       char bin_index = 7;
@@ -221,7 +306,7 @@ void print_transmission(uint8_t * transmission, schar length) {
   }
   
   fprintf(serial_logger -> file,   "\n");
-  fflush(serial_logger -> file);
+  //fflush(serial_logger -> file);
 }
 
     
@@ -253,37 +338,7 @@ void send_serial_command(uint8_t command) {
   
   schar response_length = serRead(UM7 -> serial -> handle, response, 256);
 
-  print_transmission(response, response_length);
-    
-  //print(GENERAL_WINDOW, str, 1);
-  
-  /*Packet packet;
-  
-  if (parse_packet(response, response_length, &packet)) {
-
-    switch (packet.address) {
-    case GET_FW_REVISION:
-      ;
-      
-      char string[5];
-      
-      string[0] = packet.data[0];
-      string[1] = packet.data[1];
-      string[2] = packet.data[3];
-      string[3] = packet.data[4];
-      string[4] = '\0';
-      
-      //printf("Firmware revision: %s\n", string);
-      log_error(string);
-      break;
-      
-    case 0xAD:
-      
-      log_error("Reset to factory\n");
-      
-      break;
-      }
-  }*/
+  process_transmission(response, response_length);
 }
 
 void serial_write_register(uint8_t address, uint8_t D3, uint8_t D2, uint8_t D1, uint8_t D0) {
@@ -297,21 +352,21 @@ void serial_write_register(uint8_t address, uint8_t D3, uint8_t D2, uint8_t D1, 
   request[4] = address;
 
   // Write data section
-  request[5] = D0;            // lowest data byte  (yes, datasheet is backwards)
-  request[6] = D1;            // -              -
-  request[7] = D2;            // -              -
-  request[8] = D3;            // highest data byte
+  request[5] = D3;            // highest data byte
+  request[6] = D2;            // -              -
+  request[7] = D1;            // -              -
+  request[8] = D0;            // lowest data byte
   
   uint16_t checksum = 0;
   for (uchar b = 0; b < 9; b++) {
     checksum += request[b];
   }
   
-  request[ 9] = (uint8_t) (checksum >> 8);         // Checksum high byte
+  request[ 9] = (uint8_t) (checksum  >>  8);       // Checksum high byte
   request[10] = (uint8_t) (checksum & 0xFF);       // Checksum low byte
-
+  
   nano_sleep(1000000000);   // Wait 1000 ms
-
+  
   
   if (serWrite(UM7 -> serial -> handle, request, 11)) {
     log_error("Serial write failed\n");
@@ -323,7 +378,7 @@ void serial_write_register(uint8_t address, uint8_t D3, uint8_t D2, uint8_t D1, 
   
   schar response_length = serRead(UM7 -> serial -> handle, response, 256);
 
-  print_transmission(response, response_length);
+  process_transmission(response, response_length);
 }
 
 void * serial_main() {
@@ -341,9 +396,9 @@ void * serial_main() {
     uint8_t transmission_data[256];
     schar communications_length = serRead(UM7 -> serial -> handle, transmission_data, 256);
     
-    print_transmission(transmission_data, communications_length);
+    process_transmission(transmission_data, communications_length);
   }
-
+  
   UM7_logger -> close(UM7_logger);
   serial_logger -> close(serial_logger);
 }
@@ -383,15 +438,16 @@ bool initialize_serial() {
     //send_serial_command(GET_FW_REVISION);
     
     // Send processed data at 10 Hz
-    //serial_write_register(CREG_COM_RATES4, 0b00000000, 0b00000000, 0b00000000, 10);
+
     serial_write_register(CREG_COM_RATES1, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No raw
     serial_write_register(CREG_COM_RATES2, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No temperature
-    
-    /*serial_write_register(CREG_COM_RATES5, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No telemetry
-    serial_write_register(CREG_COM_RATES6, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // ------------
-    serial_write_register(CREG_COM_RATES7, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No NMEA packets */
+    serial_write_register(CREG_COM_RATES3, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // 10 Hz processed
+    serial_write_register(CREG_COM_RATES4, 0b00000000, 0b00000000, 0b00000000, 0b00001010);   // ---------------
+    serial_write_register(CREG_COM_RATES5, 0b00001010, 0b00000000, 0b00000000, 0b00000000);   // 10 Hz Quaternion
+    serial_write_register(CREG_COM_RATES6, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No misc telemetry
+    serial_write_register(CREG_COM_RATES7, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No NMEA packets
 
-    serial_write_register(CREG_COM_RATES4, 0b00000000, 0b00000000, 0b00000000, 0b00001010);   // 10 Hz processed
+    
     
     serial_termination_signal = false;
     pthread_create(&serial_thread, NULL, serial_main, NULL);
