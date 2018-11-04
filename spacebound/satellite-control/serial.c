@@ -159,34 +159,6 @@ void configure_serial() {
   
 }
 
-/*void write_serial_register(uint8_t address, uint8_t type, uint8_t bytes[4]) {
-
-  uint8_t request[24];
-  
-  request[0] = 's';
-  request[1] = 'n';
-  request[2] = 'p';
-  request[3] = type;
-  request[4] = address;
-  request[5] = bytes[0];
-  request[6] = bytes[1];
-  request[7] = bytes[2];
-  request[8] = bytes[3];
-
-  uint16_t checksum = 's' + 'n' + 'p' + type + address + bytes[0] + bytes[1] + bytes[2] + bytes[3];
-  
-  request[9]  = (uint8_t) (checksum  <<  8);       // Checksum high byte
-  request[10] = (uint8_t) (checksum & 0xFF);       // Checksum low byte
-  
-  if (serWrite(UM7 -> serial -> handle, request, 11)) {
-    log_error("Serial write failed\n");
-    return;
-  }
-  
-  nano_sleep(1000000000);   // Wait 1000 ms
-  
-  
-  }*/
 void print_transmission(uint8_t * transmission, schar length) {
   
   uint8_t hex_str[96];
@@ -216,9 +188,16 @@ void print_transmission(uint8_t * transmission, schar length) {
     while (offset < 96 - 9 && index < length) {
       sprintf(hex_str + offset, "    0x%02x ", transmission[index]);
       sprintf(int_str + offset, "     %03d ", transmission[index]);
+
       
-      if (transmission[index]) sprintf(chr_str + offset, "       %c " , transmission[index]);
-      else                     sprintf(chr_str + offset, "         ");
+      if      (transmission[index] == '\n') sprintf(chr_str + offset, "      \\n ");
+      else if (transmission[index] == '\t') sprintf(chr_str + offset, "      \\t ");
+      else if (transmission[index] == '\r') sprintf(chr_str + offset, "      \\r ");
+      else if (transmission[index]  <  ' ') sprintf(chr_str + offset, "         ");
+      else if (transmission[index]  >  '~') sprintf(chr_str + offset, "         ");
+      else                                  sprintf(chr_str + offset, "       %c " , transmission[index]);
+      /*if (transmission[index]) sprintf(chr_str + offset, "       %c " , transmission[index]);
+	else                     sprintf(chr_str + offset, "         ");*/
 
 
       uint8_t copy = transmission[index];
@@ -245,82 +224,10 @@ void print_transmission(uint8_t * transmission, schar length) {
   fflush(serial_logger -> file);
 }
 
-
-
-/*bool initialize_serial() {
-
-  serial_logger = create_logger("./logs/serial-log.txt");
-  serial_logger -> open(serial_logger);
-  fprintf(serial_logger -> file, YELLOW "Serial Transmission Log\n" RESET);
-  
-  if (UM7 -> enabled) {
-
-    UM7 -> serial = malloc(sizeof(Serial));
-    
-    UM7 -> serial -> handle = serOpen("/dev/ttyAMA0", 115200, 0);
-    //UM7 -> serial -> handle = serOpen("/dev/serial0", 115200, 0);
-    //UM7 -> serial -> handle = serOpen("/dev/ttyS0", 115200, 0);
-
-    if (UM7 -> serial -> handle < 0) {
-      log_error("Unable to open serial connection for the UM7\n");
-      return false;
-    }
-
-    send_serial_command(RESET_TO_FACTORY);
-    
-    nano_sleep(1000000000);   // Wait 1000 ms
-    send_serial_command(GET_FW_REVISION);
-    
-    
-    
-    
-    //uint8_t bytes[4] = {0x00, 0x00, 0x01, 0x00};
-    
-    nano_sleep(1000000000);   // Wait 1000 ms
-    //write_serial_register(CREG_COM_RATES3, 0x01, bytes);
-    
-    uint8_t response[256];
-    
-    schar response_length;
-    
-    for (int i = 0; i < 4; i++) {
-      response_length = serRead(UM7 -> serial -> handle, response, 256);
-      nano_sleep(100000000);   // Wait 100 ms
-
-      print_transmission(response, response_length);
-      
-      char str[32];
-      sprintf(str, "length: %d", response_length);
-      log_error(str);
-      log_error("\n");
-
-      if (response_length) {
-	log_error("Hex:  0x");
-	for (schar i = 0; i < response_length; i++) {
-	  sprintf(str, "%x ", response[i]);
-	  log_error(str);
-	}
-	log_error("\n");
-	
-	log_error("Char:   ");
-	for (schar i = 0; i < response_length; i++) {
-	  sprintf(str, " %c ", response[i]);
-	  log_error(str);
-	}
-	log_error("\n");
-      }
-      
-    }
-
-    return true;    // FOR NOW
-  }
-
-  return false;
-  }*/
     
 void send_serial_command(uint8_t command) {
   
-  uint8_t request[24];
+  uint8_t request[7];
   
   request[0] = 's';
   request[1] = 'n';
@@ -330,7 +237,7 @@ void send_serial_command(uint8_t command) {
 
   uint16_t checksum = 's' + 'n' + 'p' + 0x00 + command;
   
-  request[5] = (uint8_t) (checksum << 8);         // Checksum high byte
+  request[5] = (uint8_t) (checksum >> 8);         // Checksum high byte
   request[6] = (uint8_t) (checksum & 0xFF);       // Checksum low byte
 
   nano_sleep(1000000000);   // Wait 1000 ms
@@ -340,39 +247,17 @@ void send_serial_command(uint8_t command) {
     log_error("Serial write failed\n");
   }
   
-  
-  nano_sleep(2000000000);   // Wait 1000 ms
+  nano_sleep(2000000000);   // Wait 2000 ms
   
   uint8_t response[256];
   
   schar response_length = serRead(UM7 -> serial -> handle, response, 256);
 
   print_transmission(response, response_length);
-  
-  char str[32];
-  sprintf(str, "length: %d\n", response_length);
-  log_error(str);
-
-  if (response_length) {
-    log_error("Hex:  0x");
-    for (schar i = 0; i < response_length; i++) {
-      sprintf(str, "%x ", response[i]);
-      log_error(str);
-    }
-    log_error("\n");
     
-    log_error("Char:   ");
-    for (schar i = 0; i < response_length; i++) {
-      sprintf(str, " %c ", response[i]);
-      log_error(str);
-    }
-    log_error("\n");
-  }
-  
   //print(GENERAL_WINDOW, str, 1);
   
-  
-  Packet packet;
+  /*Packet packet;
   
   if (parse_packet(response, response_length, &packet)) {
 
@@ -397,38 +282,86 @@ void send_serial_command(uint8_t command) {
       log_error("Reset to factory\n");
       
       break;
-    }
+      }
+  }*/
+}
 
-      
+void serial_write_register(uint8_t address, uint8_t D3, uint8_t D2, uint8_t D1, uint8_t D0) {
+  
+  uint8_t request[11];
+  
+  request[0] = 's';
+  request[1] = 'n';
+  request[2] = 'p';
+  request[3] = 0b10000000;    // Has data is true
+  request[4] = address;
+
+  // Write data section
+  request[5] = D0;            // lowest data byte  (yes, datasheet is backwards)
+  request[6] = D1;            // -              -
+  request[7] = D2;            // -              -
+  request[8] = D3;            // highest data byte
+  
+  uint16_t checksum = 0;
+  for (uchar b = 0; b < 9; b++) {
+    checksum += request[b];
   }
+  
+  request[ 9] = (uint8_t) (checksum >> 8);         // Checksum high byte
+  request[10] = (uint8_t) (checksum & 0xFF);       // Checksum low byte
+
+  nano_sleep(1000000000);   // Wait 1000 ms
+
+  
+  if (serWrite(UM7 -> serial -> handle, request, 11)) {
+    log_error("Serial write failed\n");
+  }
+  
+  nano_sleep(2000000000);   // Wait 2000 ms
+  
+  uint8_t response[256];
+  
+  schar response_length = serRead(UM7 -> serial -> handle, response, 256);
+
+  print_transmission(response, response_length);
 }
 
 void * serial_main() {
-
-  Logger * raw_serial_logger = create_logger("./logs/raw_serial-log.txt");
-  raw_serial_logger -> open(raw_serial_logger);
-  fprintf(raw_serial_logger -> file, YELLOW "Raw Serial Transmission Log\n" RESET);
   
   // Set up timings
-  long serial_delay = 100000000;   // 10 Hz
+  long serial_delay =   100000000L;   // 10 Hz
+  //long serial_delay = 999999999L;   // 1 Hz
 
   while (!serial_termination_signal) {
     
     nano_sleep(serial_delay);
+
+    if (serDataAvailable(UM7 -> serial -> handle) <= 0) continue;
     
-    uint8_t raw_transmission_data[256];
-    schar communications_length = serRead(UM7 -> serial -> handle, raw_transmission_data, 256);
+    uint8_t transmission_data[256];
+    schar communications_length = serRead(UM7 -> serial -> handle, transmission_data, 256);
     
-    print_transmission(raw_transmission_data, communications_length);
+    print_transmission(transmission_data, communications_length);
   }
 
+  UM7_logger -> close(UM7_logger);
   serial_logger -> close(serial_logger);
-  raw_serial_logger -> close(raw_serial_logger);
 }
 
 
 bool initialize_serial() {
   
+  UM7_logger = create_logger("./logs/UM7-log.txt");
+  UM7_logger -> open(UM7_logger);
+  fprintf(UM7_logger -> file,
+
+	  GREEN
+	  "\nRecording UM7 Data\n"
+	  "Gyro Time\tGyro x\tGyro y\tGyro z\t"
+	  "Acel Time\tAcel x\tAcel y\tAcel z\t"
+	  "Magn Time\tMagn x\tMagn y\tMagn z\n"
+	  RESET);
+
   serial_logger = create_logger("./logs/serial-log.txt");
   serial_logger -> open(serial_logger);
   fprintf(serial_logger -> file, YELLOW "Serial Transmission Log\n" RESET);
@@ -445,7 +378,20 @@ bool initialize_serial() {
     }
     
     send_serial_command(RESET_TO_FACTORY);
-    send_serial_command(GET_FW_REVISION);
+    nano_sleep(1000000000);   // Wait 1s
+    
+    //send_serial_command(GET_FW_REVISION);
+    
+    // Send processed data at 10 Hz
+    //serial_write_register(CREG_COM_RATES4, 0b00000000, 0b00000000, 0b00000000, 10);
+    serial_write_register(CREG_COM_RATES1, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No raw
+    serial_write_register(CREG_COM_RATES2, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No temperature
+    
+    /*serial_write_register(CREG_COM_RATES5, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No telemetry
+    serial_write_register(CREG_COM_RATES6, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // ------------
+    serial_write_register(CREG_COM_RATES7, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No NMEA packets */
+
+    serial_write_register(CREG_COM_RATES4, 0b00000000, 0b00000000, 0b00000000, 0b00001010);   // 10 Hz processed
     
     serial_termination_signal = false;
     pthread_create(&serial_thread, NULL, serial_main, NULL);

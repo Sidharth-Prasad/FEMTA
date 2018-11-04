@@ -584,7 +584,7 @@ bool initialize_i2c() {
 
   // Set up timings
   i2c_delay = 100000000;   // 10 Hz i2c bursts
-
+  
   
   if (MPU -> enabled) {
     // Set up MPU communications
@@ -592,10 +592,10 @@ bool initialize_i2c() {
     MPU -> i2c = malloc(sizeof(I2C));
     MPU -> i2c -> i2c_address       = i2cOpen(1, MPU9250_ADDRESS, 0);
     MPU -> i2c -> i2c_slave_address = i2cOpen(1,  AK8963_ADDRESS, 0);
-
+    
     MPU   -> i2c -> delays_passed = 0;
     MPU   -> i2c -> frequency =  1;        // 10 Hz
-
+    
     if (i2cReadByteData(MPU -> i2c -> i2c_address, 0) >= 0) {
       
       calibrateMPU9250(gyroBias, accelBias);
