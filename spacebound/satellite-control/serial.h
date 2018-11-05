@@ -31,6 +31,7 @@ void terminate_serial();
 long serial_delay;
 
 Logger * serial_logger;
-Logger * UM7_logger;
+Logger * UM7_vector_logger;
+Logger * UM7_quaternion_logger;
 
 #endif

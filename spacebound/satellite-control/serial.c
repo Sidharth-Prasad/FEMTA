@@ -90,108 +90,72 @@ bool serial_termination_signal;       // used to terminate child thread
 uint8_t trans_buffer[1024];           // Stores completted UM7 packet
 short   write_head;                   // trans_buffer's write head
 
-bool parse_packet(uint8_t * data, uint8_t length, Packet * packet) {
-  // Parses the rx data by finding the packet (if it exists) and extracting
-  // it's information. Returns NULL upon failures, which are logged to the error log.
-  
-  if (length < 7) {
-    log_error("UM7 packet was not long enough for parsing\n");
-    return false;
-  }
-  
-  uint8_t packet_index;
-
-  // Look for where packet header starts by finding the header starting string, "snp"
-  for (uint8_t i = 0; i < length - 2; i++) {
-    // Check if "snp" starts here
-    
-    if (data[i] == 's' && data[i + 1] == 'n' && data[i + 2] == 'p') {
-      packet_index = i;
-      break;
-    }
-  }
-  
-  if (packet_index == (length - 2)) {
-    log_error("UM7 packet was not found\n");
-    return false;
-  }
-
-  if (packet_index - length < 7) {
-    log_error("UM7 packet too short for full data\n");
-    return false;
-  }
-
-  
-  // Packet was found, let's see if it's valid
-  uint8_t type = data[length + 3];
-
-  uint8_t data_length = 0;
-  if (type >> 7 & 0x01) {
-    if (type >> 6 & 0x01) data_length = 4 * ((type >> 2) & 0x0F);
-    else                  data_length = 4;
-  }
-  else data_length = 0;
-
-  if (length - packet_index < data_length + 5) {
-    log_error("UM7 packet too short for full data\n");
-    return false;
-  }
-
-  packet -> address = data[packet_index + 4];
-  packet -> type = type;
-  
-  uint16_t checksum = 's' + 'n' + 'p' + (packet -> type) + (packet -> address);
-  
-  for (uint8_t i = 0; i < data_length; i++) {
-    packet -> data[i] = data[packet_index + 5 + i];
-    checksum += packet -> data[i];
-  }
-
-  if ((data[packet_index + 5 + data_length] << 8) | data[packet_index + 6 + data_length]) {
-    log_error("UM7 packet checksum didn't match\n");
-    return false;
-  }
-
-  // We made it to the end and the checksum checked out.
-  // The packet has been copied, so we'll return success.
-  return true;
-}
 
 void parse_UM7_data() {
   // Parses the trasmission data up to the write head
-
+  
   if (write_head < 6) {
     log_error("UM7 Packet too short\n");
     return;    // Packet not long enough
   }
+
+    
+  uint16_t calculated_checksum = 's' + 'n' + 'p';
   
-  uint8_t address = trans_buffer[3];
+  for (short b = 0; b < write_head - 5; b++) {
+    calculated_checksum += trans_buffer[b];
+  }
+
+  uint16_t reported_checksum = (trans_buffer[write_head - 5] << 8) | (trans_buffer[write_head - 4]);
+  
+  if (calculated_checksum != reported_checksum) {
+    log_error("UM7 packet checksum didn't match\n");
+    return;
+  }
+
+
+  // Data is correct
+  uint8_t address = trans_buffer[1];
   
   switch (address) {
-  case BATCH_PROCESSED:
-
-    ;    // Epsilon
+  case BATCH_QUATERNION:
     
-    uint16_t checksum = 0;
+    ; // Epsilon
     
-    for (short b = 0; b < write_head - 5; b++) {
-      checksum += trans_buffer[b];
-    }
+    int16_t aQuaternionRaw = (trans_buffer[2 + 0] << 8) | trans_buffer[2 + 1];
+    int16_t bQuaternionRaw = (trans_buffer[2 + 2] << 8) | trans_buffer[2 + 3];
+    int16_t cQuaternionRaw = (trans_buffer[2 + 4] << 8) | trans_buffer[2 + 5];
+    int16_t dQuaternionRaw = (trans_buffer[2 + 6] << 8) | trans_buffer[2 + 7];
+    
+    float aQuaternion = aQuaternionRaw / 29789.09091;
+    float bQuaternion = bQuaternionRaw / 29789.09091;
+    float cQuaternion = cQuaternionRaw / 29789.09091;
+    float dQuaternion = dQuaternionRaw / 29789.09091;
 
-    if (checksum != (trans_buffer[write_head - 4] << 8) | (trans_buffer[write_head - 3])) {
-      log_error("UM7 packet checksum didn't match\n");
-      return;
-    }
+    int32_t tQuaternionRaw =
+      (trans_buffer[2 +  8] << 24) |
+      (trans_buffer[2 +  9] << 16) |
+      (trans_buffer[2 + 10] <<  8) |
+      (trans_buffer[2 + 11] <<  0);
 
-    // Data is correct
+    
+    float tQuaternion = *(float *) &tQuaternionRaw;
+    
+    fprintf(UM7_quaternion_logger -> file, "%f\t%f\t%f\t%f\t%f\n",
+	    tQuaternion, aQuaternion, bQuaternion, cQuaternion, dQuaternion);
+    
+  case BATCH_PROCESSED:  
+
+    ; // Epsilon
+
     uint8_t data_bytes[12][4];
-
+    
     for (char reg = 0; reg < 12; reg++) {
       for (char byte = 0; byte < 4; byte++) {
-	data_bytes[reg][byte] = trans_buffer[2 + reg * 4 + byte];
+	data_bytes[reg][byte] = trans_buffer[2 + reg * 4 + (3 - byte)];
       }
     }
-
+    
     char b = 0;
     float gyro_x = *(float *) &data_bytes[b++];
     float gyro_y = *(float *) &data_bytes[b++];
@@ -208,7 +172,7 @@ void parse_UM7_data() {
     float magn_z = *(float *) &data_bytes[b++];
     float magn_t = *(float *) &data_bytes[b++];
     
-    fprintf(UM7_logger -> file, "%s\t%s\t%\t%s\t%s\t%s\t%\t%s\t%s\t%s\t%\t%s\t%s\t%s\t%\t%s\n",
+    fprintf(UM7_vector_logger -> file, "%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
 	    gyro_t, gyro_x, gyro_y, gyro_z,
 	    acel_t, acel_x, acel_y, acel_z,
 	    magn_t, magn_x, magn_y, magn_z);
@@ -399,24 +363,34 @@ void * serial_main() {
     process_transmission(transmission_data, communications_length);
   }
   
-  UM7_logger -> close(UM7_logger);
+  UM7_vector_logger -> close(UM7_vector_logger);
+  UM7_quaternion_logger -> close(UM7_quaternion_logger);
   serial_logger -> close(serial_logger);
 }
 
 
 bool initialize_serial() {
   
-  UM7_logger = create_logger("./logs/UM7-log.txt");
-  UM7_logger -> open(UM7_logger);
-  fprintf(UM7_logger -> file,
+  UM7_vector_logger = create_logger("./logs/UM7-vector-log.txt");
+  UM7_vector_logger -> open(UM7_vector_logger);
+  fprintf(UM7_vector_logger -> file,
 
 	  GREEN
-	  "\nRecording UM7 Data\n"
+	  "\nRecording vectorized UM7 attitude Data\n"
 	  "Gyro Time\tGyro x\tGyro y\tGyro z\t"
 	  "Acel Time\tAcel x\tAcel y\tAcel z\t"
 	  "Magn Time\tMagn x\tMagn y\tMagn z\n"
 	  RESET);
+  
+  UM7_quaternion_logger = create_logger("./logs/UM7-quaternion-log.txt");
+  UM7_quaternion_logger -> open(UM7_quaternion_logger);
+  fprintf(UM7_quaternion_logger -> file,
 
+	  GREEN
+	  "\nRecording quaternion UM7 attitude Data\n"
+	  "Quat Time\tQuat A\tQuat B\tQuat C\tQuat D\n"
+	  RESET);
+  
   serial_logger = create_logger("./logs/serial-log.txt");
   serial_logger -> open(serial_logger);
   fprintf(serial_logger -> file, YELLOW "Serial Transmission Log\n" RESET);
