@@ -82,7 +82,7 @@ void flip_bool(void * pointer) {             // Flips a boolean value
 }
 
 void cycle_graph(void * nil) {              // Change graph to display
-
+  
   // Add MPRLS plot
   if (MPRLS -> initialized && !MPRLS -> loaded) {
     list_insert(owner_index_list, create_node((void *) 4));
@@ -97,7 +97,12 @@ void cycle_graph(void * nil) {              // Change graph to display
     print(GENERAL_WINDOW, "Loaded MPU plots", 1);
   }
 
-  
+  // Add UM7 plots
+  if (UM7 -> initialized && !UM7 -> loaded) {
+    for (int p = 4; p <= 9; p++) list_insert(owner_index_list, create_node((void *) p));
+    UM7 -> loaded = true;
+    print(GENERAL_WINDOW, "Loaded UM7 plots", 1);
+  }
 
   graph_owner_index_node = graph_owner_index_node -> next;
   graph_owner = all_possible_owners[(int) (graph_owner_index_node -> value)];

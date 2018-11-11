@@ -1,0 +1,7 @@
+
+
+
+* Successive failures of UM7 communications could cause stack-smashing
+** Need to cut off writes to trans_data array after 1024 characters
+
+* 

@@ -83,6 +83,7 @@
 // UM7 Batch addresses
 #define BATCH_PROCESSED       0x61    // Processed gyro, accel, and magn batch start address
 #define BATCH_QUATERNION      0x6D    // Quaternion batch start address
+#define BATCH_EULER           0x70    // Euler batch batch start address
 
 pthread serial_thread;                // thread for all serial communication
 bool serial_termination_signal;       // used to terminate child thread
@@ -114,35 +115,18 @@ void parse_UM7_data() {
   }
 
 
+  // Get plot pointers
+  Plot * um7_angl_plot = (Plot *) UM7 -> plots -> head -> value;
+  Plot * um7_avel_plot = (Plot *) UM7 -> plots -> head -> next -> value;
+  Plot * um7_gyro_plot = (Plot *) UM7 -> plots -> head -> next -> next -> value;
+  Plot * um7_acel_plot = (Plot *) UM7 -> plots -> head -> next -> next -> next -> value;
+  Plot * um7_magn_plot = (Plot *) UM7 -> plots -> head -> next -> next -> next -> next -> value;    // Not optimal
+  
+
   // Data is correct
   uint8_t address = trans_buffer[1];
   
   switch (address) {
-  case BATCH_QUATERNION:
-    
-    ; // Epsilon
-    
-    int16_t aQuaternionRaw = (trans_buffer[2 + 0] << 8) | trans_buffer[2 + 1];
-    int16_t bQuaternionRaw = (trans_buffer[2 + 2] << 8) | trans_buffer[2 + 3];
-    int16_t cQuaternionRaw = (trans_buffer[2 + 4] << 8) | trans_buffer[2 + 5];
-    int16_t dQuaternionRaw = (trans_buffer[2 + 6] << 8) | trans_buffer[2 + 7];
-    
-    float aQuaternion = aQuaternionRaw / 29789.09091;
-    float bQuaternion = bQuaternionRaw / 29789.09091;
-    float cQuaternion = cQuaternionRaw / 29789.09091;
-    float dQuaternion = dQuaternionRaw / 29789.09091;
-
-    int32_t tQuaternionRaw =
-      (trans_buffer[2 +  8] << 24) |
-      (trans_buffer[2 +  9] << 16) |
-      (trans_buffer[2 + 10] <<  8) |
-      (trans_buffer[2 + 11] <<  0);
-
-    
-    float tQuaternion = *(float *) &tQuaternionRaw;
-    
-    fprintf(UM7_quaternion_logger -> file, "%f\t%f\t%f\t%f\t%f\n",
-	    tQuaternion, aQuaternion, bQuaternion, cQuaternion, dQuaternion);
     
   case BATCH_PROCESSED:  
 
@@ -177,6 +161,89 @@ void parse_UM7_data() {
 	    acel_t, acel_x, acel_y, acel_z,
 	    magn_t, magn_x, magn_y, magn_z);
 
+    plot_add_value(um7_magn_plot, um7_magn_plot -> lists[0], create_node((void *)(*((int *) &magn_x))));
+    plot_add_value(um7_magn_plot, um7_magn_plot -> lists[1], create_node((void *)(*((int *) &magn_y))));
+    plot_add_value(um7_magn_plot, um7_magn_plot -> lists[2], create_node((void *)(*((int *) &magn_z))));
+
+    plot_add_value(um7_gyro_plot, um7_gyro_plot -> lists[0], create_node((void *)(*((int *) &gyro_x))));
+    plot_add_value(um7_gyro_plot, um7_gyro_plot -> lists[1], create_node((void *)(*((int *) &gyro_y))));
+    plot_add_value(um7_gyro_plot, um7_gyro_plot -> lists[2], create_node((void *)(*((int *) &gyro_z))));
+
+    plot_add_value(um7_acel_plot, um7_acel_plot -> lists[0], create_node((void *)(*((int *) &acel_x))));
+    plot_add_value(um7_acel_plot, um7_acel_plot -> lists[1], create_node((void *)(*((int *) &acel_y))));
+    plot_add_value(um7_acel_plot, um7_acel_plot -> lists[2], create_node((void *)(*((int *) &acel_z))));
+
+    graph_plot(um7_magn_plot);
+    graph_plot(um7_gyro_plot);
+    graph_plot(um7_acel_plot);
+    
+    break;
+
+  case BATCH_EULER:
+
+    ; // Epsilon
+
+    float angle_x  = ((int16_t) ((trans_buffer[2 +  0] << 8) | trans_buffer[2 +  1])) / 91.02222;
+    float angle_y  = ((int16_t) ((trans_buffer[2 +  2] << 8) | trans_buffer[2 +  3])) / 91.02222;
+    float angle_z  = ((int16_t) ((trans_buffer[2 +  4] << 8) | trans_buffer[2 +  5])) / 91.02222;
+    
+    float angle_vx = ((int16_t) ((trans_buffer[2 +  8] << 8) | trans_buffer[2 +  9])) / 16.0;
+    float angle_vy = ((int16_t) ((trans_buffer[2 + 10] << 8) | trans_buffer[2 + 11])) / 16.0;
+    float angle_vz = ((int16_t) ((trans_buffer[2 + 12] << 8) | trans_buffer[2 + 13])) / 16.0;
+
+    int32_t raw_angle_t =
+      (trans_buffer[2 + 16] << 24) |
+      (trans_buffer[2 + 17] << 16) |
+      (trans_buffer[2 + 18] <<  8) |
+      (trans_buffer[2 + 19] <<  0);
+
+    float angle_t = *(float *) &raw_angle_t;
+    
+    /*float angle_t  = (float) (((int32_t) trans_buffer[2 + 16] << 24) |
+			      ((int32_t) trans_buffer[2 + 17] << 16) |
+			      ((int32_t) trans_buffer[2 + 18] <<  8) |
+			      ((int32_t) trans_buffer[2 + 19] <<  0));*/
+    
+    fprintf(UM7_euler_logger -> file, "%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+	    angle_t, angle_x, angle_y, angle_z, angle_vx, angle_vy, angle_vz);
+    
+    plot_add_value(um7_angl_plot, um7_angl_plot -> lists[0], create_node((void *)(*((int *) &angle_x))));
+    plot_add_value(um7_angl_plot, um7_angl_plot -> lists[1], create_node((void *)(*((int *) &angle_y))));
+    plot_add_value(um7_angl_plot, um7_angl_plot -> lists[2], create_node((void *)(*((int *) &angle_z))));
+
+    plot_add_value(um7_avel_plot, um7_avel_plot -> lists[0], create_node((void *)(*((int *) &angle_vx))));
+    plot_add_value(um7_avel_plot, um7_avel_plot -> lists[1], create_node((void *)(*((int *) &angle_vy))));
+    plot_add_value(um7_avel_plot, um7_avel_plot -> lists[2], create_node((void *)(*((int *) &angle_vz))));
+
+    graph_plot(um7_magn_plot);
+    
+    break;
+
+  case BATCH_QUATERNION:
+      
+    ; // Epsilon
+    
+    int16_t aQuaternionRaw = (trans_buffer[2 + 0] << 8) | trans_buffer[2 + 1];
+    int16_t bQuaternionRaw = (trans_buffer[2 + 2] << 8) | trans_buffer[2 + 3];
+    int16_t cQuaternionRaw = (trans_buffer[2 + 4] << 8) | trans_buffer[2 + 5];
+    int16_t dQuaternionRaw = (trans_buffer[2 + 6] << 8) | trans_buffer[2 + 7];
+    
+    float aQuaternion = aQuaternionRaw / 29789.09091;
+    float bQuaternion = bQuaternionRaw / 29789.09091;
+    float cQuaternion = cQuaternionRaw / 29789.09091;
+    float dQuaternion = dQuaternionRaw / 29789.09091;
+
+    int32_t tQuaternionRaw =
+      (trans_buffer[2 +  8] << 24) |
+      (trans_buffer[2 +  9] << 16) |
+      (trans_buffer[2 + 10] <<  8) |
+      (trans_buffer[2 + 11] <<  0);
+
+    
+    float tQuaternion = *(float *) &tQuaternionRaw;
+    
+    fprintf(UM7_quaternion_logger -> file, "%f\t%f\t%f\t%f\t%f\n",
+	    tQuaternion, aQuaternion, bQuaternion, cQuaternion, dQuaternion);
     
     break;
   }
@@ -349,12 +416,12 @@ void * serial_main() {
   
   // Set up timings
   long serial_delay =   100000000L;   // 10 Hz
-  //long serial_delay = 999999999L;   // 1 Hz
-
+  //long serial_delay = 999999999L;   // 1 Hz  
+  
   while (!serial_termination_signal) {
     
     nano_sleep(serial_delay);
-
+    
     if (serDataAvailable(UM7 -> serial -> handle) <= 0) continue;
     
     uint8_t transmission_data[256];
@@ -362,7 +429,8 @@ void * serial_main() {
     
     process_transmission(transmission_data, communications_length);
   }
-  
+
+  UM7_euler_logger -> close(UM7_euler_logger);
   UM7_vector_logger -> close(UM7_vector_logger);
   UM7_quaternion_logger -> close(UM7_quaternion_logger);
   serial_logger -> close(serial_logger);
@@ -381,13 +449,23 @@ bool initialize_serial() {
 	  "Acel Time\tAcel x\tAcel y\tAcel z\t"
 	  "Magn Time\tMagn x\tMagn y\tMagn z\n"
 	  RESET);
+
+  UM7_euler_logger = create_logger("./logs/UM7-euler-log.txt");
+  UM7_euler_logger -> open(UM7_euler_logger);
+  fprintf(UM7_euler_logger -> file,
+
+	  GREEN
+	  "\nRecording UM7 euler attitude data\n"
+	  "Euler Time\tAngle x\tAngle y\tAngle z\t"
+	  "Angular Velocity x\tAngular Velocity y\tAngular Velocity z\n"
+	  RESET);
   
   UM7_quaternion_logger = create_logger("./logs/UM7-quaternion-log.txt");
   UM7_quaternion_logger -> open(UM7_quaternion_logger);
   fprintf(UM7_quaternion_logger -> file,
 
 	  GREEN
-	  "\nRecording quaternion UM7 attitude Data\n"
+	  "\nRecording UM7 quaternion attitude data\n"
 	  "Quat Time\tQuat A\tQuat B\tQuat C\tQuat D\n"
 	  RESET);
   
@@ -417,11 +495,11 @@ bool initialize_serial() {
     serial_write_register(CREG_COM_RATES2, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No temperature
     serial_write_register(CREG_COM_RATES3, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // 10 Hz processed
     serial_write_register(CREG_COM_RATES4, 0b00000000, 0b00000000, 0b00000000, 0b00001010);   // ---------------
-    serial_write_register(CREG_COM_RATES5, 0b00001010, 0b00000000, 0b00000000, 0b00000000);   // 10 Hz Quaternion
+    serial_write_register(CREG_COM_RATES5, 0b00000000, 0b00001010, 0b00000000, 0b00000000);   // 10 Hz Euler
     serial_write_register(CREG_COM_RATES6, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No misc telemetry
     serial_write_register(CREG_COM_RATES7, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No NMEA packets
 
-    
+    UM7 -> initialized = true;
     
     serial_termination_signal = false;
     pthread_create(&serial_thread, NULL, serial_main, NULL);

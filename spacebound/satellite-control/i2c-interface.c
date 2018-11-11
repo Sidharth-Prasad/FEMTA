@@ -136,24 +136,6 @@ void requestMPRLSPressureData() {
   // exactly when new data has arrived. This isn't necessary though, as we only
   // wish to read at 1Hz.
   
-  /*i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0xAA);   // Command to read pressure
-    i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);   // Command to read pressure
-  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);   // Command to read pressure*/
-
-  /*i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_START);
-  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0xAA);
-  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);
-  i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0x00);
-  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_STOP);*/
-  
-  //i2cWriteByteData(MPRLS -> i2c -> i2c_address, 0x30, 0xAA);
-
-  /*char command[3] = {0xAA, 0x00, 0x00};
-
-  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_START);
-  i2cWriteBlockData(MPRLS -> i2c -> i2c_address, 0x30, command, 3);
-  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_STOP);*/
-
   char command[2] = {0x00, 0x00};
   i2cWriteWordData(MPRLS -> i2c -> i2c_address, 0xAA, 0x0000);
 }
@@ -166,27 +148,6 @@ float readMPRLSPressureData() {
 
   i2cReadDevice(MPRLS -> i2c -> i2c_address, rawData, 4);
 
-  // I don't even know anymore
-  
-  //readBytes(MPRLS -> i2c -> i2c_address, 0x31, 4, &rawData[0]);   // Dump values into array
-
-  /*i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_START);
-  
-  rawData[0] = i2cReadByteData(MPRLS -> i2c -> i2c_address, 0x31);
-  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_ACK);
-  
-  rawData[1] = i2cReadByteData(MPRLS -> i2c -> i2c_address, 0x31);
-  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_ACK);
-  
-  rawData[2] = i2cReadByteData(MPRLS -> i2c -> i2c_address, 0x31);
-  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_ACK);
-  
-  rawData[3] = i2cReadByteData(MPRLS -> i2c -> i2c_address, 0x31);
-  
-  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_NACK);
-  i2cWriteQuick(MPRLS -> i2c -> i2c_address, I2C_STOP);*/
-  //char returned = i2cReadBlockData(MPRLS -> i2c -> i2c_address, 0x31, rawData);
-  
   uint8_t status = rawData[0];
   
   uint32_t result;
@@ -208,9 +169,6 @@ float readMPRLSPressureData() {
   //return pressure;
   //return pressure * 6.8947572932;    // Convert to kPA
   return pressure;
-  //return status;
-  
-  //return returned;
 }
 
 float readMPUTempData() {

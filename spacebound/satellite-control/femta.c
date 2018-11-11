@@ -131,7 +131,7 @@ void initialize_satellite() {
   initialize_pin(&(QB -> pins[1]), 18, 12, PI_OUTPUT);
   initialize_pin(&(QB -> pins[2]), 24, 18, PI_OUTPUT);
   initialize_pin(&(QB -> pins[3]), 25, 22, PI_OUTPUT);
-
+  
   // Create the plot data for each module
   CPU   -> plots = create_list_from(1,
 				    create_plot("    Temperatures v.s. Time     ", 1, 8));
@@ -139,7 +139,9 @@ void initialize_satellite() {
 				    create_plot("    MPU Gyro Axes v.s. Time    ", 3, 32),
 				    create_plot("MPU Acelerometer Axes v.s. Time", 3, 32),
 				    create_plot("MPU Magnetometer Axes v.s. Time", 3, 32));
-  UM7   -> plots = create_list_from(3,
+  UM7   -> plots = create_list_from(5,
+				    create_plot("        UM7 Euler Angles       ", 3, 32),
+				    create_plot("      UM7 Euler Velocities     ", 3, 32),
                                     create_plot("     UM7 Magnitometer Axes     ", 3, 32),
                                     create_plot("       UM7 Gyroscope Axes      ", 3, 32),
                                     create_plot("     UM7 Acelerometer Axes     ", 3, 32));
@@ -150,12 +152,17 @@ void initialize_satellite() {
   FEMTA -> plots = NULL;
 
   // Load plots into array of all possible owners
-  all_possible_owners    = malloc(5 * sizeof(Plot *));                                  // NEED TO ADD UM7
-  all_possible_owners[0] = (Plot *) CPU   -> plots -> head                 -> value;
-  all_possible_owners[1] = (Plot *) MPU   -> plots -> head                 -> value;
-  all_possible_owners[2] = (Plot *) MPU   -> plots -> head -> next         -> value;
-  all_possible_owners[3] = (Plot *) MPU   -> plots -> head -> next -> next -> value;
-  all_possible_owners[4] = (Plot *) MPRLS -> plots -> head                 -> value;
+  all_possible_owners    = malloc(10 * sizeof(Plot *));
+  all_possible_owners[0] = (Plot *) CPU   -> plots -> head                                 -> value;
+  all_possible_owners[1] = (Plot *) MPU   -> plots -> head                                 -> value;
+  all_possible_owners[2] = (Plot *) MPU   -> plots -> head -> next                         -> value;
+  all_possible_owners[3] = (Plot *) MPU   -> plots -> head -> next -> next                 -> value;
+  all_possible_owners[4] = (Plot *) MPRLS -> plots -> head                                 -> value;
+  all_possible_owners[5] = (Plot *) UM7   -> plots -> head                                 -> value;
+  all_possible_owners[6] = (Plot *) UM7   -> plots -> head -> next                         -> value;
+  all_possible_owners[7] = (Plot *) UM7   -> plots -> head -> next -> next                 -> value;
+  all_possible_owners[8] = (Plot *) UM7   -> plots -> head -> next -> next -> next         -> value;
+  all_possible_owners[9] = (Plot *) UM7   -> plots -> head -> next -> next -> next -> next -> value;
   
   // Set up the interfaces
   bool i2c_success    = initialize_i2c();
