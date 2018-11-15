@@ -1,8 +1,0 @@
-<map id="initialize_graphics" name="initialize_graphics">
-<area shape="rect" id="node2" href="$graphics_8c.html#a7b38c605caf5bfd616c54fa9a6be4e98" title="print_window_title" alt="" coords="179,5,305,32"/>
-<area shape="rect" id="node3" href="$linked-list_8c.html#abd16529dbe0922996788f10925823eea" title="create_list" alt="" coords="201,56,283,83"/>
-<area shape="rect" id="node4" href="$graphics_8c.html#af09a3a6eecb74c0b79f9f52e04d9bb05" title="print" alt="" coords="219,107,265,133"/>
-<area shape="rect" id="node5" href="$graphics_8c.html#a22f207fb5603352362eaa769c35a8555" title="clear_print_window" alt="" coords="353,56,487,83"/>
-<area shape="rect" id="node6" href="$linked-list_8c.html#a947069a28d8173531d9186a74e82fb62" title="list_insert" alt="" coords="381,107,459,133"/>
-<area shape="rect" id="node7" href="$linked-list_8c.html#a45dfa9366701eddf667fd95d05cc3be0" title="create_node" alt="" coords="373,157,467,184"/>
-</map>

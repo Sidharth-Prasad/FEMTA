@@ -1,4 +1,0 @@
-<map id="calibrateMPU9250" name="calibrateMPU9250">
-<area shape="rect" id="node2" href="$timing_8c.html#a7741d257f3c488f41cfa6b3b85b02816" title="nano_sleep" alt="" coords="183,5,271,32"/>
-<area shape="rect" id="node3" href="$i2c-interface_8c.html#acc553fa90ebff27c5f1d36e44160c181" title="readBytes" alt="" coords="186,56,267,83"/>
-</map>

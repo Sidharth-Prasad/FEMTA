@@ -1,6 +1,0 @@
-<map id="readMagData" name="readMagData">
-<area shape="rect" id="node2" href="$i2c-interface_8c.html#a0ffd56a84248b3976097e0d38b2fcdaf" title="log_mpu_data" alt="" coords="153,5,256,32"/>
-<area shape="rect" id="node3" href="$i2c-interface_8h.html#a8eb11c031b9484a01fd8b263c13373cf" title="initialize_i2c" alt="" coords="304,5,397,32"/>
-<area shape="rect" id="node4" href="$femta_8c.html#a8ecd8ad82265b8157b5c24ba269bf362" title="initialize_satellite" alt="" coords="445,5,567,32"/>
-<area shape="rect" id="node5" href="$femta_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="615,5,665,32"/>
-</map>

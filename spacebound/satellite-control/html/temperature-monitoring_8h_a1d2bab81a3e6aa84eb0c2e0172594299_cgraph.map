@@ -1,9 +1,0 @@
-<map id="initialize_temperature_monitoring" name="initialize_temperature_monitoring">
-<area shape="rect" id="node2" href="$temperature-monitoring_8c.html#a6a33eb327dd6b9aac62b32cf7220cca0" title="read_cpu_temperature" alt="" coords="199,81,349,108"/>
-<area shape="rect" id="node3" href="$linked-list_8c.html#abd16529dbe0922996788f10925823eea" title="create_list" alt="" coords="411,5,493,32"/>
-<area shape="rect" id="node4" href="$graphics_8c.html#a7556c334f33b2eeb5dad2fbfdafd96ce" title="plot_add_value" alt="" coords="397,56,507,83"/>
-<area shape="rect" id="node6" href="$linked-list_8c.html#a45dfa9366701eddf667fd95d05cc3be0" title="create_node" alt="" coords="405,107,499,133"/>
-<area shape="rect" id="node7" href="$graphics_8c.html#a0149357e966fd1342354a03d37e093c2" title="graph_plot" alt="" coords="411,157,493,184"/>
-<area shape="rect" id="node5" href="$linked-list_8c.html#a947069a28d8173531d9186a74e82fb62" title="list_insert" alt="" coords="579,56,657,83"/>
-<area shape="rect" id="node8" href="$graphics_8c.html#a7b38c605caf5bfd616c54fa9a6be4e98" title="print_window_title" alt="" coords="555,157,681,184"/>
-</map>

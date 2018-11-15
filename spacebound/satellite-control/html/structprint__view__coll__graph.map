@@ -1,5 +1,0 @@
-<map id="print_view" name="print_view">
-<area shape="rect" id="node2" href="$structView.html" title="View" alt="" coords="5,141,56,168"/>
-<area shape="rect" id="node3" href="$structList.html" title="List" alt="" coords="80,141,123,168"/>
-<area shape="rect" id="node4" href="$structNode.html" title="Node" alt="" coords="75,29,128,55"/>
-</map>
