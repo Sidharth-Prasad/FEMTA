@@ -345,18 +345,20 @@ int main() {
 //add_selector_command(   manual, '1', "FEMTA 1"         , (lambda)      flip_femta,  (void *)              1);
 //add_selector_command(   manual, '2', "FEMTA 2"         , (lambda)      flip_femta,  (void *)              2);
 //add_selector_command(   manual, '3', "FEMTA 3"         , (lambda)      flip_femta,  (void *)              3);
-
+  
   add_selector_command(  scripts, 'i', "Test"            , (lambda)  execute_script,  (void *)       "test.x");
   add_selector_command(  scripts, 'e', "Example"         , (lambda)  execute_script,  (void *)    "example.x");
   add_selector_command(  scripts, 't', "Tuner"           , (lambda)  execute_script,  (void *)      "tuner.x");
-
+  
   add_selector_command(auto_menu, 'x', "Ramp 0-100%"     , (lambda)         ramp_up,                     NULL);
   add_selector_command(auto_menu, 'y', "Pyramid 0-100-0%", (lambda)         pyramid,                     NULL);
 //add_selector_command(auto_menu, 'z', "Configuration"   , (lambda)          rotate,                     NULL);
-
+  
   add_selector_command( pid_menu, 't', "test w/ data"    , (lambda)          rotate,                     NULL);
   add_selector_command( pid_menu, 'n', "Initialize PID"  , (lambda)          rotate,                     NULL);
-
+  add_selector_command( pid_menu, 's', "Start PID"       , (lambda)       PID_start,                     NULL);
+  add_selector_command( pid_menu, 'p', "Stop PID"        , (lambda)        PID_stop,                     NULL);
+  
   add_selector_command(    graph, 'f', "full experiment" , (lambda) change_selector,  (void *)       pid_menu);
   add_selector_command(    graph, 'i', "Increase scale"  , (lambda) change_selector,  (void *)       pid_menu);
   add_selector_command(    graph, 'd', "Decrease scale"  , (lambda) change_selector,  (void *)       pid_menu);

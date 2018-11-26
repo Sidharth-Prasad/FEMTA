@@ -198,23 +198,25 @@ void parse_UM7_data() {
       (trans_buffer[2 + 19] <<  0);
 
     float angle_t = *(float *) &raw_angle_t;
-    
-    /*float angle_t  = (float) (((int32_t) trans_buffer[2 + 16] << 24) |
-			      ((int32_t) trans_buffer[2 + 17] << 16) |
-			      ((int32_t) trans_buffer[2 + 18] <<  8) |
-			      ((int32_t) trans_buffer[2 + 19] <<  0));*/
-    
+
+    // Call control process if one is running
+    if (serial_routine) {
+      serial_routine(angle_x, angle_vx, angle_t);
+    }
+
+    // Log to file
     fprintf(UM7_euler_logger -> file, "%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
 	    angle_t, angle_x, angle_y, angle_z, angle_vx, angle_vy, angle_vz);
-    
+
+    // Plot to terminal
     plot_add_value(um7_angl_plot, um7_angl_plot -> lists[0], create_node((void *)(*((int *) &angle_x))));
     plot_add_value(um7_angl_plot, um7_angl_plot -> lists[1], create_node((void *)(*((int *) &angle_y))));
     plot_add_value(um7_angl_plot, um7_angl_plot -> lists[2], create_node((void *)(*((int *) &angle_z))));
-
+    
     plot_add_value(um7_avel_plot, um7_avel_plot -> lists[0], create_node((void *)(*((int *) &angle_vx))));
     plot_add_value(um7_avel_plot, um7_avel_plot -> lists[1], create_node((void *)(*((int *) &angle_vy))));
     plot_add_value(um7_avel_plot, um7_avel_plot -> lists[2], create_node((void *)(*((int *) &angle_vz))));
-
+    
     graph_plot(um7_magn_plot);
     
     break;
@@ -438,6 +440,8 @@ void * serial_main() {
 
 
 bool initialize_serial() {
+
+  serial_routine = NULL;
   
   UM7_vector_logger = create_logger("./logs/UM7-vector-log.txt");
   UM7_vector_logger -> open(UM7_vector_logger);

@@ -14,6 +14,7 @@ typedef pthread_t       pthread;
 typedef pthread_mutex_t pmutex;
 
 // Lambda Calculus
-typedef void (*lambda)(void *);
+typedef void (* lambda)(void *);
+typedef void (* controller)(float angle, float velocity, float time);
 
 #endif

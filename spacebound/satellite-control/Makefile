@@ -14,8 +14,8 @@ femta: femta.o controller.o i2c-interface.o serial.o temperature.o graphics.o se
 femta.o: femta.c femta.h controller.h i2c-interface.h serial.h temperature.h graphics.h selector.h scripter.h linked-list.h logger.h error.h colors.h
 	gcc $(GFLAGS) -c femta.c femta.h controller.h i2c-interface.h serial.h temperature.h graphics.h selector.h linked-list.h scripter.h logger.h error.h colors.h
 
-controller.o: controller.c controller.h femta.h quaternion.h graphics.h selector.h colors.h
-	gcc $(GFLAGS) -c controller.c controller.h femta.h quaternion.h graphics.h selector.h colors.h
+controller.o: controller.c controller.h femta.h serial.h quaternion.h graphics.h selector.h colors.h
+	gcc $(GFLAGS) -c controller.c controller.h femta.h serial.h quaternion.h graphics.h selector.h colors.h
 
 i2c-interface.o: i2c-interface.c i2c-interface.h femta.h graphics.h timing.h logger.h colors.h types.h
 	gcc $(GFLAGS) -c i2c-interface.c i2c-interface.h femta.h graphics.h timing.h logger.h colors.h types.h

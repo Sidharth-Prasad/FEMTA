@@ -9,6 +9,7 @@
 
 #include "femta.h"
 #include "controller.h"
+#include "serial.h"
 #include "quaternion.h"
 #include "graphics.h"
 #include "selector.h"
@@ -180,11 +181,11 @@ __attribute__((const)) float tracking_signal_value(int phi_des, float t, float t
   return phi_tr;
 }
 
-void PID_controller(bool CW, bool CCW, float init_or, float dor) {
+/*void PID_controller(bool CW, bool CCW, float init_or, float dor) {
   // init_or will be defined as 0 degrees until data can be read from MPU
   // dor is the change in orientation (delta orientation)
   
-  /*Logger * pid_logger = create_logger("./logs/pid-log.txt");
+  Logger * pid_logger = create_logger("./logs/pid-log.txt");
   pid_logger -> open(pid_logger);
   fprintf(pid_logger -> file,
 	  YELLOW "\nRecording PID Data\nDevice\tDevice State\tMPU Measures\tBNO Measures\tSystem Time\n" RESET);
@@ -278,9 +279,9 @@ void PID_controller(bool CW, bool CCW, float init_or, float dor) {
     fprintf(logger -> file, "QB %d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\n",
 	    CCW, new_pwm, mpu_reads, bno_reads,tdiff, angles[0], phi_mpu, angles[2], phi_tr);
     logger -> close(logger);
-    }*/
+    }
   
-}
+}*/
 
 /*float yaw_angle(struct Logger * mpu_logger) {
   // this is an adaptation of kate's Matlab code.
@@ -299,3 +300,44 @@ void PID_controller(bool CW, bool CCW, float init_or, float dor) {
   }
   return theta;
   }*/
+
+void PID_start(void * target) {
+  // Sets up a PID meneuver
+  // 
+  // Note - this can be called again after PID_stop()
+
+  kp = 0.01;
+  ki = 0.00;
+  kd = 0.00;
+
+  pid_target = (float) target;
+  
+  pid_logger = create_logger("./logs/pid-log.txt");
+  pid_logger -> open(pid_logger);
+  fprintf(pid_logger -> file,
+	  
+	  YELLOW
+	  "\nRecording PID Data"
+	  "\nConstants: %f\t%f\t%f\n"
+	  "\nTime\tAngle\tVelocity\tQ0\tQ1\tQ2\tQ3\n"
+	  RESET,
+	  
+	  kp, ki, kd);
+  
+  
+  serial_routine = PID_controller;
+}
+
+void PID_stop(void * nil) {
+  pid_logger -> close(pid_logger);
+  serial_routine = NULL;
+}
+
+void PID_controller(float angle, float velocity, float time) {
+  
+  float error = pid_target - angle;
+
+  
+  
+  
+}

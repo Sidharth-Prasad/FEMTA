@@ -35,4 +35,6 @@ Logger * UM7_euler_logger;
 Logger * UM7_vector_logger;
 Logger * UM7_quaternion_logger;
 
+controller serial_routine;
+
 #endif

@@ -17,11 +17,19 @@ void pyramid(void * nil);
 
 void set_bank_speed(bool Clockwise, int pwn_num);
 
-float rise_time(float phi_des) __attribute__((const));
-
+float rise_time(float phi_des)                              __attribute__((const));
 float tracking_signal_value(int phi_des, float t, float tr) __attribute__((const));
 
-void PID_controller(bool CW, bool CCW, float init_or, float dor);
+void PID_start(void * target);                                   // Target angle
+void PID_stop(void * nil);
+void PID_controller(float angle, float velocity, float time);    // Asynchronous loop
+
+// PID constants
+float kp;            // Proportional gain
+float ki;            // Integral gain
+float kd;            // Derivative gain
+
+float pid_target;    // Angle control loop seeks
 
 Logger * pid_logger;
 
