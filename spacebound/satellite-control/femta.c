@@ -167,6 +167,7 @@ void initialize_satellite() {
   // Set up the interfaces
   bool i2c_success    = initialize_i2c();
   bool serial_success = initialize_serial();
+  bool pid_success    = initialize_PID();       // Not used
   
   // Set each module's initialization state
   //  MPU   -> initialized = i2c_success;
@@ -356,8 +357,8 @@ int main() {
   
   add_selector_command( pid_menu, 't', "test w/ data"    , (lambda)          rotate,                     NULL);
   add_selector_command( pid_menu, 'n', "Initialize PID"  , (lambda)          rotate,                     NULL);
-  add_selector_command( pid_menu, 's', "Start PID"       , (lambda)       PID_start,                     NULL);
   add_selector_command( pid_menu, 'p', "Stop PID"        , (lambda)        PID_stop,                     NULL);
+  add_selector_command( pid_menu, 's', "Start PID"       , (lambda)       PID_start,  (void *)            180);
   
   add_selector_command(    graph, 'f', "full experiment" , (lambda) change_selector,  (void *)       pid_menu);
   add_selector_command(    graph, 'i', "Increase scale"  , (lambda) change_selector,  (void *)       pid_menu);

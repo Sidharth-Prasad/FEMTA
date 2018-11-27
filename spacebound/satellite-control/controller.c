@@ -15,6 +15,7 @@
 #include "selector.h"
 #include "logger.h"
 #include "colors.h"
+#include "error.h"
 
 int default_step_size = 0;
 int default_time_between = 0;
@@ -301,43 +302,70 @@ __attribute__((const)) float tracking_signal_value(int phi_des, float t, float t
   return theta;
   }*/
 
-void PID_start(void * target) {
-  // Sets up a PID meneuver
-  // 
-  // Note - this can be called again after PID_stop()
+bool initialize_PID() {
 
+  pid_logger = create_logger("./logs/pid-log.txt");
+  
   kp = 0.01;
   ki = 0.00;
   kd = 0.00;
 
-  pid_target = (float) target;
+  pid_active = false;
   
-  pid_logger = create_logger("./logs/pid-log.txt");
+  return true;
+}
+
+void PID_start(void * target) {
+  // Sets up a PID meneuver
+  // Note - this can be called again after PID_stop()
+
+  if (pid_active) {
+    log_error("PID already started!\n");
+    return;
+  }
+  
+  pid_target = (float)((int) target);
+  
   pid_logger -> open(pid_logger);
   fprintf(pid_logger -> file,
 	  
 	  YELLOW
-	  "\nRecording PID Data"
-	  "\nConstants: %f\t%f\t%f\n"
-	  "\nTime\tAngle\tVelocity\tQ0\tQ1\tQ2\tQ3\n"
+	  "\nRecording PID Data for meneuver"
+	  "\nConstants: %f\t%f\t%f"
+	  "\nTarget: %f\n"
+	  "\nTime\tAngle\tVelocity\tError\tQ0\tQ1\tQ2\tQ3\n"
 	  RESET,
 	  
-	  kp, ki, kd);
+	  kp, ki, kd, pid_target);
   
   
   serial_routine = PID_controller;
+  pid_active = true;
 }
 
 void PID_stop(void * nil) {
+
+  if (!pid_active) {
+    log_error("PID not started!\n");
+    return;
+  }
+
   pid_logger -> close(pid_logger);
   serial_routine = NULL;
+  pid_active = false;
 }
 
 void PID_controller(float angle, float velocity, float time) {
   
   float error = pid_target - angle;
+  
+  short update = abs(error * kp);
+  
+  if      (update < MIN_SAT) update =   0;
+  else if (update > MAX_PWM) update = 255;
+  
+  set_bank_speed((error < 0), update);
 
-  
-  
-  
+  fprintf(pid_logger -> file, "%f\t%f\t%f\t%f\t%d\n", time, angle, velocity, error, update);
 }
+

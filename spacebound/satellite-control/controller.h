@@ -24,12 +24,16 @@ void PID_start(void * target);                                   // Target angle
 void PID_stop(void * nil);
 void PID_controller(float angle, float velocity, float time);    // Asynchronous loop
 
+bool initialize_PID();    // Sets constants 
+
 // PID constants
 float kp;            // Proportional gain
 float ki;            // Integral gain
 float kd;            // Derivative gain
 
 float pid_target;    // Angle control loop seeks
+
+bool pid_active;     // PID is under way
 
 Logger * pid_logger;
 
