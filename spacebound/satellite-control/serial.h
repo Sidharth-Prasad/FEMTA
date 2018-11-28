@@ -28,6 +28,8 @@ typedef struct Packet {
 bool initialize_serial();
 void terminate_serial();
 
+void null_controller(float angle, float velocity, float time);
+
 long serial_delay;
 
 Logger * serial_logger;

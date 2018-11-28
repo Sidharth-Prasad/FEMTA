@@ -41,7 +41,7 @@ void flip_femta(void * number);             // Flip a FEMTA module
 void flip_valve(void *    nil);             // Flip the valve
 void rotate(void * nil);                    // Rotate a number of degrees
 void write_message(void * nil);             // Writes a message to the log
-
+void do_nothing(void * nil);                // Does nothing
 
 
 #endif

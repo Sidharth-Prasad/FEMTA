@@ -284,47 +284,90 @@ __attribute__((const)) float tracking_signal_value(int phi_des, float t, float t
   
 }*/
 
-/*float yaw_angle(struct Logger * mpu_logger) {
-  // this is an adaptation of kate's Matlab code.
-  float theta, m1, m2, m3;
-  // int mpu_reads = 0;
-  // if (mpu_logger) mpu_reads = mpu_logger -> values_read;
-  m1 = mpu_logger -> mx;
-  m2 = mpu_logger -> my;
-  m3 = mpu_logger -> mz;
+void PID_tune(void * nil) {
 
-  if (m3 > 0) theta = 90.0  - (atan(m1/m3) * 180.0/PI);
-  if (m3 < 0) theta = 270.0 - (atan(m1/m3) * 180.0/PI);
-  if (m3 == 0) {
-    if (m1 < 0) theta = 180.0;
-    else        theta = 0.0;
-  }
-  return theta;
-  }*/
+  // Get angle amount from user
+  erase_print_window(1);
+  echo();
+  
+  char answer[64];
+  char current[64];
+
+  // Show the current constants
+  print(CONTROL_WINDOW, "Current constants", 5);
+  sprintf(current, "kp: %.2f  ki: %.2f  kd: %.2f", kp, ki, kd);
+  print(CONTROL_WINDOW, current, 1);
+  
+  print(CONTROL_WINDOW, "Please enter kp:", 5);
+  print(CONTROL_WINDOW, "", 1);
+  wgetstr(print_views[CONTROL_WINDOW] -> view -> window, answer);
+  stomp_printer(CONTROL_WINDOW, answer, 1);
+  kp = atof(answer);
+  
+  print(CONTROL_WINDOW, "Please enter ki:", 5);
+  print(CONTROL_WINDOW, "", 1);
+  wgetstr(print_views[CONTROL_WINDOW] -> view -> window, answer);
+  stomp_printer(CONTROL_WINDOW, answer, 1);
+  ki = atof(answer);
+  
+  print(CONTROL_WINDOW, "Please enter kd:", 5);
+  print(CONTROL_WINDOW, "", 1);
+  wgetstr(print_views[CONTROL_WINDOW] -> view -> window, answer);
+  stomp_printer(CONTROL_WINDOW, answer, 1);
+  kd = atof(answer);
+  
+  noecho();
+
+  present_selector((void *) visible_selector);
+  print(GENERAL_WINDOW, "Updated PID constants", 1);
+  sprintf(current, "kp: %.2f  ki: %.2f  kd: %.2f", kp, ki, kd);
+  print(GENERAL_WINDOW, current, 1);
+}
 
 bool initialize_PID() {
-
+  
   pid_logger = create_logger("./logs/pid-log.txt");
   
   kp = 0.01;
   ki = 0.00;
   kd = 0.00;
-
+  
   pid_active = false;
   
   return true;
 }
 
-void PID_start(void * target) {
+void PID_start(void * nil) {
   // Sets up a PID meneuver
   // Note - this can be called again after PID_stop()
 
   if (pid_active) {
+    print(GENERAL_WINDOW, "PID already started!", 4);
     log_error("PID already started!\n");
     return;
   }
+
+  // Get angle amount from user
+  erase_print_window(1);
+  echo();
   
-  pid_target = (float)((int) target);
+  char answer[256];
+  
+  print(CONTROL_WINDOW, "Please enter an angle:", 5);
+  print(CONTROL_WINDOW, "", 1);
+  
+  wgetstr(print_views[CONTROL_WINDOW] -> view -> window, answer);
+  stomp_printer(CONTROL_WINDOW, answer, 1);
+  
+  pid_target = (float) ((int) atoi(answer));
+  
+  noecho();
+  
+  present_selector((void *) visible_selector);
+  print(GENERAL_WINDOW, "Manuever Underway", 5);
+
+  // Start PID plant process
+  //pid_target = (float) ((int) target);
   
   pid_logger -> open(pid_logger);
   fprintf(pid_logger -> file,
@@ -346,12 +389,18 @@ void PID_start(void * target) {
 void PID_stop(void * nil) {
 
   if (!pid_active) {
+    print(GENERAL_WINDOW, "PID not started!", 4);
     log_error("PID not started!\n");
     return;
   }
 
+  set_bank_speed(true , 0);
+  set_bank_speed(false, 0);
+
+  print(GENERAL_WINDOW, "PID stopped", 5);
+
   pid_logger -> close(pid_logger);
-  serial_routine = NULL;
+  serial_routine = null_controller;
   pid_active = false;
 }
 

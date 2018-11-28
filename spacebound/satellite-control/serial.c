@@ -199,10 +199,8 @@ void parse_UM7_data() {
 
     float angle_t = *(float *) &raw_angle_t;
 
-    // Call control process if one is running
-    if (serial_routine) {
-      serial_routine(angle_x, angle_vx, angle_t);
-    }
+    // Call control process, which may be the null_controller    
+    serial_routine(angle_x, angle_vx, angle_t);
 
     // Log to file
     fprintf(UM7_euler_logger -> file, "%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
@@ -441,7 +439,7 @@ void * serial_main() {
 
 bool initialize_serial() {
 
-  serial_routine = NULL;
+  serial_routine = null_controller;
   
   UM7_vector_logger = create_logger("./logs/UM7-vector-log.txt");
   UM7_vector_logger -> open(UM7_vector_logger);
@@ -516,4 +514,8 @@ bool initialize_serial() {
 
 void terminate_serial() {
   serial_termination_signal = true;
+}
+
+void null_controller(float angle, float velocity, float time) {
+  return;
 }

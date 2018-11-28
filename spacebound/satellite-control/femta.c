@@ -338,10 +338,10 @@ int main() {
   
   add_selector_command(   manual, 'm', "Write message"   , (lambda)   write_message,  (void *) message_logger);
   add_selector_command(   manual, 'v', "Valve"           , (lambda)      flip_valve,                     NULL);
-  add_selector_command(   manual, 'r', "Rotate"          , (lambda)          rotate,                     NULL);
-  add_selector_command(   manual, 'p', "QB PWM"          , (lambda)          rotate,                     NULL);
-  add_selector_command(   manual, 'e', "QB CCW"          , (lambda)          rotate,                     NULL);
-  add_selector_command(   manual, 'w', "QB CW"           , (lambda)          rotate,                     NULL);
+  add_selector_command(   manual, 'r', "Rotate"          , (lambda)      do_nothing,                     NULL);
+  add_selector_command(   manual, 'p', "QB PWM"          , (lambda)      do_nothing,                     NULL);
+  add_selector_command(   manual, 'e', "QB CCW"          , (lambda)      do_nothing,                     NULL);
+  add_selector_command(   manual, 'w', "QB CW"           , (lambda)      do_nothing,                     NULL);
 //add_selector_command(   manual, '0', "FEMTA 0"         , (lambda)      flip_femta,  (void *)              0);
 //add_selector_command(   manual, '1', "FEMTA 1"         , (lambda)      flip_femta,  (void *)              1);
 //add_selector_command(   manual, '2', "FEMTA 2"         , (lambda)      flip_femta,  (void *)              2);
@@ -353,12 +353,12 @@ int main() {
   
   add_selector_command(auto_menu, 'x', "Ramp 0-100%"     , (lambda)         ramp_up,                     NULL);
   add_selector_command(auto_menu, 'y', "Pyramid 0-100-0%", (lambda)         pyramid,                     NULL);
-//add_selector_command(auto_menu, 'z', "Configuration"   , (lambda)          rotate,                     NULL);
+//add_selector_command(auto_menu, 'z', "Configuration"   , (lambda)      do_nothing,                     NULL);
   
-  add_selector_command( pid_menu, 't', "test w/ data"    , (lambda)          rotate,                     NULL);
-  add_selector_command( pid_menu, 'n', "Initialize PID"  , (lambda)          rotate,                     NULL);
+//add_selector_command( pid_menu, 't', "test w/ data"    , (lambda)      do_nothing,                     NULL);
+  add_selector_command( pid_menu, 't', "Tune PID"        , (lambda)        PID_tune,                     NULL);
   add_selector_command( pid_menu, 'p', "Stop PID"        , (lambda)        PID_stop,                     NULL);
-  add_selector_command( pid_menu, 's', "Start PID"       , (lambda)       PID_start,  (void *)            180);
+  add_selector_command( pid_menu, 's', "Start PID"       , (lambda)       PID_start,                     NULL);
   
   add_selector_command(    graph, 'f', "full experiment" , (lambda) change_selector,  (void *)       pid_menu);
   add_selector_command(    graph, 'i', "Increase scale"  , (lambda) change_selector,  (void *)       pid_menu);

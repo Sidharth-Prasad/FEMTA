@@ -154,3 +154,9 @@ void write_message(void * logger) {
   present_selector((void *) visible_selector);
 }
 
+void do_nothing(void * nil) {
+  // Does nothing. Useful for adding menu entries where functions
+  // aren't ready yet
+  
+  return;
+}
