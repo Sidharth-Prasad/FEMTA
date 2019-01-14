@@ -1,0 +1,23 @@
+
+
+* Work before
+** Ensure absence of MPU makes no difference
+** Temporarily change IP email rate to 2 mins
+
+* Things to bring
+** SAT
+** Laptop
+** Laptop charger
+** Duplicate SD card
+
+* Test day software procedures
+** Start Pi via 9V outside of chamber
+** Get IP address
+** SSH from laptop, setting up terminals
+*** tmux
+*** nice -n 19 htop
+*** sudo nice -n -20 ./femta
+*** tail -f logs/mprls-log.txt
+** Cleanup
+*** scp -r noah@IP:~/FEMTA/spacebound/satellite-control/logs .
+
