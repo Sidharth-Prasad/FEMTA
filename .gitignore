@@ -1,5 +1,6 @@
 *~
 \#*
+.\#*
 ./FEMTA/spacebound/logs/*
 ./FEMTA/spacebound/satellite-control/logs
 ./FEMTA/spacebound/satellite-control/logs/*.txt
