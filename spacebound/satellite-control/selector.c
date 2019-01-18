@@ -115,6 +115,15 @@ void flip_femta(void * number) {             // Flip a FEMTA module
 }
 
 void flip_valve(void * nil) {                // Flip the valve
+
+  Valve -> pins -> voltage = !Valve -> pins -> voltage;
+  set_voltage(Valve -> pins, Valve -> pins -> voltage);
+
+  if (Valve -> pins -> voltage) print(GENERAL_WINDOW, "Valve is on", 5);
+  else                          print(GENERAL_WINDOW, "Valve is off", 5);
+
+
+  
   return;
 }
 void rotate(void * nil) {                    // Rotate a number of degrees
