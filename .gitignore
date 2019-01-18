@@ -1,5 +1,6 @@
 *~
 \#*
+.\#*
 ./FEMTA/spacebound/logs/*
 ./FEMTA/spacebound/satellite-control/logs
 ./FEMTA/spacebound/satellite-control/logs/*.txt
@@ -13,3 +14,4 @@ spacebound/onboard-sensors/cpu_log*.txt
 *.o
 *.gch
 *.x
+*.DS_Store
