@@ -116,7 +116,7 @@ void initialize_satellite() {
   initialize_pin(&(UM7 -> pins[1]), 15, 10, UART_STATE);   // UART RXD
   
   // The Valve is controlled via digital states
-  initialize_pin(&(Valve -> pins[0]), 17, 11, PI_OUTPUT);
+  initialize_pin(&(Valve -> pins[0]), 12, 32, PI_OUTPUT);
   
   // The FEMTA is controlled via pulse width modulation
   initialize_pin(&(FEMTA -> pins[0]), 24, 18, PI_OUTPUT);
@@ -294,7 +294,7 @@ int main() {
   Logger * message_logger = create_logger("./logs/message-log.txt");
   message_logger -> open(message_logger);
   fprintf(message_logger -> file, PURPLE "\nStarting message log\n");
-  fprintf(message_logger -> file,        "MPU Measures\tSystem Time\tMessage\n" RESET);
+  fprintf(message_logger -> file,        "MPRLS Measures\tSystem Time\tMessage\n" RESET);
   message_logger -> close(message_logger);
   
   // Initializations
@@ -337,7 +337,7 @@ int main() {
   add_selector_command(main_menu, 'c', "Cycle graph"     , (lambda)     cycle_graph,                     NULL);
   
   add_selector_command(   manual, 'm', "Write message"   , (lambda)   write_message,  (void *) message_logger);
-  add_selector_command(   manual, 'v', "Valve"           , (lambda)      flip_valve,                     NULL);
+  add_selector_command(   manual, 'v', "Valve"           , (lambda)      flip_valve,  (void *) message_logger);
   add_selector_command(   manual, 'r', "Rotate"          , (lambda)      do_nothing,                     NULL);
   add_selector_command(   manual, 'p', "QB PWM"          , (lambda)      do_nothing,                     NULL);
   add_selector_command(   manual, 'e', "QB CCW"          , (lambda)      do_nothing,                     NULL);

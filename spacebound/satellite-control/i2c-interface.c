@@ -157,17 +157,22 @@ float readMPRLSPressureData() {
 
   //uint32_t result = rawData[0];
   
-  float pressure = (result - 0x19999A) * (250 - 6);
+  float pressure = (result - 0x19999A) * 25.0 + 0.0 * (25.0 * 0.9 - 25.0 * 0.1);
   pressure /= (float) (0xE66666 - 0x19999A);
-  pressure += 6;
+  //pressure += 0.1 * 25.0;
+
+  /*float pressure = result * 25.0;
+  //pressure /= (float) (0x1000000);
+  pressure /= (float) (0xFFFFFF);*/
+
+  
   
   //return result;
   // Ask sensor to get the next value ready now
   // This way enough time will have passed before
   // we try to read next time this is called.
   requestMPRLSPressureData();
-  //return pressure;
-  //return pressure * 6.8947572932;    // Convert to kPA
+  
   return pressure;
 }
 
@@ -573,7 +578,7 @@ bool initialize_i2c() {
     MPRLS -> i2c -> i2c_address     = i2cOpen(1, MPRLS_DEFAULT_ADDR, 0);
 
     MPRLS -> i2c -> delays_passed = 0;
-    MPRLS -> i2c -> frequency = 10;        //  1 Hz
+    MPRLS -> i2c -> frequency = 1;        //  1 Hz
 
     if (i2cReadByteData(MPRLS -> i2c -> i2c_address, 0) >= 0) {
       MPRLS -> initialized = true;

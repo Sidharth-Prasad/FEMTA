@@ -114,7 +114,26 @@ void flip_femta(void * number) {             // Flip a FEMTA module
   return;
 }
 
-void flip_valve(void * nil) {                // Flip the valve
+void flip_valve(void * logger) {                // Flip the valve
+  
+  Valve -> pins -> voltage = !Valve -> pins -> voltage;
+  set_voltage(Valve -> pins, Valve -> pins -> voltage);
+  
+  if (Valve -> pins -> voltage) print(GENERAL_WINDOW, "Valve is on", 5);
+  else                          print(GENERAL_WINDOW, "Valve is off", 5);
+  
+  if (MPRLS -> initialized) {
+
+    Logger * log = (Logger *) logger;
+
+    int relativeTime = time(NULL) - start_time;
+    
+    log -> open(log);
+    if (Valve -> pins -> voltage) fprintf(log -> file, "%d\t%d\t%s\n", mprls_logger -> values_read, relativeTime, "Valve is on");
+    else                          fprintf(log -> file, "%d\t%d\t%s\n", mprls_logger -> values_read, relativeTime, "Valve is off");
+    log -> close(log);
+  }
+  
   return;
 }
 void rotate(void * nil) {                    // Rotate a number of degrees

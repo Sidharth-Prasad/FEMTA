@@ -200,7 +200,7 @@ void parse_UM7_data() {
     float angle_t = *(float *) &raw_angle_t;
 
     // Call control process, which may be the null_controller    
-    serial_routine(angle_x, angle_vx, angle_t);
+    serial_routine(angle_z, angle_vz, angle_t);
 
     // Log to file
     fprintf(UM7_euler_logger -> file, "%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
@@ -486,6 +486,7 @@ bool initialize_serial() {
       return false;
     }
     
+    
     send_serial_command(RESET_TO_FACTORY);
     nano_sleep(1000000000);   // Wait 1s
     
@@ -500,7 +501,8 @@ bool initialize_serial() {
     serial_write_register(CREG_COM_RATES5, 0b00000000, 0b00001010, 0b00000000, 0b00000000);   // 10 Hz Euler
     serial_write_register(CREG_COM_RATES6, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No misc telemetry
     serial_write_register(CREG_COM_RATES7, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No NMEA packets
-
+    
+    
     UM7 -> initialized = true;
     
     serial_termination_signal = false;
