@@ -147,7 +147,7 @@ float readMPRLSPressureData() {
   uint8_t rawData[4];
 
   i2cReadDevice(MPRLS -> i2c -> i2c_address, rawData, 4);
-
+  
   uint8_t status = rawData[0];
   
   uint32_t result;
@@ -490,7 +490,7 @@ void calibrateMPU9250(float * dest1, float * dest2) {
   accel_bias_reg[1] = (int16_t) ((int16_t)data[0] << 8) | data[1];
   readBytes(MPU -> i2c -> i2c_address, ZA_OFFSET_H, 2, &data[0]);
   accel_bias_reg[2] = (int16_t) ((int16_t)data[0] << 8) | data[1];
-
+  
   uint32_t mask = 1uL; // Define mask for temperature compensation bit 0 of lower byte of accelerometer bias registers
   uint8_t mask_bit[3] = {0, 0, 0}; // Define array to hold mask bit for each accelerometer bias axis
 
