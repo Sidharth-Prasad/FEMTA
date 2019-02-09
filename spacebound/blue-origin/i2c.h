@@ -34,6 +34,8 @@ typedef struct i2c_device {
   uchar count;            // counts since last read
   
   i2c_pattern pattern;    // 
+
+  
   
   i2c_reader read;
   
@@ -42,17 +44,21 @@ typedef struct i2c_device {
 
 
 typedef struct i2c_schedule {
+
+  List * devices;
   
+  int fd;              // i2c file descriptor
+  uint8 last_addr;     // current i2c address we've asserted on the bus
   
   pthread * thread;
   bool term_signal;    // when set to true, schedule terminates
   
 } i2c_schedule;
 
-
 i2c_schedule * schedule;
 
 void init_i2c();
+void start_i2c();
 
 i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint8 interval);
 
