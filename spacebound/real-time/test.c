@@ -49,7 +49,7 @@ long real_get_time() {
 int main() {
   
   long test_duration = 1;    // length of test in minutes
-
+  
   printf("Starting %ld minute test\n", test_duration);
   
   long start_time;
