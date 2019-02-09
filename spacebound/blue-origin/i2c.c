@@ -4,15 +4,28 @@
 #include <stdio.h>
 #include <linux/i2c-dev.h>
 #include <errno.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h> 
+#include <fcntl.h>
+#include <unistd.h>
 
+#include "i2c.h"
 
 #define I2C_ADDR 0x53
 
-int main (void) {
-  char buffer[1];
-  int fd;
+i2c_device * create_i2c_device(char * name, uchar8 address) {
   
-  fd = open("/dev/i2c-1", O_RDWR);
+  i2c_device * i2c = malloc(sizeof(i2c_device));
+  
+  
+  
+  return i2c;
+}
+
+int main() {
+  
+  int fd = open("/dev/i2c-1", O_RDWR);
   
   if (fd < 0) {
     printf("Error opening file: %s\n", strerror(errno));
@@ -26,8 +39,14 @@ int main (void) {
   
   /*buffer[0]=0xFF;
     write(fd, buffer, 1);*/
+
+  char buffer[1] = {
+    0x00,
+  };
+  write(fd, buffer, 1);
   
   read(fd, buffer, 1);
+  
   printf("0x%02X\n", buffer[0]);
   return 0;
 }
