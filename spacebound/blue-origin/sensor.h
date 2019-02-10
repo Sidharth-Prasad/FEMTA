@@ -13,9 +13,8 @@ typedef void (* sensor_free)(Sensor * sensor);
 
 typedef struct Sensor {
   
-  char * name;
+  char * name;  
   
-
   union {
     i2c_device * i2c;
   };

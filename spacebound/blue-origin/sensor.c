@@ -15,4 +15,8 @@ void init_sensors() {
   list_insert(sensors, init_adxl());
 }
 
+void destroy_sensors() {
+  
+  
+}
 

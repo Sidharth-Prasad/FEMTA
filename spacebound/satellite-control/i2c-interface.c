@@ -121,7 +121,7 @@ void printStartupConstants(char * offset) {
 }
 
 void readBytes(uint8_t address, uint8_t location, uint8_t number, uint8_t * data) {
-
+  
   // Read the bytes sequentially, writing them to the data array
   for (uint8_t offset = 0; offset < number; offset++) {
     data[offset] = i2cReadByteData(address, location + offset);

@@ -59,8 +59,8 @@ int main() {
   long target_ns = target_ms * 1000000;
   
   long samples = (test_duration * 60 * 1000) / target_ms;
-
   
+  long max_error = 0;
   long sum_error = 0;
   
   for (long i = 0; i < samples; i++) {
@@ -69,19 +69,21 @@ int main() {
     real_nano_sleep(target_ns);
     
     end_time = real_get_time();
-
+    
     long duration = end_time - start_time;
     if (duration < 0) duration += 1000000000;
-
+    
     long error = duration - target_ns;
-
+    
+    if (abs(error) > abs(max_error)) max_error = error;
     sum_error += error;
     
     printf("%ld\t%ld\n", duration, error);
   }
   printf("\n");
-
+  
   printf("Average: %lf\n", (double) sum_error / samples);
+  printf("Max:     %ld\n", max_error);
   
   printf("Test concluded\n");
   
