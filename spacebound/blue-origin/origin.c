@@ -12,6 +12,7 @@
 #include "i2c.h"
 #include "color.h"
 
+#include "selector.h"
 
 int main() {
 
@@ -21,9 +22,24 @@ int main() {
     exit(2);
   }
   
+  
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
   start_i2c();       // start reading the i2c bus
+
+  Selector * selector = create_selector(NULL);
+  
+  add_selector_command(selector, 'q', "quit",  flip_bool, &reading_user_input);
+  add_selector_command(selector, 'c', "char", output_str, (void *) "quit");
+  
+  reading_user_input = true;
+  
+  char input;
+  while (reading_user_input) {
+    input = getc(stdin);
+    
+    execute_selector(selector, input);
+  }
   
   real_sleep(60);
   

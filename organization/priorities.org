@@ -1,0 +1,35 @@
+
+
+* Software objectives
+** Decide on computers
+*** space             - 
+*** suborbital        - Raspberry Pi 0W
+*** 1-U test platform - Raspberry Pi 0W
+** Order minimal set of sensors
+*** need to recheck that sensors work together
+*** build plan for each sensor's integration
+** Develop test modules for each sensor
+** GNU Make builds
+*** --no-graphics
+**** removes all graphics and user input from the program
+**** these aren't needed and present a potential source of failure during the mission
+**** we do, however, want them for testing
+*** --no-<sensor>
+**** removes sensor code
+**** old sensors need not be in the release candidates
+**** keeps the 1-U and suborbital programs from needlessly re-developing
+*** --no-serial
+**** excises all serial-bound sensors
+**** useful for developing on other protocols
+*** --no-i2c
+**** excises all i2c-bound sensors
+**** useful for developing on other protocols
+** OS changes
+*** slim down OS to minimal set of processes
+*** potentially apply a real-time patch to the Linux Kernel
+*** close all networking
+** Order rest of sensors
+** Order rad-hard SD card
+** Build sensor suite
+** Test final program
+
