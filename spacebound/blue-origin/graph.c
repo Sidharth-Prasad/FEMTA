@@ -90,6 +90,8 @@ int main() {
     gets(input);
     
     if (!strcmp(input, "quit")) break;
+    
+    
   }
 
   
