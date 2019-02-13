@@ -53,8 +53,11 @@ bool read_adxl(i2c_device * adxl_i2c) {
 
   
   //printf("%d, %d, %d\n", xAccel, yAccel, zAccel);
-  printf("Zenith %f g\n", zAccel * 3.9 / 1000.0);
-
+  //printf("Zenith %f g\n", zAccel * 3.9 / 1000.0);
+  printf("d:%f %f %f\n",
+	 xAccel * 3.9 / 1000.0,
+	 yAccel * 3.9 / 1000.0,
+	 zAccel * 3.9 / 1000.0);
 
 /*printf("X: %x %x\n", accel_raws[0], accel_raws[1]);
   printf("Y: %x %x\n", accel_raws[2], accel_raws[3]);

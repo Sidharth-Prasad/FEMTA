@@ -38,6 +38,7 @@ void list_insert(List * list, void * datum);
 void list_remove(List * list, Node * node);
 
 void list_insert_last(List * list, void * datum);
+void list_remove_tail(List * list);
 
 void list_empty(List * list);
 void list_destroy(List * list);

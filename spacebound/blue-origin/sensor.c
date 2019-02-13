@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "sensor.h"
 #include "adxl.h"
 #include "list.h"
+#include "sensor.h"
 
 
 void init_sensors() {

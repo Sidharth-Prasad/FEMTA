@@ -1,2 +1,2 @@
 sleep 2
-echo "quit"
+printf "q"

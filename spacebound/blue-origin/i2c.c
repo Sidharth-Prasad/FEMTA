@@ -6,12 +6,12 @@
 #include <pigpio.h>
 
 
-#include "i2c.h"
-#include "sensor.h"
 #include "adxl.h"
-#include "color.h"
 #include "clock.h"
+#include "color.h"
+#include "i2c.h"
 #include "list.h"
+#include "sensor.h"
 
 void * i2c_main();
 

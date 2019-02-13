@@ -15,11 +15,8 @@ Selector * create_selector(Selector * parent) {
   
   selector -> parent  = parent;
   
-  selector -> entries = create_list(0, false, false);
-
-  // Adds a back button if this isn't the main menu
-  if (parent) add_selector_command(selector, 'b', "back", (lambda) change_selector, (void *) parent);
-
+  selector -> entries = create_list(SLL, NULL);
+  
   return selector;
 }
 
@@ -50,7 +47,7 @@ void execute_selector(Selector * selector, char key) {
 
 void output_str(void * str_ptr) {
   
-  char output = (char *) str_ptr;
+  char * output = (char *) str_ptr;
   
   printf("%s\n", output);
 }
