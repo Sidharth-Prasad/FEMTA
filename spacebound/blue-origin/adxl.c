@@ -5,6 +5,8 @@
 
 #include "i2c.h"
 #include "adxl.h"
+#include "color.h"
+#include "ds32.h"
 
 #define ADXL_ADDRESS 0x53
 
@@ -18,30 +20,32 @@ Sensor * init_adxl() {
   
   adxl -> name = "ADXL345";
   adxl -> free = free_adxl;
+
+  adxl -> file = fopen("logs/adxl.log", "a");
+  
+  fprintf(adxl -> file, RED "\n\nADXL345\nStart time %s\nAccel x\tAccel y\tAccel z\n" RESET, formatted_time);
   
   adxl -> i2c = create_i2c_device(adxl, ADXL_ADDRESS, read_adxl, 10);    // 10ms between reads
-
+  
   // set up data format for acceleration measurements (page 28)
   // tell adxl to use full resolution when measuring acceleration (bit    3)
   // tell adxl to use full range      when measuring acceleration (bits 1,2)
-  i2c_write_byte(adxl -> i2c -> handle, 0x31, 0b00001011);    
+  i2c_write_byte(adxl -> i2c, 0x31, 0b00001011);    
 
   // tell adxl to bypass it's FIFO queue (page 28)
-  i2c_write_byte(adxl -> i2c -> handle, 0x38, 0b00000000);
+  i2c_write_byte(adxl -> i2c, 0x38, 0b00000000);
   
   // tell adxl to enter measurement mode (page 26)
-  i2c_write_byte(adxl -> i2c -> handle, 0x2D, 0b00001000);    // bit 3 indicates measure mode
+  i2c_write_byte(adxl -> i2c, 0x2D, 0b00001000);    // bit 3 indicates measure mode
   
   return adxl;
 }
 
 bool read_adxl(i2c_device * adxl_i2c) {
   
-  //printf("Pretending to read ADXL\n");
-
   uint8 accel_raws[6];
   
-  i2c_read_bytes(adxl_i2c -> handle, 0x32, accel_raws, 6);
+  i2c_read_bytes(adxl_i2c, 0x32, accel_raws, 6);
   
   int16 xAccel = (accel_raws[1] << 8) | accel_raws[0];
   int16 yAccel = (accel_raws[3] << 8) | accel_raws[2];
@@ -54,14 +58,20 @@ bool read_adxl(i2c_device * adxl_i2c) {
   
   //printf("%d, %d, %d\n", xAccel, yAccel, zAccel);
   //printf("Zenith %f g\n", zAccel * 3.9 / 1000.0);
-  printf("d:%f %f %f\n",
+  /*printf("d:%f %f %f\n",
 	 xAccel * 3.9 / 1000.0,
 	 yAccel * 3.9 / 1000.0,
-	 zAccel * 3.9 / 1000.0);
+	 zAccel * 3.9 / 1000.0);*/
 
-/*printf("X: %x %x\n", accel_raws[0], accel_raws[1]);
-  printf("Y: %x %x\n", accel_raws[2], accel_raws[3]);
-  printf("Z: %x %x\n", accel_raws[4], accel_raws[5]);*/
+  /*printf("d:%f %f %f\n",
+	 xAccel * 3.9 / 1000.0,
+	 yAccel * 3.9 / 1000.0,
+	 zAccel * 3.9 / 1000.0);*/
+  
+  fprintf(adxl_i2c -> sensor -> file, "%.4f\t%.4f\t%.4f\n",
+	  xAccel * 3.9 / 1000.0,
+	  yAccel * 3.9 / 1000.0,
+	  zAccel * 3.9 / 1000.0);
   
   return true;
 }

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <pigpio.h>
-
+#include <time.h>
 
 #include "adxl.h"
 #include "clock.h"
@@ -12,10 +12,11 @@
 #include "i2c.h"
 #include "list.h"
 #include "sensor.h"
+#include "types.h"
 
 void * i2c_main();
 
-i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint8 interval) {
+i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 interval) {
   // creates an i2c device, adding it to the device list
   
   i2c_device * i2c = malloc(sizeof(i2c_device));
@@ -61,25 +62,25 @@ void start_i2c() {
   
   // create i2c thread
   if (pthread_create(schedule -> thread, NULL, i2c_main, NULL)) {
-    printf(CONSOLE_RED "Could not start i2c thread\n" CONSOLE_RESET);
+    printf(RED "Could not start i2c thread\n" RESET);
     return;  
   }
 }
 
 
-void i2c_read_bytes(int handle, uint8 reg, uint8 * buf, char n) {
+void i2c_read_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   
-  if (i2cReadI2CBlockData(handle, reg, buf, n) < 0) {
-    printf(CONSOLE_RED "Could not read bytes\n" CONSOLE_RESET);
+  if (i2cReadI2CBlockData(dev -> handle, reg, buf, n) < 0) {
+    printf(RED "Could not read bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
     exit(3);
   }
 }
 
-void i2c_write_byte(int handle, uint8 reg, uint8 value) {
+void i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {
   // writes a byte to the device associated with the handle
 
-  if (i2cWriteByteData(handle, reg, value) < 0) {
-    printf(CONSOLE_RED "Could not write byte\n" CONSOLE_RESET);
+  if (i2cWriteByteData(dev -> handle, reg, value) < 0) {
+    printf(RED "Could not write byte to " YELLOW "%s\n" RESET, dev -> sensor -> name);
     exit(3);
   }
   
@@ -87,9 +88,16 @@ void i2c_write_byte(int handle, uint8 reg, uint8 value) {
 
 
 void * i2c_main() {
+
+  FILE * i2c_log = fopen("logs/i2c.log", "a");
   
   while (!schedule -> term_signal) {
-    
+
+    // get time before we perform the read
+    struct timespec pre_read_time;
+    clock_gettime(CLOCK_REALTIME, &pre_read_time);
+
+    // read the sensors
     for (Node * node = schedule -> devices -> head; node; node = node -> next) {
       
       i2c_device * i2c = (i2c_device *) node -> value;
@@ -104,9 +112,18 @@ void * i2c_main() {
       }
     }
     
-    real_milli_sleep(10);    // 10ms
+    // figure out how long to sleep
+    long diff = real_time_diff(&pre_read_time);
+    
+    long time_remaining = 1E7 - diff;
+    
+    if (time_remaining < 0)
+      time_remaining = 0;               // taking too long to read!
+    
+    real_nano_sleep(time_remaining);   // 10ms minus time it took to read sensors
   }
-
+  
+  fclose(i2c_log);
 }
 
 

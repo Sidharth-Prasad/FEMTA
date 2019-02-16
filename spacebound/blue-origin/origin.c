@@ -15,13 +15,13 @@
 
 
 int main(int argc, char ** argv) {
-
+  
   // start pigpio library
   if (gpioInitialise() < 0) {
-    printf(CONSOLE_RED "pigpio unable to start\n" CONSOLE_RESET);
+    printf(RED "pigpio unable to start\n" RESET);
     exit(2);
   }
-
+  
   if (argc > 1) {
     printf("t:ADXL 345\n");
     printf("a:x-axis\n");
@@ -32,7 +32,7 @@ int main(int argc, char ** argv) {
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
   start_i2c();       // start reading the i2c bus
-
+  
   Selector * selector = create_selector(NULL);
   
   add_selector_command(selector, 'q', "quit",  flip_bool, &reading_user_input);

@@ -29,7 +29,7 @@
 **** sudo dpkg-reconfigure openssh-server
 * sudo apt update && sudo apt upgrade -y && sudo apt-get dist-upgrade -y && sudo apt autoremove
 * sudo reboot 0
-* sudo apt install emacs-nox logwatch htop ufw git pigpio ssmtp mailutils libncurses5-dev libncursesw5-dev i2c-tools tmux sysstat libaa-bin
+* sudo apt install emacs-nox logwatch htop ufw git pigpio ssmtp mailutils libncurses5-dev libncursesw5-dev i2c-tools tmux sysstat libaa-bin bc
 * sudo cp /etc/fstab /etc/fstap.backup
 * sudo emacs /etc/fstab
 ** replace all nonzero entries in the last column with 0
