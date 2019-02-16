@@ -82,47 +82,49 @@ void update_plot() {
       
       heights[h] = (uchar) relative;
     }
+
+    char glyph = '*';
     
     if (axes_enabled == 1) {
       attron(COLOR_PAIR(4));
-      mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+      mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, glyph);
       attroff(COLOR_PAIR(4));
     }
     if (axes_enabled == 3) {
       
       attron(COLOR_PAIR(4));
-      mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+      mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, glyph);
       attroff(COLOR_PAIR(4));
       
       attron(COLOR_PAIR(2));
-      mvaddch(LINES - 6 - heights[1], 9 + number_of_data_points_graphable - c, '*');
+      mvaddch(LINES - 6 - heights[1], 9 + number_of_data_points_graphable - c, glyph);
       attroff(COLOR_PAIR(2));
       
       attron(COLOR_PAIR(6));
-      mvaddch(LINES - 6 - heights[2], 9 + number_of_data_points_graphable - c, '*');
+      mvaddch(LINES - 6 - heights[2], 9 + number_of_data_points_graphable - c, glyph);
       attroff(COLOR_PAIR(6));
       
       if (heights[0] == heights[1]) {
 	attron(COLOR_PAIR(5));
-	mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, glyph);
 	attroff(COLOR_PAIR(5));
       }
       
       if (heights[1] == heights[2]) {
 	attron(COLOR_PAIR(7));
-	mvaddch(LINES - 6 - heights[1], 9 + number_of_data_points_graphable - c, '*');
+	mvaddch(LINES - 6 - heights[1], 9 + number_of_data_points_graphable - c, glyph);
 	attroff(COLOR_PAIR(7));
       }
       
       if (heights[0] == heights[2]) {
 	attron(COLOR_PAIR(3));
-	mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, glyph);
 	attroff(COLOR_PAIR(3));
       }
       
       if (heights[0] == heights[1] && heights[0] == heights[2]) {
 	attron(COLOR_PAIR(1));
-	mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, '*');
+	mvaddch(LINES - 6 - heights[0], 9 + number_of_data_points_graphable - c, glyph);
 	attroff(COLOR_PAIR(1));
       }
     }
