@@ -16,8 +16,6 @@ typedef void (* sensor_free)(Sensor * sensor);
 typedef struct Sensor {
   
   char * name;           // component name
-  FILE * file;           // log file
-  char * buffer;         // buffer for file I/O
   
   union {
     i2c_device * i2c;    // i2c communications info

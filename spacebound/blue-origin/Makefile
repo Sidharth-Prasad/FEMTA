@@ -27,8 +27,8 @@ ds32.o: ds32.c ds32.h color.h i2c.h
 fram.o: fram.c fram.h color.h ds32.h i2c.h
 	gcc $(GFLAGS) -c fram.c fram.h ds32.h color.h i2c.h
 
-i2c.o: i2c.c adxl.h clock.h color.h i2c.h list.h sensor.h types.h
-	gcc $(GFLAGS) -c i2c.c adxl.h clock.h color.h i2c.h list.h sensor.h types.h
+i2c.o: i2c.c clock.h color.h i2c.h list.h sensor.h types.h
+	gcc $(GFLAGS) -c i2c.c clock.h color.h i2c.h list.h sensor.h types.h
 
 list.o: list.c list.h
 	gcc $(GFLAGS) -c list.c list.h

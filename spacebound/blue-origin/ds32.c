@@ -19,14 +19,13 @@ Sensor * init_ds32() {
   ds32 -> name = "DS3231N";
   ds32 -> free = free_ds32;
   
-  ds32 -> file = fopen("logs/ds32.log", "a");
-  //ds32 -> buffer = malloc(sizeof(char));
-  
-  setlinebuf(ds32 -> file);    // write out every read
-  
-  fprintf(ds32 -> file, GREEN "\n\nDS3231N\n" RESET);
-  
   ds32 -> i2c = create_i2c_device(ds32, DS32_ADDRESS, read_ds32, 1000);    // 1s between reads
+  
+  ds32 -> i2c -> file = fopen("logs/ds32.log", "a");
+  
+  setlinebuf(ds32 -> i2c -> file);    // write out every read
+  
+  fprintf(ds32 -> i2c -> file, GREEN "\n\nDS3231N\n" RESET);
   
   read_ds32(ds32 -> i2c);    // read now to get human time before other sensors are created
   
@@ -66,7 +65,7 @@ bool read_ds32(i2c_device * ds32_i2c) {
 	  hours_tens, hours_ones, minutes_tens, minutes_ones, seconds_tens, seconds_ones,
 	  meridian);
   
-  fprintf(ds32_i2c -> sensor -> file, "%s\n", formatted_time);
+  fprintf(ds32_i2c -> file, "%s\n", formatted_time);
   
   return true;
 }
