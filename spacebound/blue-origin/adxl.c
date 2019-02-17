@@ -10,9 +10,13 @@
 
 #define ADXL_ADDRESS 0x53
 
+const float adxl_bias_x =  0.0371;
+const float adxl_bias_y = -0.0010;
+const float adxl_bias_z = -0.0861;
+
+
 void free_adxl(Sensor * adxl);
 bool read_adxl(i2c_device * adxl_i2c);
-
 
 Sensor * init_adxl() {
   
@@ -63,15 +67,12 @@ bool read_adxl(i2c_device * adxl_i2c) {
 	 yAccel * 3.9 / 1000.0,
 	 zAccel * 3.9 / 1000.0);*/
 
-  /*printf("d:%f %f %f\n",
-	 xAccel * 3.9 / 1000.0,
-	 yAccel * 3.9 / 1000.0,
-	 zAccel * 3.9 / 1000.0);*/
+  printf("d:%f %f %f\n",
   
-  fprintf(adxl_i2c -> file, "%.4f\t%.4f\t%.4f\n",
-	  xAccel * 3.9 / 1000.0,
-	  yAccel * 3.9 / 1000.0,
-	  zAccel * 3.9 / 1000.0);
+  //fprintf(adxl_i2c -> file, "%.3f\t%.3f\t%.3f\n",
+	  xAccel * 0.004 - adxl_bias_x,
+	  yAccel * 0.004 - adxl_bias_y,
+	  zAccel * 0.004 - adxl_bias_z);
   
   return true;
 }

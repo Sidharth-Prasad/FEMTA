@@ -52,3 +52,4 @@ clean:
 	rm -f *.o *.gch   # blow away compiled objects
 	rm -f *.x         # blow away binaries
 	rm -f gmon.out    # blow away profiling outputs
+	mv *~ backups/    # move emacs backups
