@@ -25,6 +25,8 @@ Sensor * init_ds32() {
   
   setlinebuf(ds32 -> i2c -> file);    // write out every read
   
+  //set_time_ds32(ds32);
+  
   fprintf(ds32 -> i2c -> file, GREEN "\n\nDS3231N\n" RESET);
   
   read_ds32(ds32 -> i2c);    // read now to get human time before other sensors are created
@@ -46,7 +48,7 @@ bool read_ds32(i2c_device * ds32_i2c) {
   
   char hours_ones   = '0' + ((0b00001111 & read_raws[2]) >> 0);    // 0 am/pm 0 tens ones
   char hours_tens   = '0' + ((0b00010000 & read_raws[2]) >> 4);
-  char meridian     = 'a' + ((0b01000000 & read_raws[2]) >> 6) * ('p' - 'a');
+  char meridian     = 'a' + ((0b00100000 & read_raws[2]) >> 5) * ('p' - 'a');
   
   char date_ones    = '0' + ((0b00001111 & read_raws[4]) >> 0);    // 00 tens ones
   char date_tens    = '0' + ((0b00110000 & read_raws[4]) >> 4);    // ------------
@@ -59,9 +61,9 @@ bool read_ds32(i2c_device * ds32_i2c) {
   char year_tens    = '0' + ((0b11110000 & read_raws[6]) >> 4);    // ---------
   
   char weakday      = -1  + ((0b00000111 & read_raws[3]) >> 0);
-
+  
   sprintf(formatted_time, "%c%c/%c%c %c%c:%c%c:%c%c %cm",
-	  month_tens, month_tens, date_tens, date_ones,
+	  month_tens, month_ones, date_tens, date_ones,
 	  hours_tens, hours_ones, minutes_tens, minutes_ones, seconds_tens, seconds_ones,
 	  meridian);
   
@@ -72,9 +74,17 @@ bool read_ds32(i2c_device * ds32_i2c) {
 
 void set_time_ds32(Sensor * ds32) {
   
-  i2c_write_byte(ds32 -> i2c, 0x00, 0b00001011);
+  uint8 time[7] = {
+    0b00000000,  // 0 tens ones          (seconds)
+    0b00010110,  // 0 tens ones          (minutes)
+    0b00110001,  // 0 am/pm 0 tens ones  (hours  )
+    0b00000111,  // 00000 weakday        (weekday)
+    0b00010110,  // 00 tens ones         (date   )
+    0b00000010,  // century 00 tens ones (month  )
+    0b00011001,  // tens ones            (year   )
+  };
   
-  
+  i2c_write_bytes(ds32 -> i2c, 0x00, time, 7);
 }
 
 void free_ds32(Sensor * ds32) {

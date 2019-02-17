@@ -8,4 +8,6 @@ char formatted_time[32];
 
 Sensor * init_ds32();
 
+void set_time_ds32(Sensor * ds32);
+
 #endif
