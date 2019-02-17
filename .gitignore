@@ -18,3 +18,4 @@ spacebound/onboard-sensors/cpu_log*.txt
 *a.out
 *output.log
 ./FEMTA/spacebound/blue-origin/logs/*.log
+*.log
