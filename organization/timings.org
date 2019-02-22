@@ -1,0 +1,11 @@
+
+
+
+* 1 system second = 1.0051222951 real seconds at room temperature
+
+* shedule 
+**  sensor frequency
+*** adxl   100 Hz
+*** ds32     1 Hz
+*** fram     1 Hz
+*** 

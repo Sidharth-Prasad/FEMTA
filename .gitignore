@@ -17,3 +17,5 @@ spacebound/onboard-sensors/cpu_log*.txt
 *.DS_Store
 *a.out
 *output.log
+./FEMTA/spacebound/blue-origin/logs/*.log
+*.log

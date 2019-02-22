@@ -27,15 +27,18 @@ typedef struct i2c_pattern {
 typedef struct i2c_device {
 
   Sensor * sensor;
-  
-  uint8 address;          // address on bus
-  
-  uchar interval;         // time span between reads in ms
-  uchar count;            // counts since last read
-  
-  i2c_pattern pattern;    // 
 
-  int handle;          // 
+  FILE * file;             // log file
+  char * buffer;           // buffer for file I/O
+  
+  uint8 address;           // address on bus
+  
+  ushort interval;         // time span between reads in ms
+  ushort count;            // counts since last read
+  
+  i2c_pattern pattern;     // 
+
+  int handle;              // 
   
   i2c_reader read;
   
@@ -59,10 +62,15 @@ void start_i2c();
 
 void terminate_i2c();
 
-void i2c_write_byte(int handle, uint8 reg, uint8 value);
-void i2c_read_bytes(int handle, uint8 reg, uint8 * buf, char n);
+void i2c_write_byte (i2c_device * dev, uint8 reg, uint8 value);
+void i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n);
+void i2c_read_bytes (i2c_device * dev, uint8 reg, uint8 * buf, char n);
+void i2c_raw_write  (i2c_device * dev,            uint8 * buf, char n);
+void i2c_raw_read   (i2c_device * dev,            uint8 * buf, char n);
 
-i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint8 interval);
+uint8 i2c_read_byte(i2c_device * dev, uint8 reg);
+
+i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 interval);
 
 
 

@@ -48,12 +48,15 @@ void list_insert(List * list, void * datum) {
   // Inserts node into the linked list
   // Complexity: O(1)
   
+  list -> elements++;
+  
   Node * node = create_node(datum);
   
   if (list -> head == NULL) {
+    // first element, need to become head
+    
     list -> head = node;
     list -> tail = node;
-    list -> elements = 1;
     
     if (list -> doubly_linked) {
       node -> prev = node;
@@ -61,8 +64,6 @@ void list_insert(List * list, void * datum) {
     }
     return;
   }
-
-  list -> elements++;
   
   if (!list -> doubly_linked) {
     node -> next = list -> head;
@@ -94,7 +95,7 @@ void list_insert_last(List * list, void * datum) {
     list -> elements = 1;
     return;
   }
-
+  
   list -> tail -> next = node;
   list -> tail = node;
   list -> elements++;
@@ -120,7 +121,7 @@ void list_remove(List * list, Node * node) {
       list -> tail = previous;         // Retract tail
     }
   }
-
+  
   else {
     node -> next -> prev = node -> prev;   // Drop out of DLL
     node -> prev -> next = node -> next;   // ---------------
@@ -130,9 +131,31 @@ void list_remove(List * list, Node * node) {
     list -> head = node -> next;       // Advance head
   }
   
-  if (--list -> elements == 0) list -> head = NULL;
-  if (list -> free) list -> free(node -> value);
+  list -> tail = list -> head -> prev;    // retracts tail if needed
+  
+  if (--list -> elements == 0) {
+    list -> head = NULL;
+    list -> tail = NULL;
+  }
+  if (list -> free) (list -> free) (node -> value);
   free(node);
+}
+
+void list_remove_tail(List * list) {
+  // remove tail from DLL
+  
+  Node * tail = list -> tail;
+
+  // drop out of DLL
+  list -> tail = tail -> prev;
+  list -> tail -> next = list -> head;
+  list -> tail -> next -> prev = list -> tail;
+  
+  if (list -> free) (list -> free)(tail -> value);
+  
+  free(tail);
+  
+  list -> elements--;
 }
 
 void list_empty(List * list) {
