@@ -47,8 +47,6 @@ int main(int argc, char ** argv) {
     execute_selector(selector, input);
   }
   
-  real_sleep(60);
-  
   // tell threads to terminate
   schedule -> term_signal = true;
   

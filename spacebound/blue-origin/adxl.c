@@ -49,7 +49,7 @@ bool read_adxl(i2c_device * adxl_i2c) {
   
   uint8 accel_raws[6];
   
-  i2c_read_bytes(adxl_i2c, 0x32, accel_raws, 6);
+  if (!i2c_read_bytes(adxl_i2c, 0x32, accel_raws, 6)) return false;
   
   int16 xAccel = (accel_raws[1] << 8) | accel_raws[0];
   int16 yAccel = (accel_raws[3] << 8) | accel_raws[2];
@@ -67,9 +67,9 @@ bool read_adxl(i2c_device * adxl_i2c) {
 	 yAccel * 3.9 / 1000.0,
 	 zAccel * 3.9 / 1000.0);*/
 
-  printf("d:%f %f %f\n",
+  //printf("d:%f %f %f\n",
   
-  //fprintf(adxl_i2c -> file, "%.3f\t%.3f\t%.3f\n",
+  fprintf(adxl_i2c -> file, "%.3f\t%.3f\t%.3f\n",
 	  xAccel * 0.004 - adxl_bias_x,
 	  yAccel * 0.004 - adxl_bias_y,
 	  zAccel * 0.004 - adxl_bias_z);

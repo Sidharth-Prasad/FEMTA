@@ -62,11 +62,11 @@ void start_i2c();
 
 void terminate_i2c();
 
-void i2c_write_byte (i2c_device * dev, uint8 reg, uint8 value);
-void i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n);
-void i2c_read_bytes (i2c_device * dev, uint8 reg, uint8 * buf, char n);
-void i2c_raw_write  (i2c_device * dev,            uint8 * buf, char n);
-void i2c_raw_read   (i2c_device * dev,            uint8 * buf, char n);
+bool i2c_write_byte (i2c_device * dev, uint8 reg, uint8 value);
+bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n);
+bool i2c_read_bytes (i2c_device * dev, uint8 reg, uint8 * buf, char n);
+bool i2c_raw_write  (i2c_device * dev,            uint8 * buf, char n);
+bool i2c_raw_read   (i2c_device * dev,            uint8 * buf, char n);
 
 uint8 i2c_read_byte(i2c_device * dev, uint8 reg);
 

@@ -90,7 +90,7 @@ void print_byte(FILE * file, uint8 byte) {
 }
 
 bool read_fram(i2c_device * fram_i2c) {
-
+  
   return true;
   
   static char fram_step;

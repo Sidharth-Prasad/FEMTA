@@ -38,7 +38,7 @@ bool read_ds32(i2c_device * ds32_i2c) {
   
   uint8 read_raws[7];
   
-  i2c_read_bytes(ds32_i2c, 0x00, read_raws, 7);
+  if (!i2c_read_bytes(ds32_i2c, 0x00, read_raws, 7)) return false;
   
   char seconds_ones = '0' + ((0b00001111 & read_raws[0]) >> 0);    // 0 tens ones
   char seconds_tens = '0' + ((0b01110000 & read_raws[0]) >> 4);    // -----------
