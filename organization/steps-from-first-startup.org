@@ -1,6 +1,10 @@
 * Place SD card into UNIX-like system
 * Install raspian lite from .img file
-** https://www.raspberrypi.org/documentation/installation/installing-images/mac.md
+** https://www.raspberrypi.org/documentation/installation/installing-images/linux.md
+** wipe the card so it's completely free space
+** dd bs=4M if=2018-11-13-raspbian-stretch.img of=/dev/sdX conv=fsync status=progress
+*** use lsblk to get the value of X
+**** the wrong X will wipe one of your hard drives, so be careful
 * Place SD card into pi
 * sudo raspi-config
 ** Localization options
@@ -29,6 +33,7 @@
 **** sudo dpkg-reconfigure openssh-server
 * sudo apt update && sudo apt upgrade -y && sudo apt-get dist-upgrade -y && sudo apt autoremove
 * sudo reboot 0
+* sudo apt install emacs-nox logwatch htop ufw git pigpio ssmtp mailutils libncurses5-dev libncursesw5-dev i2c-tools tmux sysstat libaa-bin bc sl valgrind
 * sudo apt install emacs-nox logwatch htop ufw git pigpio ssmtp mailutils libncurses5-dev libncursesw5-dev i2c-tools tmux sysstat libaa-bin bc
 * sudo cp /etc/fstab /etc/fstap.backup
 * sudo emacs /etc/fstab
@@ -49,7 +54,7 @@
 ** You need to have GitHub access to the repository. Ask noah for an invitation. 
 * git clone https://github.com/Noah-Franks/Layer.git
 ** Installs a layer noah wrote for interfacing with the operating system
-** Contains various dot files and an auxillery for cd named cdd and newcdd
+** Contains various dot files and an auxillery for cd named cdd
 ** You need to have GitHub access to the repository. Ask noah for an invitation.
 * cp ~/Layer/.* .
 * sudo emacs /boot/config.txt
@@ -70,9 +75,53 @@
 * crontab -e
 ** Select emacs
 ** append the following to the end
-*** 0,20,40 * * * * /home/noah/FEMTA/spacebound/bash-scripts/email.sh
+*** 0,20,40 * * * * /home/noah/FEMTA/spacebound/helper-scripts/email.sh
 *** 0 17,23 * * * sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y
 * sudo emacs /etc/ssh/sshd_config
 ** Append AllowUsers noah kate
 ** This white lists everyone but the default user pi
 *** This ensures bots on the internet won't know a username for the satellite
+
+
+* apply real time patch
+** switch to another computer and copy kernel
+*** scp rt-kernel.tgz noah@<ip address>:/tmp
+** ssh into pi
+*** tar xzf rt-kernel.tgz
+*** sudo cp -rd boot/* /boot/
+*** sudo cp -rd lib/* /lib
+*** sudo cp -d overlays/* /boot/overlays/
+*** sudo cp -d bcm* /boot/
+*** sudo emacs /boot/config.txt
+**** add the line kernel=vmlinuz-4.14.91-rt49+
+***** might have to change kernel version at the end
+*** reboot 0
+** if everything went right, do uname -r and see if the version matches
+** if not, here's things to consider
+*** debian uses a keyboard script that has issues with the real time clock during boot
+**** unplug the keyboard you are using and boot up without it
+** fix keyboard interrupt crashing
+*** sudo emacs /boot/cmdline.txt
+**** add the following to the end
+***** dwc_otg.fiq_fsm_enable=0 dwc_otg.fiq_enable=0 dwc_otg.nak_holdoff=0 
+**** when you reboot check the FIQ is disabled via 
+***** dmesg | grep otg
+
+* only do the following if you want to use the ds3231 as the system clock
+** recognize that by doing this you can't use the ds3231 in your program
+** recognize that 0x68 will be set to UU due to being appropriated by the kernel
+** recognize that Noah hasn't yet gotten this to work on a PREEMPT_RT kernel yet
+** add physical real time clock
+*** connect DS3231N via i2c
+*** alter the last line in /boot/config.txt as follows
+**** change dtoverlay=pi3-disable-bt to dtoverlay=pi3-disable-bt,i2c-rtc,ds3231
+*** sudo reboot 0
+*** remove fake hardware clock
+**** sudo apt remove fake-hwclock
+**** sudo update-rc.d -f fake-hwclock remove
+**** sudo systemctl disable fake-hwclock
+*** comment out the following lines in /lib/udev/hwclock-set
+**** if [ -e /run/systemd/system ] ; then
+****     exit 0
+**** fi
+*** also comment out all lines containing --sysstz in the same file

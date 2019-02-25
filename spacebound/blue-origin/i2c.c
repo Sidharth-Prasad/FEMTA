@@ -67,7 +67,7 @@ void start_i2c() {
   // create i2c thread
   if (pthread_create(schedule -> thread, NULL, i2c_main, NULL)) {
     printf(RED "Could not start i2c thread\n" RESET);
-    return;  
+    return;
   }
 }
 
@@ -77,49 +77,57 @@ uint8 i2c_read_byte(i2c_device * dev, uint8 reg) {
   return i2cReadByteData(dev -> handle, reg);
 }
 
-void i2c_read_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
+bool i2c_read_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   // reads up to 32 bytes from an i2c device
   
   if (i2cReadI2CBlockData(dev -> handle, reg, buf, n) < 0) {
     printf(RED "Could not read bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    exit(3);
+    //exit(3);
+    return false;
   }
+  return true;
 }
 
-void i2c_raw_read(i2c_device * dev, uint8 * buf, char n) {
+bool i2c_raw_read(i2c_device * dev, uint8 * buf, char n) {
   // reads up to 32 bytes from an i2c device, without asking for a particular register
   
   if (i2cReadDevice(dev -> handle, buf, n)) {
     printf(RED "Could not read raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    exit(3);
+    //exit(3);
+    return false;
   }
+  return true;
 }
 
-void i2c_raw_write(i2c_device * dev, uint8 * buf, char n){
+bool i2c_raw_write(i2c_device * dev, uint8 * buf, char n){
   // writes up to 32 bytes from an i2c device, without specifying a particular register
   
   if (i2cWriteDevice(dev -> handle, buf, n)) {
     printf(RED "Could not write raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    exit(3);
+    //exit(3);
+    return false;
   }
 }
 
-void i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {
+bool i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {
   // writes a byte to the i2c device
   
   if (i2cWriteByteData(dev -> handle, reg, value) < 0) {
     printf(RED "Could not write byte to " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    exit(3);
+    //exit(3);
+    return false;
   }
 }
 
-void i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
+bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   // writes up to 32 bytes to the i2c device
   
   if (i2cWriteI2CBlockData(dev -> handle, reg, buf, n)) {
     printf(RED "Could not write bytes to " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    exit(3);
+    //exit(3);
+    return false;
   }
+  return true;
 }
 
 void * i2c_main() {
@@ -147,15 +155,17 @@ void * i2c_main() {
       if (i2c -> count == i2c -> interval) {
         
         (i2c -> read)(i2c);
-        
+	
         i2c -> count = 0;
       }
     }
+
+    long i2c_interval = 1E7;
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);
     
-    long time_remaining = 1E7 - read_duration;
+    long time_remaining = i2c_interval - read_duration;
     
     if (time_remaining < 0)
       time_remaining = 0;               // taking too long to read!

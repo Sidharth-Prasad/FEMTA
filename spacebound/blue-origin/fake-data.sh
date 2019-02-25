@@ -8,8 +8,8 @@ pi=3.14159265
 for i in $(seq 0 10240); do
 
     
-    x=$(echo "s($i/180 + 0*$pi/3.0)" | bc -l)
-    y=$(echo "s($i/120 + 1*$pi/3.0)" | bc -l)
+    x=$(echo "s($i/120 + 0*$pi/3.0)" | bc -l)
+    y=$(echo "s($i/180 + 1*$pi/3.0)" | bc -l)
     z=$(echo "s($i/90 + 2*$pi/3.0)" | bc -l)
     
     echo "d:$x $y $z"

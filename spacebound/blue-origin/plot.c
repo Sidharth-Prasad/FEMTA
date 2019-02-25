@@ -245,9 +245,9 @@ int main() {
 	
 	list_insert(data[l], value);
 	
-	/*if (data[l] -> elements > COLS - 4) {
+	if (data[l] -> elements > COLS - 4) {
 	  list_remove(data[l], data[l] -> tail);
-	  }*/
+	}
       }
       
       update_plot();
