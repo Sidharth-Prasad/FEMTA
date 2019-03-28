@@ -11,12 +11,15 @@ GFLAGS =
 debug: GFLAGS += -g
 debug: origin
 
-origin: adxl.o clock.o ds32.o fram.o i2c.o list.o origin.o selector.o sensor.o
-	gcc $(GFLAGS) -o origin.x adxl.o ds32.o fram.o clock.o i2c.o list.o origin.o selector.o sensor.o $(CFLAGS)
+origin: ad15.o adxl.o clock.o ds32.o fram.o i2c.o list.o origin.o selector.o sensor.o
+	gcc $(GFLAGS) -o origin.x ad15.o adxl.o ds32.o fram.o clock.o i2c.o list.o origin.o selector.o sensor.o $(CFLAGS)
 origin:	plot
 
+ad15.o: ad15.c ad15.h ds32.h i2c.h
+	gcc $(GFLAGS) -c ad15.c ad15.h color.h ds32.h i2c.h
+
 adxl.o: adxl.c adxl.h ds32.h i2c.h
-	gcc $(GFLAGS) -c adxl.c adxl.h ds32.h i2c.h
+	gcc $(GFLAGS) -c adxl.c adxl.h color.h ds32.h i2c.h
 
 clock.o: clock.c clock.h color.h i2c.h
 	gcc $(GFLAGS) -c clock.c clock.h color.h i2c.h
@@ -26,6 +29,9 @@ ds32.o: ds32.c ds32.h color.h i2c.h
 
 fram.o: fram.c fram.h color.h ds32.h i2c.h
 	gcc $(GFLAGS) -c fram.c fram.h ds32.h color.h i2c.h
+
+group.o: group.c group.h i2c.h list.h
+	gcc $(GFLAGS) -c group.c group.h i2c.h list.h
 
 i2c.o: i2c.c clock.h color.h i2c.h list.h sensor.h types.h
 	gcc $(GFLAGS) -c i2c.c clock.h color.h i2c.h list.h sensor.h types.h
