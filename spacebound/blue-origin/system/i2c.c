@@ -9,9 +9,10 @@
 #include "clock.h"
 #include "color.h"
 #include "i2c.h"
-#include "list.h"
-#include "sensor.h"
-#include "types.h"
+
+#include "../structures/list.h"
+#include "../sensors/sensor.h"
+#include "../types/types.h"
 
 void * i2c_main();
 
@@ -55,7 +56,8 @@ void init_i2c() {
   
   schedule = malloc(sizeof(i2c_schedule));
   
-  schedule -> devices = create_list(SLL, i2c_freer);
+  schedule -> devices = list_create();
+  schedule -> devices -> free = i2c_freer;
   schedule -> thread  = malloc(sizeof(pthread));
   
   // open communication with the i2c bus
@@ -146,21 +148,18 @@ void * i2c_main() {
     
     fprintf(i2c_log, "%ld\n", last_read_duration);
     
-    // read the sensors
-    for (Node * node = schedule -> devices -> head; node; node = node -> next) {
-      
-      i2c_device * i2c = (i2c_device *) node -> value;
-      
+    for (iterate(schedule -> devices, i2c_device *, i2c)) {
+
       i2c -> count += 10;
-      
+
       if (i2c -> count == i2c -> interval) {
-        
-        (i2c -> read)(i2c);
-	
-        i2c -> count = 0;
+
+	(i2c -> read)(i2c);
+
+	i2c -> count = 0;
       }
     }
-
+    
     long i2c_interval = 1E7 * 100;    // SLOW TEMP
     
     // figure out how long to sleep

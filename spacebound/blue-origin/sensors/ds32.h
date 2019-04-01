@@ -19,7 +19,8 @@
 
 
 #include "sensor.h"
-#include "i2c.h"
+
+#include "../system/i2c.h"
 
 char formatted_time[32];
 

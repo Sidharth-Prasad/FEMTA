@@ -4,10 +4,9 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "list.h"
-#include "types.h"
-
-#include "sensor.h"
+#include "../structures/list.h"
+#include "../types/types.h"
+#include "../sensors/sensor.h"
 
 typedef struct Sensor Sensor;
 typedef struct i2c_device i2c_device;

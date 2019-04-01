@@ -1,19 +1,17 @@
 
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <pigpio.h>
 
-#include "clock.h"
-#include "color.h"
-#include "i2c.h"
-#include "list.h"
-#include "selector.h"
-#include "types.h"
-
+#include "../system/clock.h"
+#include "../system/color.h"
+#include "../system/i2c.h"
+#include "../structures/list.h"
+#include "../structures/selector.h"
+#include "../types/types.h"
 
 int main(int argc, char ** argv) {
   

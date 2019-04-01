@@ -10,9 +10,9 @@
  */
 
 
-#include "sensor.h"
-#include "list.h"
-#include "i2c.h"
+#include "../sensors/sensor.h"
+#include "../structures/list.h"
+#include "../system/i2c.h"
 
 Sensor * group(List * list);
 

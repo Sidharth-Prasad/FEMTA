@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "i2c.h"
 #include "ad15.h"
-#include "color.h"
 #include "ds32.h"
+
+#include "../system/i2c.h"
+#include "../system/color.h"
+
 
 // information regarding this can be found pages 18-19 of the datasheet
 // more options exist in the datasheet, but this should cover most needs

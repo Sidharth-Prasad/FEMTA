@@ -18,9 +18,10 @@
  */
 
 #include "sensor.h"
-#include "i2c.h"
-#include "types.h"
-#include "list.h"
+
+#include "../system/i2c.h"
+#include "../types/types.h"
+#include "../structures/list.h"
 
 #define A01 0b000
 #define A23 0b011

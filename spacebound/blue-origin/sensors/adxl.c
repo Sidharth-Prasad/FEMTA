@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "i2c.h"
 #include "adxl.h"
-#include "color.h"
 #include "ds32.h"
+
+#include "../system/color.h"
+#include "../system/i2c.h"
 
 #define ADXL_ADDRESS 0x53
 

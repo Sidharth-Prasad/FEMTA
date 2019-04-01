@@ -1,61 +1,46 @@
 
-# C linking flags
-CFLAGS = -lpigpio -lpthread
-PLOT_FLAGS = -lncurses
 
-# Granular flags
-GFLAGS = 
+ORIGIN_LINKS = -lpigpio -lpthread -lm
+PLOT_LINKS   = -lncurses
+TEST_LINKS   = -lpigpio -lpthread -lm
+FLAGS =
+#FLAGS = -g
 
 .DEFAULT_GOAL := origin
 
-debug: GFLAGS += -g
-debug: origin
+ORIGIN_SOURCES = $(wildcard */*.c .origin/*.c)
+ORIGIN_OBJECTS = $(ORIGIN_SOURCES:%.c=compiler/%.o)
+ORIGIN_HEADERS = $(ORIGIN_OBJECTS:%.o=%.d)
 
-origin: ad15.o adxl.o clock.o ds32.o fram.o i2c.o list.o origin.o selector.o sensor.o
-	gcc $(GFLAGS) -o origin.x ad15.o adxl.o ds32.o fram.o clock.o i2c.o list.o origin.o selector.o sensor.o $(CFLAGS)
-origin:	plot
+PLOT_SOURCES   = $(wildcard */*.c .plot/*.c)
+PLOT_OBJECTS   = $(PLOT_SOURCES:%.c=compiler/%.o)
+PLOT_HEADERS   = $(PLOT_OBJECTS:%.o=%.d)
 
-ad15.o: ad15.c ad15.h color.h ds32.h i2c.h list.h
-	gcc $(GFLAGS) -c ad15.c ad15.h color.h ds32.h i2c.h list.h
+TEST_SOURCES = $(wildcard */*.c .test/*.c)
+TEST_OBJECTS = $(TEST_SOURCES:%.c=compiler/%.o)
+TEST_HEADERS = $(TEST_OBJECTS:%.o=%.d)
 
-adxl.o: adxl.c adxl.h ds32.h i2c.h
-	gcc $(GFLAGS) -c adxl.c adxl.h color.h ds32.h i2c.h
+origin: $(ORIGIN_OBJECTS)
+	gcc $(FLAGS) -o origin.x $(ORIGIN_OBJECTS) $(ORIGIN_LINKS)
 
-clock.o: clock.c clock.h color.h i2c.h
-	gcc $(GFLAGS) -c clock.c clock.h color.h i2c.h
+plot: $(PLOT_OBJECTS)
+	gcc $(FLAGS) -o plot.x $(PLOT_OBJECTS) $(PLOT_LINKS)
 
-ds32.o: ds32.c ds32.h color.h i2c.h
-	gcc $(GFLAGS) -c ds32.c ds32.h color.h i2c.h
+test: $(TEST_OBJECTS)
+	gcc $(FLAGS) -o test.x $(TEST_OBJECTS) $(TEST_LINKS)
 
-fram.o: fram.c fram.h color.h ds32.h i2c.h
-	gcc $(GFLAGS) -c fram.c fram.h ds32.h color.h i2c.h
+-include $(ORIGIN_HEADERS) $(PLOT_HEADERS) $(TEST_HEADERS)
 
-group.o: group.c group.h i2c.h list.h
-	gcc $(GFLAGS) -c group.c group.h i2c.h list.h
-
-i2c.o: i2c.c clock.h color.h i2c.h list.h sensor.h types.h
-	gcc $(GFLAGS) -c i2c.c clock.h color.h i2c.h list.h sensor.h types.h
-
-list.o: list.c list.h
-	gcc $(GFLAGS) -c list.c list.h
-
-origin.o: origin.c clock.h color.h i2c.h list.h selector.h types.h
-	gcc $(GFLAGS) -c origin.c clock.h color.h i2c.h list.h selector.h types.h
-
-selector.o: selector.c list.h selector.h
-	gcc $(GFLAGS) -c selector.c list.h selector.h
-
-sensor.o: sensor.c adxl.h ds32.h fram.h list.h types.h sensor.h
-	gcc $(GFLAGS) -c sensor.c adxl.h ds32.h fram.h list.h types.h sensor.h
-
-plot: plot.o list.o
-	gcc $(PLOT_FLAGS) -o plot.x plot.o list.o
-
-plot.o: plot.c list.h
-	gcc $(GFLAGS) -c plot.c list.h
+compiler/%.o: %.c
+	@mkdir -p $(dir $(basename $@))
+	gcc -o $@ -MMD -c $(FLAGS) $<
 
 clean:
-	rm -f *.o *.gch   # blow away compiled objects
-	rm -f *.x         # blow away binaries
-	rm -f gmon.out    # blow away profiling outputs
-	mv *~ backups/    # move emacs backups
+	rm -rf compiler                      # blow away compiled objects
+	rm -f *.x                            # blow away binaries
+	rm -f gmon.out                       # blow away profiling outputs
+	touch fake~ && mv -f *~ backups/     # move emacs backups
+
+
+
+

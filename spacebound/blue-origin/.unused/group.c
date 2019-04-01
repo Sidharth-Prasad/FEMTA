@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "i2c.h"
 #include "group.h"
-#include "color.h"
-#include "ds32.h"
+
+#include "../system/i2c.c"
+#include "../system/color.h"
+#include "../sensors/ds32.h"
 
 void free_group(Sensor * group);
 bool read_group(i2c_device * group_i2c);

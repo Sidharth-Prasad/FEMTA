@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "i2c.h"
 #include "ds32.h"
-#include "color.h"
+
+#include "../system/color.h"
+#include "../system/i2c.h"
 
 #define DS32_ADDRESS 0x68
 

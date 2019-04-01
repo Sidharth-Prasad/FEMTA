@@ -4,7 +4,8 @@
 #include <stdbool.h>
 
 #include "list.h"
-#include "types.h"
+
+#include "../types/types.h"
 
 typedef struct Command {
   

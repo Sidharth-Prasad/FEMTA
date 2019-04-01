@@ -19,9 +19,8 @@
 
 
 #include "sensor.h"
-#include "i2c.h"
 
-
+#include "../system/i2c.h"
 
 Sensor * init_adxl();
 

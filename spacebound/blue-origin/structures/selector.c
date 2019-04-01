@@ -15,7 +15,7 @@ Selector * create_selector(Selector * parent) {
   
   selector -> parent  = parent;
   
-  selector -> entries = create_list(SLL, NULL);
+  selector -> entries = list_create();
   
   return selector;
 }
@@ -30,14 +30,12 @@ void add_selector_command(Selector * selector, char key, char * text, lambda act
   command -> action   = (lambda) action;
   command -> argument = argument;
 
-  list_insert(selector -> entries, create_node((void *) command));
+  list_insert(selector -> entries, command);
 }
 
 void execute_selector(Selector * selector, char key) {
 
-  for (Node * node = selector -> entries -> head; node; node = node -> next) {
-
-    Command * entry = (Command *) node -> value;
+  for (iterate(selector -> entries, Command *, entry)) {
 
     if (entry -> key != key) continue;
 

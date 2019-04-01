@@ -3,9 +3,9 @@
 
 #include <stdio.h>
 
-#include "list.h"
-#include "i2c.h"
-#include "types.h"
+#include "../structures/list.h"
+#include "../system/i2c.h"
+#include "../types/types.h"
 
 typedef struct Sensor Sensor;
 typedef struct i2c_device i2c_device;

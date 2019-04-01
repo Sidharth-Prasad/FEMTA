@@ -4,10 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "i2c.h"
 #include "ds32.h"
 #include "fram.h"
-#include "color.h"
+
+#include "../system/color.h"
+#include "../system/i2c.h"
 
 #define FRAM_ADDRESS 0x50
 
