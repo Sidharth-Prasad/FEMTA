@@ -97,7 +97,7 @@ Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
   sensor_config -> COMP_LAT  = AD15_LAT_DONT_LATCH;
   sensor_config -> COMP_POL  = AD15_POL_ACTIVE_LOW;
   sensor_config -> COMP_MODE = AD15_COMP_TRADITIONAL;
-  sensor_config -> DATA_RATE = AD15_RATE_128HZ;
+  sensor_config -> DATA_RATE = AD15_RATE_860HZ;
   
   sensor_config -> MODE      = AD15_MODE_CONTINUOUS;
   sensor_config -> PGA       = AD15_PGA_6144V;
@@ -134,12 +134,15 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   for (iterate(config -> modes, uint8, mode)) {
     
-    uint8 ad15_raws[2];
+    config -> high_byte = (mode << 4) | (config -> high_byte & 0b10001111);
     
-    config -> MUX = mode << 4;    // gotta shift to match the MUX field
+    /*if (ad15_i2c -> address == 0x49)
+      printf("%x %x %x %x\n", config -> high_byte, config -> low_byte, config -> MUX, mode);*/
     
     configure_ad15(ad15);
     
+    uint8 ad15_raws[2];
+        
     i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);
     
     uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
