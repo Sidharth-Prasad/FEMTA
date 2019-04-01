@@ -160,7 +160,7 @@ void * i2c_main() {
       }
     }
     
-    long i2c_interval = 1E7 * 100;    // SLOW TEMP
+    long i2c_interval = 1E7 * 10;    // SLOW TEMP
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);

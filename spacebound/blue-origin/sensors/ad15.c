@@ -65,8 +65,6 @@ void configure_ad15(Sensor * ad15);
 
 Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
   
-  printf("Config size: %ld\n", sizeof(AD15_Config));
-  
   Sensor * ad15 = malloc(sizeof(Sensor));
   
   ad15 -> name = "ADS1115";
@@ -78,15 +76,18 @@ Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
   
   sprintf(file_name, "logs/ad15-%x.log", address);
   
-  ad15 -> i2c -> file = fopen(file_name, "a");
+  FILE * file = fopen(file_name, "a");
+  
+  ad15 -> i2c -> file = file;
 
-  fprintf(ad15 -> i2c -> file, RED "\n\nADS115 - %s\n" RESET, title);
-  fprintf(ad15 -> i2c -> file, RED "Start time %s\n"   RESET, formatted_time);
-
+  fprintf(file, RED "\n\n");
+  fprintf(file, "ADS115 - %s\n", title);
+  fprintf(file, "Start time %s\n", formatted_time);
   
+  for (iterate(names, char *, column_name))
+    fprintf(file, "%s\t", column_name);
   
-  fprintf(ad15 -> i2c -> file, RED "\n\nADS1115\nStart time %s\nAnalog 0 x\tAnalog 1\n" RESET, formatted_time);
-  
+  fprintf(file, "\n" RESET);
   
   // set up the configuration  (page 19)
 
@@ -102,6 +103,8 @@ Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
   sensor_config -> PGA       = AD15_PGA_6144V;
   sensor_config -> MUX       = AD15_MUX_SINGLE_AIN0;
   sensor_config -> OS        = AD15_OS_BEGIN_CONVERSION;
+  
+  sensor_config -> modes     = modes;
   
   ad15 -> data = sensor_config;
   
@@ -124,39 +127,27 @@ void configure_ad15(Sensor * ad15) {
 }
 
 bool read_ad15(i2c_device * ad15_i2c) {
-
+  
   Sensor * ad15 = ad15_i2c -> sensor;
   
   AD15_Config * config = ad15 -> data;
-
-  uint8 ad15_raws[2];
-
-  /**/ {
-    config -> MUX = AD15_MUX_SINGLE_AIN0;
+  
+  for (iterate(config -> modes, uint8, mode)) {
+    
+    uint8 ad15_raws[2];
+    
+    config -> MUX = mode << 4;    // gotta shift to match the MUX field
     
     configure_ad15(ad15);
     
-    if (!i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2)) return false;
-  }
-  {
-    config -> MUX = AD15_MUX_SINGLE_AIN3;
+    i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);
     
-    configure_ad15(ad15);
+    uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
     
-    if (!i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2)) return false;
+    fprintf(ad15_i2c -> file, "%d\t", counts);
   }
   
-  
-  
-  //int16 raw0 = (ad15_raws[1] << 8) | ad15_raws[0];
-  int16 raw0 = (ad15_raws[0] << 8) | ad15_raws[1];
-  //int16 raw1 = (ad15_raws[3] << 8) | ad15_raws[2];
-  
-  //fprintf(ad15_i2c -> file, "%d\t%d\n", raw0, raw1);
-  fprintf(ad15_i2c -> file, "%d\n", raw0);
-  
-  /*if (ad15_i2c -> address < 0x4B)
-    printf("d:%f\n", raw0 * 1.0);*/
+  fprintf(ad15_i2c -> file, "\n");
   
   return true;
 }

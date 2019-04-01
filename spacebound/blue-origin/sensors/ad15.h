@@ -61,6 +61,8 @@ typedef struct AD15_Config {
       uchar OS  : 1;         // sleep state
     };
   };
+
+  List * modes;    // list of modes used to change config as needed
   
 } AD15_Config;
 
