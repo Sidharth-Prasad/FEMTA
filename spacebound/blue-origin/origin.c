@@ -1,5 +1,6 @@
 
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -23,10 +24,13 @@ int main(int argc, char ** argv) {
   }
   
   if (argc > 1) {
-    printf("t:ADXL 345\n");
-    printf("a:x-axis\n");
-    printf("a:y-axis\n");
-    printf("a:z-axis\n");
+    printf("t:ADS 1115\n");
+    printf("a:analog 0x48\n");
+    printf("a:analog 0x49\n");
+    printf("a:analog 0x4A\n");
+    //printf("a:x-axis\n");
+    //printf("a:y-axis\n");
+    //printf("a:z-axis\n");
   }
   
   init_i2c();        // set up the i2c data structures

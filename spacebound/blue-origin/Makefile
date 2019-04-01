@@ -15,8 +15,8 @@ origin: ad15.o adxl.o clock.o ds32.o fram.o i2c.o list.o origin.o selector.o sen
 	gcc $(GFLAGS) -o origin.x ad15.o adxl.o ds32.o fram.o clock.o i2c.o list.o origin.o selector.o sensor.o $(CFLAGS)
 origin:	plot
 
-ad15.o: ad15.c ad15.h ds32.h i2c.h
-	gcc $(GFLAGS) -c ad15.c ad15.h color.h ds32.h i2c.h
+ad15.o: ad15.c ad15.h color.h ds32.h i2c.h list.h
+	gcc $(GFLAGS) -c ad15.c ad15.h color.h ds32.h i2c.h list.h
 
 adxl.o: adxl.c adxl.h ds32.h i2c.h
 	gcc $(GFLAGS) -c adxl.c adxl.h color.h ds32.h i2c.h

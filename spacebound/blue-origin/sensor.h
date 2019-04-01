@@ -22,6 +22,8 @@ typedef struct Sensor {
   };
   
   sensor_free free;      // how to free sensor
+
+  void * data;           // specialized sensor data
   
 } Sensor;
 

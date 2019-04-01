@@ -23,6 +23,7 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   i2c -> sensor   = sensor;
   i2c -> read     = reader;
   i2c -> interval = interval;
+  i2c -> address  = address;
   
   i2c -> count = 0;
 
@@ -31,7 +32,7 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   
   i2c -> handle = i2cOpen(1, address, 0);
   
-  printf("Added i2c device %d\n", i2c -> handle);
+  printf("Added %s i2c device %x\n", sensor -> name, address);
   
   list_insert(schedule -> devices, i2c);
   
@@ -99,7 +100,7 @@ bool i2c_raw_read(i2c_device * dev, uint8 * buf, char n) {
   return true;
 }
 
-bool i2c_raw_write(i2c_device * dev, uint8 * buf, char n){
+bool i2c_raw_write(i2c_device * dev, uint8 * buf, char n) {
   // writes up to 32 bytes from an i2c device, without specifying a particular register
   
   if (i2cWriteDevice(dev -> handle, buf, n)) {
@@ -160,7 +161,7 @@ void * i2c_main() {
       }
     }
 
-    long i2c_interval = 1E7;
+    long i2c_interval = 1E7 * 100;    // SLOW TEMP
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);
