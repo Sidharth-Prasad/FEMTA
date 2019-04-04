@@ -108,7 +108,7 @@ Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
   
   ad15 -> data = sensor_config;
   
-  configure_ad15(ad15);
+  //configure_ad15(ad15);
   
   return ad15;
 }
@@ -117,13 +117,19 @@ void configure_ad15(Sensor * ad15) {
   
   AD15_Config * sensor_config = ad15 -> data;
   
-  uint8 request[3] = {
+  uint8 config_request[3] = {
     AD15_CONFIG_REG,               // point to config register
     sensor_config -> high_byte,    // fill in the request according to the config
     sensor_config -> low_byte,     // -------------------------------------------
   };
   
-  i2c_raw_write(ad15 -> i2c, request, 3);    
+  i2c_raw_write(ad15 -> i2c, config_request, 3);
+
+  /*uint8 pointer_request[1] = {
+    0x00,
+  };
+  
+  i2c_raw_write(ad15 -> i2c, pointer_request, 1);*/
 }
 
 bool read_ad15(i2c_device * ad15_i2c) {
@@ -139,16 +145,33 @@ bool read_ad15(i2c_device * ad15_i2c) {
     /*if (ad15_i2c -> address == 0x49)
       printf("%x %x %x %x\n", config -> high_byte, config -> low_byte, config -> MUX, mode);*/
     
+    /*if (ad15_i2c -> address == 0x49)
+      printf("%x %x\t", config -> high_byte, mode);*/
+    
     configure_ad15(ad15);
+
+    /*if (ad15_i2c -> address == 0x49)
+      real_nano_sleep(1E8);    // TEMP DELAY*/
     
     uint8 ad15_raws[2];
-        
+    
     i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);
+    //i2c_raw_read(ad15_i2c, ad15_raws, 2);
     
     uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
     
-    fprintf(ad15_i2c -> file, "%d\t", counts);
+    fprintf(ad15_i2c -> file, "%d\t", (int16) counts);
+
+    if (ad15_i2c -> address == 0x49) {
+      double volts = 6.114 * (double) ((int16) counts) / 32768.0;
+      //printf("%d\t", 6.144 * ((int16) counts) / ((double) (1 << 15)));
+      if (volts >= 0.0) printf(" ");
+      printf("%.9lfv\t", volts);
+    }
   }
+  
+  if (ad15_i2c -> address == 0x49)
+    printf("\n");
   
   fprintf(ad15_i2c -> file, "\n");
   

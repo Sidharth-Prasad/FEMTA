@@ -1,5 +1,5 @@
 
-
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -14,6 +14,8 @@
 #include "../sensors/sensor.h"
 #include "../types/types.h"
 
+int8 handles[0x7F];
+
 void * i2c_main();
 
 i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 interval) {
@@ -27,13 +29,20 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   i2c -> address  = address;
   
   i2c -> count = 0;
-
+  
   i2c -> file   = NULL;
   i2c -> buffer = NULL;
-  
-  i2c -> handle = i2cOpen(1, address, 0);
-  
-  printf("Added %s i2c device %x\n", sensor -> name, address);
+
+  if (handles[address] == -1) {
+    i2c -> handle = i2cOpen(1, address, 0);
+    
+    printf("Added %s i2c device %x\n", sensor -> name, address);
+    
+    handles[address] = i2c -> handle;
+  }
+  else {
+    i2c -> handle = handles[address];
+  }
   
   list_insert(schedule -> devices, i2c);
   
@@ -60,9 +69,9 @@ void init_i2c() {
   schedule -> devices -> free = i2c_freer;
   schedule -> thread  = malloc(sizeof(pthread));
   
-  // open communication with the i2c bus
-  
-  
+  // prepare handle array
+  for (int i = 0; i < 0x7F; i++)
+    handles[i] = -1;
 }
 
 void start_i2c() {
@@ -160,7 +169,7 @@ void * i2c_main() {
       }
     }
     
-    long i2c_interval = 1E7 * 10;    // SLOW TEMP
+    long i2c_interval = 1E7;    // SLOW TEMP
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);
