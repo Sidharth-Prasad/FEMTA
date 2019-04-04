@@ -17,33 +17,31 @@ typedef pthread_t pthread;
 typedef bool (* i2c_reader)(i2c_device * i2c);
 
 
-typedef struct i2c_pattern {
-  
-  void * todo;
-  
-} i2c_pattern;
-
 
 typedef struct i2c_device {
-
+  
   Sensor * sensor;
-
+  
   FILE * file;             // log file
-  char * buffer;           // buffer for file I/O
   
   uint8 address;           // address on bus
   
   ushort interval;         // time span between reads in ms
   ushort count;            // counts since last read
   
-  i2c_pattern pattern;     // 
-
   int handle;              // 
   
   i2c_reader read;
   
 } i2c_device;
 
+
+typedef struct sub_device {
+  
+  FILE * file;
+  
+  
+} sub_device;
 
 
 typedef struct i2c_schedule {

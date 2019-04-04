@@ -9,25 +9,34 @@
 
 typedef struct Sensor Sensor;
 typedef struct i2c_device i2c_device;
+typedef struct sub_device sub_device;
 
 typedef void (* sensor_free)(Sensor * sensor);
 
 
 typedef struct Sensor {
   
-  char * name;           // component name
+  char * name;                  // component name
   
   union {
-    i2c_device * i2c;    // i2c communications info
+    struct {
+      i2c_device * i2c;         // i2c communications info
+      Sensor * subsystem[4];    // subsystem SLL
+    };
+    struct {
+      sub_device * sub;
+    };
   };
   
-  sensor_free free;      // how to free sensor
+  sensor_free free;             // how to free sensor
   
 } Sensor;
 
-List * sensors;          // every sensor on craft
+List * sensors;                 // every sensor on craft
 
 void init_sensors();
+
+Sensor * create_sensor(char * name, sensor_free freer);
 
 
 #endif
