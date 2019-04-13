@@ -13,6 +13,7 @@
 #include "../structures/list.h"
 #include "../sensors/sensor.h"
 #include "../types/types.h"
+#include "../types/thread-types.h"
 
 int8 handles[0x7F];
 
@@ -36,7 +37,7 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   if (handles[address] == -1) {
     i2c -> handle = i2cOpen(1, address, 0);
     
-    printf("Added %s i2c device %x\n", sensor -> name, address);
+    //printf("Added %s i2c device %x\n", sensor -> name, address);
     
     handles[address] = i2c -> handle;
   }
@@ -67,7 +68,7 @@ void init_i2c() {
   
   schedule -> devices = list_create();
   schedule -> devices -> free = i2c_freer;
-  schedule -> thread  = malloc(sizeof(pthread));
+  schedule -> thread  = malloc(sizeof(Thread));
   
   // prepare handle array
   for (int i = 0; i < 0x7F; i++)
@@ -158,13 +159,13 @@ void * i2c_main() {
     fprintf(i2c_log, "%ld\n", last_read_duration);
     
     for (iterate(schedule -> devices, i2c_device *, i2c)) {
-
+      
       i2c -> count += 10;
-
+      
       if (i2c -> count == i2c -> interval) {
-
+	
 	(i2c -> read)(i2c);
-
+	
 	i2c -> count = 0;
       }
     }

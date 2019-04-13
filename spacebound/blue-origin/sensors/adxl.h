@@ -22,6 +22,6 @@
 
 #include "../system/i2c.h"
 
-Sensor * init_adxl();
+Sensor * init_adxl(ProtoSensor * sensor);
 
 #endif

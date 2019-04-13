@@ -1,9 +1,11 @@
 #ifndef HEADER_GAURD_SENSOR
 #define HEADER_GAURD_SENSOR
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "../structures/list.h"
+#include "../structures/hashmap.h"
 #include "../system/i2c.h"
 #include "../types/types.h"
 
@@ -22,14 +24,27 @@ typedef struct Sensor {
   };
   
   sensor_free free;      // how to free sensor
-
+  
   void * data;           // specialized sensor data
   
 } Sensor;
 
-List * sensors;          // every sensor on craft
+typedef struct ProtoSensor {
+  
+  char * code_name;     // abbreviated name
+  
+  int hertz;     // frequency in hertz
+
+  bool print;
+  bool requested;    // whether sensor is requested
+  
+} ProtoSensor;
+
+List * sensors;             // every active sensor on craft
+
+Hashmap * proto_sensors;    // sensors that could be specified
 
 void init_sensors();
-
+void start_sensors();
 
 #endif

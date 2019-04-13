@@ -64,7 +64,7 @@ bool read_ad15(i2c_device * ad15_i2c);
 void configure_ad15(Sensor * ad15);
 
 Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
-  
+
   Sensor * ad15 = malloc(sizeof(Sensor));
   
   ad15 -> name = "ADS1115";
@@ -114,7 +114,7 @@ Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
 }
 
 void configure_ad15(Sensor * ad15) {
-  
+
   AD15_Config * sensor_config = ad15 -> data;
   
   uint8 config_request[3] = {
@@ -133,6 +133,8 @@ void configure_ad15(Sensor * ad15) {
 }
 
 bool read_ad15(i2c_device * ad15_i2c) {
+
+  static long total_reads_ever;
   
   Sensor * ad15 = ad15_i2c -> sensor;
   
@@ -161,8 +163,8 @@ bool read_ad15(i2c_device * ad15_i2c) {
     uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
     
     fprintf(ad15_i2c -> file, "%d\t", (int16) counts);
-
-    if (ad15_i2c -> address == 0x49) {
+    
+    if (ad15_i2c -> address == AD15_GND && !(total_reads_ever % 25)) {
       double volts = 6.114 * (double) ((int16) counts) / 32768.0;
       //printf("%d\t", 6.144 * ((int16) counts) / ((double) (1 << 15)));
       if (volts >= 0.0) printf(" ");
@@ -170,8 +172,9 @@ bool read_ad15(i2c_device * ad15_i2c) {
     }
   }
   
-  if (ad15_i2c -> address == 0x49)
+  if (ad15_i2c -> address == AD15_GND && !(total_reads_ever % 25))
     printf("\n");
+  total_reads_ever++;
   
   fprintf(ad15_i2c -> file, "\n");
   

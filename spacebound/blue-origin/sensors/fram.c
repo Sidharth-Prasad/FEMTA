@@ -18,20 +18,30 @@ bool read_fram(i2c_device * fram_i2c);
 uint16 fram_head;
 
 
-Sensor * init_fram() {
+Sensor * init_fram(ProtoSensor * proto) {
   
   Sensor * fram = malloc(sizeof(Sensor));
   
   fram -> name = "FRAM";
   fram -> free = free_fram;
   
-  fram -> i2c = create_i2c_device(fram, FRAM_ADDRESS, read_fram, 1000);    // 1s between reads
+  fram -> i2c = create_i2c_device(fram, FRAM_ADDRESS, read_fram,
+				  1000 / (proto -> hertz + (!proto -> hertz)));
   
   fram -> i2c -> file = fopen("logs/fram.log", "a");
-
+  
   setlinebuf(fram -> i2c -> file);    // write out every read
   
   fprintf(fram -> i2c -> file, GRAY "\n\nFRAM\nStart time %s\n" RESET, formatted_time);
+  
+  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
+	 fram -> name, proto -> hertz, FRAM_ADDRESS);
+  
+  if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
+  else                printf("\n");
+  
+  printf("logged in logs/fram.log\n");
+  printf("A storage medium\n\n");
   
   return fram;
 }
@@ -57,7 +67,7 @@ void write_fram_data(i2c_device * fram_i2c, uint16 address, uint8 * message) {
 
 void read_fram_data(i2c_device * fram_i2c, uint16 address, uint8 * dest, short n) {
   // reads any number of bytes from FRAM
-  
+
   uint8 LSB = (uint8) (0xFF & address);
   uint8 MSB = (uint8) (0x7F & (address >> 8));    // force address to be 15 bit
 
@@ -92,7 +102,7 @@ void print_byte(FILE * file, uint8 byte) {
 
 bool read_fram(i2c_device * fram_i2c) {
   
-  return true;
+  return true;    // SHORTING
   
   static char fram_step;
   const char fram_cycle = 4;

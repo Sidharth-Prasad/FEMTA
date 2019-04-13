@@ -24,7 +24,7 @@
 
 char formatted_time[32];
 
-Sensor * init_ds32();
+Sensor * init_ds32(ProtoSensor * proto);
 
 void set_time_ds32(Sensor * ds32);
 
