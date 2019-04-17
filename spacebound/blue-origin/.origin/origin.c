@@ -74,8 +74,8 @@ int main(int argc, char ** argv) {
   
   start_sensors();
   start_i2c();       // start reading the i2c bus
-
-  exit(0);
+  
+  //exit(0);
   
   Selector * selector = create_selector(NULL);
   

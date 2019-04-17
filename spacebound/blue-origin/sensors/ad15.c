@@ -63,18 +63,19 @@ void free_ad15(Sensor * ad15);
 bool read_ad15(i2c_device * ad15_i2c);
 void configure_ad15(Sensor * ad15);
 
-Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
+Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names) {
 
   Sensor * ad15 = malloc(sizeof(Sensor));
   
   ad15 -> name = "ADS1115";
   ad15 -> free = free_ad15;
+  ad15 -> print = proto -> print;
   
-  ad15 -> i2c = create_i2c_device(ad15, address, read_ad15, 10);    // 10ms between reads
+  ad15 -> i2c = create_i2c_device(ad15, proto -> address, read_ad15, 1000 / proto -> hertz);
   
   char file_name[32];
   
-  sprintf(file_name, "logs/ad15-%x.log", address);
+  sprintf(file_name, "logs/ad15-%x.log", proto -> address);
   
   FILE * file = fopen(file_name, "a");
   
@@ -108,13 +109,34 @@ Sensor * init_ad15(uint8 address, char * title, List * modes, List * names) {
   
   ad15 -> data = sensor_config;
   
-  //configure_ad15(ad15);
+  
+  // prepare for first read
+  
+  sensor_config -> current_mode = modes -> head;
+  
+  uint8 first_mode = (uint8) (int) sensor_config -> current_mode -> value;
+  
+  sensor_config -> high_byte = (first_mode << 4) | (sensor_config -> high_byte & 0b10001111);
+  
+  configure_ad15(ad15);
+  
+  
+  // console update
+  
+  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
+	 ad15 -> name, proto -> hertz, proto -> address);
+  
+  if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
+  else                printf("\n");
+  
+  printf("logged among logs/ad15*.log\n");
+  printf("An analog to digital converter\n\n");
   
   return ad15;
 }
 
 void configure_ad15(Sensor * ad15) {
-
+  
   AD15_Config * sensor_config = ad15 -> data;
   
   uint8 config_request[3] = {
@@ -124,36 +146,61 @@ void configure_ad15(Sensor * ad15) {
   };
   
   i2c_raw_write(ad15 -> i2c, config_request, 3);
-
-  /*uint8 pointer_request[1] = {
-    0x00,
-  };
-  
-  i2c_raw_write(ad15 -> i2c, pointer_request, 1);*/
 }
 
 bool read_ad15(i2c_device * ad15_i2c) {
-
-  static long total_reads_ever;
   
   Sensor * ad15 = ad15_i2c -> sensor;
   
   AD15_Config * config = ad15 -> data;
   
-  for (iterate(config -> modes, uint8, mode)) {
+  bool should_print = ad15 -> print && !(ad15_i2c -> total_reads % 25);
+  
+  
+  // perform the sensor read
+  
+  uint8 ad15_raws[2];
+  
+  i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);
+  
+  uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
+  
+  fprintf(ad15_i2c -> file, "%d\t", (int16) counts);
+  
+  if (should_print) {
+    double volts = 6.114 * (double) ((int16) counts) / 32768.0;
+    
+    if (volts >= 0.0) printf(" ");
+    printf("%.9lfv\t", volts);
+  }
+  
+  if (config -> current_mode == config -> modes -> head -> prev) {
+    // must be on last mode
+    
+    if (should_print) printf("\n");
+    
+    fprintf(ad15_i2c -> file, "\n");
+    
+    ad15_i2c -> total_reads++;
+  }
+  
+  // change mode before leaving.
+  // this is done to give the sensor time to actual flip values
+  
+  config -> current_mode = config -> current_mode -> next;
+  
+  uint8 next_mode = (uint8) (int) config -> current_mode -> value;
+  
+  config -> high_byte = (next_mode << 4) | (config -> high_byte & 0b10001111);
+  
+  configure_ad15(ad15);
+  
+  
+  /*for (iterate(config -> modes, uint8, mode)) {
     
     config -> high_byte = (mode << 4) | (config -> high_byte & 0b10001111);
-    
-    /*if (ad15_i2c -> address == 0x49)
-      printf("%x %x %x %x\n", config -> high_byte, config -> low_byte, config -> MUX, mode);*/
-    
-    /*if (ad15_i2c -> address == 0x49)
-      printf("%x %x\t", config -> high_byte, mode);*/
-    
+        
     configure_ad15(ad15);
-
-    /*if (ad15_i2c -> address == 0x49)
-      real_nano_sleep(1E8);    // TEMP DELAY*/
     
     uint8 ad15_raws[2];
     
@@ -164,7 +211,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
     
     fprintf(ad15_i2c -> file, "%d\t", (int16) counts);
     
-    if (ad15_i2c -> address == AD15_GND && !(total_reads_ever % 25)) {
+    if (should_print) {
       double volts = 6.114 * (double) ((int16) counts) / 32768.0;
       //printf("%d\t", 6.144 * ((int16) counts) / ((double) (1 << 15)));
       if (volts >= 0.0) printf(" ");
@@ -172,11 +219,10 @@ bool read_ad15(i2c_device * ad15_i2c) {
     }
   }
   
-  if (ad15_i2c -> address == AD15_GND && !(total_reads_ever % 25))
-    printf("\n");
+  if (should_print) printf("\n");
   total_reads_ever++;
   
-  fprintf(ad15_i2c -> file, "\n");
+  fprintf(ad15_i2c -> file, "\n");*/
   
   return true;
 }

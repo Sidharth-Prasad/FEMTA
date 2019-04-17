@@ -10,8 +10,6 @@
 #include "../system/color.h"
 #include "../system/i2c.h"
 
-#define FRAM_ADDRESS 0x50
-
 void free_fram(Sensor * fram);
 bool read_fram(i2c_device * fram_i2c);
 

@@ -21,6 +21,8 @@
 
 #include "../system/i2c.h"
 
+#define FRAM_ADDRESS 0x50
+
 Sensor * init_fram();
 
 #endif

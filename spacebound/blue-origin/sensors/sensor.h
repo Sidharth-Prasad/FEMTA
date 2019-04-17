@@ -18,6 +18,7 @@ typedef void (* sensor_free)(Sensor * sensor);
 typedef struct Sensor {
   
   char * name;           // component name
+  bool   print;          // whether sensor prints
   
   union {
     i2c_device * i2c;    // i2c communications info
@@ -34,7 +35,8 @@ typedef struct ProtoSensor {
   char * code_name;     // abbreviated name
   
   int hertz;     // frequency in hertz
-
+  uint8 address;
+  
   bool print;
   bool requested;    // whether sensor is requested
   

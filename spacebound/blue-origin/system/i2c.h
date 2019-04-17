@@ -26,7 +26,9 @@ typedef struct i2c_device {
   ushort interval;         // time span between reads in ms
   ushort count;            // counts since last read
   
-  int handle;              // 
+  int handle;              //
+
+  int total_reads;         // total times this sensor has been read
   
   i2c_reader read;
   
@@ -36,6 +38,8 @@ typedef struct i2c_device {
 typedef struct i2c_schedule {
   
   List * devices;      // list of all i2c device pointers
+  
+  long interval;
   
   Thread * thread;     // i2c thread 
   bool term_signal;    // when set to true, schedule terminates

@@ -30,6 +30,7 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   i2c -> address  = address;
   
   i2c -> count = 0;
+  i2c -> total_reads = 0;
   
   i2c -> file   = NULL;
   i2c -> buffer = NULL;
@@ -59,20 +60,6 @@ void i2c_freer(void * device_ptr) {
   
   i2cClose(i2c -> handle);
   free(i2c);
-}
-
-void init_i2c() {
-  //
-  
-  schedule = malloc(sizeof(i2c_schedule));
-  
-  schedule -> devices = list_create();
-  schedule -> devices -> free = i2c_freer;
-  schedule -> thread  = malloc(sizeof(Thread));
-  
-  // prepare handle array
-  for (int i = 0; i < 0x7F; i++)
-    handles[i] = -1;
 }
 
 void start_i2c() {
@@ -143,10 +130,26 @@ bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   return true;
 }
 
+void init_i2c() {
+  //
+  
+  schedule = malloc(sizeof(i2c_schedule));
+  
+  schedule -> devices = list_create();
+  schedule -> devices -> free = i2c_freer;
+  schedule -> thread  = malloc(sizeof(Thread));
+  
+  // prepare handle array
+  for (int i = 0; i < 0x7F; i++)
+    handles[i] = -1;
+}
+
 void * i2c_main() {
   
   FILE * i2c_log = fopen("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
+
+  long i2c_interval = schedule -> interval;
   
   long last_read_duration = 0;    // tracks time taken to read i2c bus
   
@@ -160,7 +163,7 @@ void * i2c_main() {
     
     for (iterate(schedule -> devices, i2c_device *, i2c)) {
       
-      i2c -> count += 10;
+      i2c -> count += i2c_interval / 1E6;
       
       if (i2c -> count == i2c -> interval) {
 	
@@ -170,7 +173,7 @@ void * i2c_main() {
       }
     }
     
-    long i2c_interval = 1E7;    // SLOW TEMP
+    //long i2c_interval = 1E7;    // SLOW TEMP
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);

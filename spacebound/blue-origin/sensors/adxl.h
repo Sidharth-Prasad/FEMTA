@@ -22,6 +22,8 @@
 
 #include "../system/i2c.h"
 
+#define ADXL_ADDRESS 0x53
+
 Sensor * init_adxl(ProtoSensor * sensor);
 
 #endif

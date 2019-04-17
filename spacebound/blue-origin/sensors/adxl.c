@@ -9,8 +9,6 @@
 #include "../system/color.h"
 #include "../system/i2c.h"
 
-#define ADXL_ADDRESS 0x53
-
 const float adxl_bias_x =  0.0371;
 const float adxl_bias_y = -0.0010;
 const float adxl_bias_z = -0.0861;
