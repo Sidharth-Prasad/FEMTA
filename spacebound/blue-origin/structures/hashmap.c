@@ -113,7 +113,24 @@ void hashmap_add(Hashmap * this, void * key, void * value) {
 }
 
 bool hashmap_exists(Hashmap * this, void * key) {
-  return hashmap_get(this, key) != NULL;
+  
+  int hx = (this -> hash)(key, this -> size);
+  
+  List * list = this -> table[hx];
+  
+  if (!this -> table[hx]        ) return false;
+  if (!this -> table[hx] -> size) return false;
+  
+  for (iterate(list, HashmapElement *, element)) {
+    
+    void * element_key = element -> key;
+    
+    if (this -> key_diff(key, element_key)) continue;
+    
+    return true;
+  }
+  
+  return false;
 }
 
 void hashmap_remove(Hashmap * this, void * key) {

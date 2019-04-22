@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include <unistd.h>
 #include <pigpio.h>
 
@@ -12,7 +13,9 @@
 #include "../structures/list.h"
 #include "../structures/selector.h"
 #include "../types/types.h"
+#include "../parser/y.tab.h"
 
+FILE * yyin;
 
 void parse_args(int argc, char ** argv) {
 
@@ -20,11 +23,29 @@ void parse_args(int argc, char ** argv) {
     // default, use all sensors
     
     for (iterate(proto_sensors -> all, ProtoSensor *, proto))
-      proto -> requested = true;
+      if (proto -> hertz)
+	proto -> requested = true;
     
     return;
   }
   
+  if (!strncmp(argv[1], "file", 4)) {
+
+    char * filename = argv[1] + 5;
+    
+    printf("%s\n", filename);
+    
+    yyin = fopen(filename, "r");
+    
+    if (!yyin) {
+      printf(RED "Experiment file %s does not exist\n" RESET, filename);
+      exit(1);
+    }
+      
+    yyparse();
+    
+    return;
+  }
   
   for (int i = 1; i < argc; i++) {
     

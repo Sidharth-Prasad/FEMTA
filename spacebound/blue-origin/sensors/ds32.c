@@ -18,7 +18,7 @@ Sensor * init_ds32(ProtoSensor * proto) {
   ds32 -> name = "DS3231N";
   ds32 -> free = free_ds32;
   
-  ds32 -> i2c = create_i2c_device(ds32, proto -> address, read_ds32, 1000 / (proto -> hertz));
+  ds32 -> i2c = create_i2c_device(ds32, proto -> address, read_ds32, proto -> hertz);
   
   ds32 -> i2c -> file = fopen("logs/ds32.log", "a");
   

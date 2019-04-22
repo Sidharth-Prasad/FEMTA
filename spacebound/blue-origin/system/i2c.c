@@ -19,18 +19,24 @@ int8 handles[0x7F];
 
 void * i2c_main();
 
-i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 interval) {
+i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 hertz) {
   // creates an i2c device, adding it to the device list
   
   i2c_device * i2c = malloc(sizeof(i2c_device));
   
   i2c -> sensor   = sensor;
   i2c -> read     = reader;
-  i2c -> interval = interval;
   i2c -> address  = address;
+
+  i2c -> hertz    = hertz;
+  
+  if (hertz) i2c -> interval = 1000 / hertz;
+  else       i2c -> interval = 0;
   
   i2c -> count = 0;
   i2c -> total_reads = 0;
+  
+  i2c -> reading = false;
   
   i2c -> file   = NULL;
   i2c -> buffer = NULL;
@@ -45,8 +51,6 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   else {
     i2c -> handle = handles[address];
   }
-  
-  list_insert(schedule -> devices, i2c);
   
   return i2c;
 }
@@ -149,6 +153,8 @@ void * i2c_main() {
   FILE * i2c_log = fopen("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
 
+  printf("\nStarting schedule with " MAGENTA "%d " RESET "events\n", schedule -> devices -> size);
+  
   long i2c_interval = schedule -> interval;
   
   long last_read_duration = 0;    // tracks time taken to read i2c bus
@@ -165,15 +171,13 @@ void * i2c_main() {
       
       i2c -> count += i2c_interval / 1E6;
       
-      if (i2c -> count == i2c -> interval) {
+      if (i2c -> count == i2c -> interval || i2c -> reading) {
 	
 	(i2c -> read)(i2c);
-	
+
 	i2c -> count = 0;
       }
     }
-    
-    //long i2c_interval = 1E7;    // SLOW TEMP
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);

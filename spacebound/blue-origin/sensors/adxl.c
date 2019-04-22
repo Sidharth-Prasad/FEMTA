@@ -24,7 +24,7 @@ Sensor * init_adxl(ProtoSensor * proto) {
   adxl -> name = "ADXL345";
   adxl -> free = free_adxl;
   
-  adxl -> i2c = create_i2c_device(adxl, ADXL_ADDRESS, read_adxl, 1000 / proto -> hertz);
+  adxl -> i2c = create_i2c_device(adxl, ADXL_ADDRESS, read_adxl, proto -> hertz);
   
   adxl -> i2c -> file = fopen("logs/adxl.log", "a");
   

@@ -23,8 +23,7 @@ Sensor * init_fram(ProtoSensor * proto) {
   fram -> name = "FRAM";
   fram -> free = free_fram;
   
-  fram -> i2c = create_i2c_device(fram, FRAM_ADDRESS, read_fram,
-				  1000 / (proto -> hertz + (!proto -> hertz)));
+  fram -> i2c = create_i2c_device(fram, FRAM_ADDRESS, read_fram, proto -> hertz);
   
   fram -> i2c -> file = fopen("logs/fram.log", "a");
   

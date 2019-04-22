@@ -24,7 +24,10 @@ typedef struct i2c_device {
   uint8 address;           // address on bus
   
   ushort interval;         // time span between reads in ms
+  ushort hertz;            // reads per second
   ushort count;            // counts since last read
+  
+  bool reading;            // when true, scheduler knows to re-read
   
   int handle;              //
 

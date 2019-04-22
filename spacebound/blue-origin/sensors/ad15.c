@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <pigpio.h>
 
 #include "ad15.h"
 #include "ds32.h"
@@ -70,8 +71,10 @@ Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names
   ad15 -> name = "ADS1115";
   ad15 -> free = free_ad15;
   ad15 -> print = proto -> print;
+  ad15 -> targets = proto -> targets;
+  ad15 -> triggers = proto -> triggers;
   
-  ad15 -> i2c = create_i2c_device(ad15, proto -> address, read_ad15, 1000 / proto -> hertz);
+  ad15 -> i2c = create_i2c_device(ad15, proto -> address, read_ad15, proto -> hertz);
   
   char file_name[32];
   
@@ -80,7 +83,7 @@ Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names
   FILE * file = fopen(file_name, "a");
   
   ad15 -> i2c -> file = file;
-
+  
   fprintf(file, RED "\n\n");
   fprintf(file, "ADS115 - %s\n", title);
   fprintf(file, "Start time %s\n", formatted_time);
@@ -113,6 +116,7 @@ Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names
   // prepare for first read
   
   sensor_config -> current_mode = modes -> head;
+  sensor_config -> mode_cycle = 0;
   
   uint8 first_mode = (uint8) (int) sensor_config -> current_mode -> value;
   
@@ -154,8 +158,14 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   AD15_Config * config = ad15 -> data;
   
-  bool should_print = ad15 -> print && !(ad15_i2c -> total_reads % 25);
+  bool should_print = false;
   
+  if (ad15_i2c -> hertz >= 5)
+    should_print = ad15 -> print && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz / 5));
+  else
+    should_print = ad15 -> print && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz    ));
+  
+  ad15_i2c -> reading = true;    // this sensor does partial reads
   
   // perform the sensor read
   
@@ -164,6 +174,29 @@ bool read_ad15(i2c_device * ad15_i2c) {
   i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);
   
   uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
+
+  // act on potential triggers
+  
+  if (ad15 -> triggers) {
+    for (iterate(ad15 -> triggers, Trigger *, trigger)) {
+      
+      if (trigger -> fired) continue;    // already done firing
+      
+      int cycle = (int) hashmap_get(ad15 -> targets, trigger -> id);
+      
+      if (config -> mode_cycle != cycle) continue;
+
+      if ( trigger -> less && counts > trigger -> threshold) continue;
+      if (!trigger -> less && counts < trigger -> threshold) continue;
+      
+      printf("Trigger going off on GPIO %d !!!\n", trigger -> gpio);
+      
+      //gpioWrite(trigger -> gpio, 1);
+      trigger -> fired = true;
+    }
+  }
+  
+  // log and print
   
   fprintf(ad15_i2c -> file, "%d\t", (int16) counts);
   
@@ -181,49 +214,24 @@ bool read_ad15(i2c_device * ad15_i2c) {
     
     fprintf(ad15_i2c -> file, "\n");
     
+    ad15_i2c -> reading = false;
     ad15_i2c -> total_reads++;
   }
+
+  //  printf("HERE: %d\n", ad15_i2c -> reading);
   
   // change mode before leaving.
-  // this is done to give the sensor time to actual flip values
+  // this is done to give the sensor time to actually flip values
   
   config -> current_mode = config -> current_mode -> next;
+  config -> mode_cycle = (config -> mode_cycle + 1) % config -> modes -> size;
   
   uint8 next_mode = (uint8) (int) config -> current_mode -> value;
   
   config -> high_byte = (next_mode << 4) | (config -> high_byte & 0b10001111);
   
   configure_ad15(ad15);
-  
-  
-  /*for (iterate(config -> modes, uint8, mode)) {
     
-    config -> high_byte = (mode << 4) | (config -> high_byte & 0b10001111);
-        
-    configure_ad15(ad15);
-    
-    uint8 ad15_raws[2];
-    
-    i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);
-    //i2c_raw_read(ad15_i2c, ad15_raws, 2);
-    
-    uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
-    
-    fprintf(ad15_i2c -> file, "%d\t", (int16) counts);
-    
-    if (should_print) {
-      double volts = 6.114 * (double) ((int16) counts) / 32768.0;
-      //printf("%d\t", 6.144 * ((int16) counts) / ((double) (1 << 15)));
-      if (volts >= 0.0) printf(" ");
-      printf("%.9lfv\t", volts);
-    }
-  }
-  
-  if (should_print) printf("\n");
-  total_reads_ever++;
-  
-  fprintf(ad15_i2c -> file, "\n");*/
-  
   return true;
 }
 

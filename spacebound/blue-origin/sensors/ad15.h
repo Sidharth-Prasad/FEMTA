@@ -64,6 +64,7 @@ typedef struct AD15_Config {
 
   List * modes;               // list of modes used to change config as needed
   ListNode * current_mode;    // the most recent mode configured configured
+  int mode_cycle;             // where in the read cycle the current mode is
   
 } AD15_Config;
 
