@@ -18,7 +18,7 @@ Upon access to the cubesat's code and association with the sudoers group, you wi
 ### [organization][2]
 Contains a meeting log of the .org format, which is an Emacs format.
 ### [physical][3]
-Contains hardware tests, pinout information, sample python BNO code, and Steven Peguia's C# serial code (which Noah has ported to C).
+Contains hardware tests, pinout information, sample python BNO code, and Steven Pugia's C# serial code (which Noah has ported to C).
 
 ### [scratch][4]
 Contains scratch work for testing short pieces of code. Some files are outdated excepts from the spacebound directory's contents.
