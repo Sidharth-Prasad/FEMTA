@@ -20,3 +20,4 @@ spacebound/onboard-sensors/cpu_log*.txt
 ./FEMTA/spacebound/blue-origin/logs/*.log
 *.log
 compiler
+.DS_Store
