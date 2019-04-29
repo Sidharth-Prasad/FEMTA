@@ -20,6 +20,19 @@ FILE * yyin;
 void parse_args(int argc, char ** argv) {
 
   if (argc == 1) {
+
+    yyin = fopen("/home/noah/FEMTA/spacebound/blue-origin/experiments/2-trigger.e", "r");
+    
+    if (!yyin) {
+      printf(RED "Experiment file does not exist\n" RESET);
+      exit(1);
+    }
+      
+    yyparse();
+    
+    return;
+
+    
     // default, use all sensors
     
     for (iterate(proto_sensors -> all, ProtoSensor *, proto))
@@ -87,6 +100,9 @@ int main(int argc, char ** argv) {
     printf(RED "pigpio unable to start\n" RESET);
     exit(2);
   }
+
+  gpioWrite(23, 0);
+  gpioWrite(24, 0);
   
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions

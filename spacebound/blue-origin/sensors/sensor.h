@@ -39,6 +39,8 @@ typedef struct Sensor {
   List * triggers;       // sensor triggers
   Hashmap * targets;     // that which can be triggered
   
+  List * betas;          // the regression coefficients
+  
   sensor_free free;      // how to free sensor
   
   void * data;           // specialized sensor data
@@ -54,6 +56,8 @@ typedef struct ProtoSensor {
   
   List * triggers;           // gpio triggers
   Hashmap * targets;         // that which can be triggered
+  
+  List * betas;              // the regression coefficients
   
   bool print;                // whether sensor is printed to console
   bool requested;            // whether sensor is requested

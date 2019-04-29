@@ -191,7 +191,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
       
       printf("Trigger going off on GPIO %d !!!\n", trigger -> gpio);
       
-      //gpioWrite(trigger -> gpio, 1);
+      gpioWrite(trigger -> gpio, 1);
       trigger -> fired = true;
     }
   }

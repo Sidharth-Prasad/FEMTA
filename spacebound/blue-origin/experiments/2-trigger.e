@@ -1,21 +1,19 @@
 
-// Notes
-//   GPIO numbers are specified by their Broadcom IDs
 
-ad15_vdd {
+ad15_sda {
+    hertz = 100
 
-    hertz = 50                          // log at 100Hz
-    
-    A01 less_than 8192  trigger 22      // triggers GPIO 22 when less than 1V is read on diff 01
-    A23 more_than 26214 trigger 23      // triggers GPIO 23 when more than 4V is read on diff 23
-    
-    print                               // print at 5Hz to console
+    A01 less_than 7120 trigger 23       // 1.335v 20kpa trigger the white wire
+    A01 less_than 4880 trigger 24       // 0.915v 10kpa trigger the green wire
+      
+    //print                               // print at 5Hz to console
 }
 
-adxl {
-    hertz = 100
-    
-    Z less_than -2 trigger 4            // triggers GPIO 4 when less than -2g is read on Z-axis
+
+ad15_vdd {
+    hertz = 100                          // log at 100Hz
+
+    print
 }
 
 ds32 {
