@@ -54,8 +54,8 @@ void print_config();
 %token PRINT LESS_THAN MORE_THAN TRIGGER
 
 %token <string> ID
-%token <integer> HERTZ COUNTS CHARGE SECONDS MINUTES
-%token <decimal> VOLTS GS
+%token <integer> HERTZ COUNTS CHARGE SECONDS MINUTES VOLTS    // should change volts to decimal later
+%token <decimal> GS
 
 %type <list>      Actions Charges Options
 %type <threshold> Argument
@@ -86,7 +86,7 @@ Action   : ID LESS_THAN Argument TRIGGER Actuator     { $$ = modify_trigger($1, 
          | ID MORE_THAN Argument TRIGGER Actuator     { $$ = modify_trigger($1, false, $3, $5);           }
          ;
 
-Argument : VOLTS                                      { $$ = make_threshold( true,  0,  $1);              }
+Argument : VOLTS                                      { $$ = make_threshold(false, $1,   0);              }
          | GS                                         { $$ = make_threshold( true,  0,  $1);              }
          | COUNTS                                     { $$ = make_threshold(false, $1, 0.0);              }
          | SECONDS                                    { $$ = make_threshold(false, $1, 0.0);              }

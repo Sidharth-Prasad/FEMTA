@@ -51,7 +51,10 @@ more_than { return MORE_THAN; }
 }
 
 -?{digit}+\.{digit}+v {
-  yylval.decimal = atof(yytext);
+  double voltage = atof(yytext);    // used by ad15
+  
+  yylval.integer = (voltage + .00082419) / 0.0001873938;    // average calibration
+  
   return VOLTS;
 }
 

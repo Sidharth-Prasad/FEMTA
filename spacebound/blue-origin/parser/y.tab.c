@@ -1344,7 +1344,7 @@ yyreduce:
 
   case 13:
 #line 89 "parser.y" /* yacc.c:1646  */
-    { (yyval.threshold) = make_threshold( true,  0,  (yyvsp[0].decimal));              }
+    { (yyval.threshold) = make_threshold(false, (yyvsp[0].integer),   0);              }
 #line 1349 "y.tab.c" /* yacc.c:1646  */
     break;
 

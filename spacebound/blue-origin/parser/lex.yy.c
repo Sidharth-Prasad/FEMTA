@@ -915,13 +915,16 @@ case 12:
 YY_RULE_SETUP
 #line 53 "parser.l"
 {
-  yylval.decimal = atof(yytext);
+  double voltage = atof(yytext);    // used by ad15
+  
+  yylval.integer = (voltage + .00082419) / 0.0001873938;    // average calibration
+  
   return VOLTS;
 }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 58 "parser.l"
+#line 61 "parser.l"
 {
   yylval.integer = atoi(yytext);    // used by all sensors
   return CHARGE;
@@ -929,7 +932,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 63 "parser.l"
+#line 66 "parser.l"
 {
   yylval.string = strdup(yytext);
   return ID;
@@ -937,7 +940,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 68 "parser.l"
+#line 71 "parser.l"
 {
   return yytext[0];
 }
@@ -945,12 +948,12 @@ YY_RULE_SETUP
 case 16:
 /* rule 16 can match eol */
 YY_RULE_SETUP
-#line 72 "parser.l"
+#line 75 "parser.l"
 {}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 74 "parser.l"
+#line 77 "parser.l"
 {
   printf("%s\n", yytext);
   yyerror("Unexpected symbol found");
@@ -958,10 +961,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 79 "parser.l"
+#line 82 "parser.l"
 ECHO;
 	YY_BREAK
-#line 965 "lex.yy.c"
+#line 968 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1974,7 +1977,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 79 "parser.l"
+#line 82 "parser.l"
 
 
 
