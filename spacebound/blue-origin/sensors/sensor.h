@@ -14,15 +14,28 @@ typedef struct i2c_device i2c_device;
 
 typedef void (* sensor_free)(Sensor * sensor);
 
+typedef struct Charge {
+  
+  char gpio;
+  bool hot;
+  
+} Charge;
+
 typedef struct Trigger {
   
   char * id;
   bool less;
   
-  int threshold;
-  int gpio;
+  union {
+    int    integer;
+    double decimal;
+  } threshold;
+  
+  List * charges;
   
   bool fired;
+  bool singular;
+  bool reverses;
   
 } Trigger;
 
@@ -67,8 +80,6 @@ typedef struct ProtoSensor {
 List * sensors;             // every active sensor on craft
 
 Hashmap * proto_sensors;    // sensors that could be specified
-
-Trigger * trigger_create(char * id, bool less, int threshold, int gpio);
 
 void init_sensors();
 void start_sensors();

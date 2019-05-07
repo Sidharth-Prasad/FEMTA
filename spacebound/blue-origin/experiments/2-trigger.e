@@ -3,8 +3,13 @@
 ad15_sda {
     hertz = 100
 
-    A01 less_than 7120 trigger 23       // 1.335v 20kpa trigger the white wire
-    A01 less_than 4880 trigger 24       // 0.915v 10kpa trigger the green wire
+    A01 less_than 7120 trigger {       // 1.335v 20kpa trigger the white wire
+      +23, -24,
+    } forever, reverses;
+    
+    A01 less_than 4880 trigger {       // 0.915v 10kpa trigger the green wire
+      +25,
+    } singular;
       
     //print                               // print at 5Hz to console
 }

@@ -9,6 +9,7 @@
 
 #include "../system/clock.h"
 #include "../system/color.h"
+#include "../system/gpio.h"
 #include "../system/i2c.h"
 #include "../structures/list.h"
 #include "../structures/selector.h"
@@ -16,6 +17,7 @@
 #include "../parser/y.tab.h"
 
 FILE * yyin;
+void print_config();
 
 void parse_args(int argc, char ** argv) {
 
@@ -100,19 +102,17 @@ int main(int argc, char ** argv) {
     printf(RED "pigpio unable to start\n" RESET);
     exit(2);
   }
-
-  gpioWrite(23, 0);
-  gpioWrite(24, 0);
   
+  init_pins();       // set up gpio data structure
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
   
   parse_args(argc, argv);
   
+  print_config();
+  
   start_sensors();
   start_i2c();       // start reading the i2c bus
-  
-  //exit(0);
   
   Selector * selector = create_selector(NULL);
   

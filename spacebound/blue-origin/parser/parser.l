@@ -21,15 +21,43 @@ id     ({letter}|{digit})+
 \/\/.* {}                                                                    // 1 line comment
 \/\*(([^*/]|\n)|(\*+([^*/]|\n)|\/([^*/]|\n)*|\/\*([^*/]|\n)*))*\**\*\/ {}    // multi comment
 
-hertz     { return HERTZ;     }
 print     { return PRINT;     }
 trigger   { return TRIGGER;   }
 less_than { return LESS_THAN; }
 more_than { return MORE_THAN; }
 
--?{digit}+ {
-  yylval.number = atoi(yytext);
-  return INT;
+{digit}+Hz {
+  yylval.integer = atoi(yytext);    // used by all sensors
+  return HERTZ;
+}
+
+{digit}+s {
+  yylval.integer = atoi(yytext);    // used by ds32
+  return SECONDS;
+}
+{digit}+m {
+  yylval.integer = atoi(yytext);    // used by ds32
+  return MINUTES;
+}
+
+-?{digit}+c {
+  yylval.integer = atoi(yytext);    // used by ad15
+  return COUNTS;
+}
+
+-?{digit}+\.{digit}+g {
+  yylval.decimal = atof(yytext);    // used by adxl
+  return GS;
+}
+
+-?{digit}+\.{digit}+v {
+  yylval.decimal = atof(yytext);
+  return VOLTS;
+}
+
+(-|\+){digit}+ {
+  yylval.integer = atoi(yytext);    // used by all sensors
+  return CHARGE;
 }
 
 {id} {
@@ -37,7 +65,7 @@ more_than { return MORE_THAN; }
   return ID;
 }
 
-[=\{\}] {
+[=\{\},;] {
   return yytext[0];
 }
 

@@ -7,8 +7,9 @@
 #include "ad15.h"
 #include "ds32.h"
 
-#include "../system/i2c.h"
 #include "../system/color.h"
+#include "../system/gpio.h"
+#include "../system/i2c.h"
 
 
 // information regarding this can be found pages 18-19 of the datasheet
@@ -180,18 +181,18 @@ bool read_ad15(i2c_device * ad15_i2c) {
   if (ad15 -> triggers) {
     for (iterate(ad15 -> triggers, Trigger *, trigger)) {
       
-      if (trigger -> fired) continue;    // already done firing
+      if (trigger -> singular && trigger -> fired) continue;                    // singular triggers never reload
       
       int cycle = (int) hashmap_get(ad15 -> targets, trigger -> id);
+      if (config -> mode_cycle != cycle) continue;                              // wrong target
       
-      if (config -> mode_cycle != cycle) continue;
-
-      if ( trigger -> less && counts > trigger -> threshold) continue;
-      if (!trigger -> less && counts < trigger -> threshold) continue;
+      if ( trigger -> less && counts > trigger -> threshold.integer) continue;  // condition not true
+      if (!trigger -> less && counts < trigger -> threshold.integer) continue;  // ------------------
       
-      printf("Trigger going off on GPIO %d !!!\n", trigger -> gpio);
+      for (iterate(trigger -> charges, Charge *, charge)) {
+	pin_set(charge -> gpio, charge -> hot);	
+      }
       
-      gpioWrite(trigger -> gpio, 1);
       trigger -> fired = true;
     }
   }
@@ -217,7 +218,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
     ad15_i2c -> reading = false;
     ad15_i2c -> total_reads++;
   }
-
+  
   //  printf("HERE: %d\n", ad15_i2c -> reading);
   
   // change mode before leaving.

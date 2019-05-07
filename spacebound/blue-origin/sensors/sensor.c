@@ -14,18 +14,6 @@
 #include "../system/color.h"
 #include "../math/mathematics.h"
 
-Trigger * trigger_create(char * id, bool less, int threshold, int gpio) {
-
-  Trigger * trigger = malloc(sizeof(Trigger));
-
-  trigger -> id = id;
-  trigger -> less = less;
-  trigger -> threshold = threshold;
-  trigger -> gpio = gpio;
-  trigger -> fired = false;
-  
-  return trigger;
-}
 
 ProtoSensor * proto_sensor_create(char * code_name, int hertz, int address, Hashmap * targets, List * betas) {
   
@@ -48,12 +36,14 @@ void init_sensors() {
   sprintf(formatted_time, "[Clock not present!]");    // overwritten by clock
   
   proto_sensors = hashmap_create(hash_string, compare_strings, NULL, 8);
-
+  
   Hashmap * adxl_tar = hashmap_create(hash_string, compare_strings, NULL, 3);
   Hashmap * ad15_tar = hashmap_create(hash_string, compare_strings, NULL, 6);
-  Hashmap * ds32_tar = NULL;
+  Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
   Hashmap * fram_tar = NULL;
 
+  hashmap_add(ds32_tar, "Time", (void *) (int) 0);
+  
   hashmap_add(adxl_tar, "X", (void *) (int) 0);
   hashmap_add(adxl_tar, "Y", (void *) (int) 1);
   hashmap_add(adxl_tar, "Z", (void *) (int) 2);
@@ -161,16 +151,14 @@ void start_sensors() {
   proto = hashmap_get(proto_sensors, "ad15_vdd");
 
   if (proto -> requested) {
-    //ad15[1] = init_ad15(proto, "Differentials", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
-    ad15[1] = init_ad15(proto, "Alcohol Pressure", list_from(1, A01), list_from(1, "Differential 0"));
+    ad15[1] = init_ad15(proto, "Alcohol Pressure", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
     list_insert(sensors, ad15[1]);
   }
 
   proto = hashmap_get(proto_sensors, "ad15_sda");
 
   if (proto -> requested) {
-    //ad15[2] = init_ad15(proto, "Differentials", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
-    ad15[2] = init_ad15(proto, "Ambient Air", list_from(1, A0), list_from(1, "Channel 0"));
+    ad15[2] = init_ad15(proto, "Ambient Air", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
     list_insert(sensors, ad15[2]);
   }
 
@@ -182,7 +170,7 @@ void start_sensors() {
   }
   
   
-  /*if (ad15[0]) list_insert(schedule -> devices, ad15[0] -> i2c);   // single 0 -> 1
+  if (ad15[0]) list_insert(schedule -> devices, ad15[0] -> i2c);   // single 0 -> 1
   if (ad15[1]) list_insert(schedule -> devices, ad15[1] -> i2c);
   if (ad15[2]) list_insert(schedule -> devices, ad15[2] -> i2c);
   if (ad15[0]) list_insert(schedule -> devices, ad15[0] -> i2c);   // single 1 -> 2
@@ -191,10 +179,8 @@ void start_sensors() {
   if (ad15[0]) list_insert(schedule -> devices, ad15[0] -> i2c);   // single 2 -> 3
   if (ad15[2]) list_insert(schedule -> devices, ad15[2] -> i2c);
   if (ad15[3]) list_insert(schedule -> devices, ad15[3] -> i2c);
-  if (ad15[0]) list_insert(schedule -> devices, ad15[0] -> i2c);   // single 3 -> 0*/
+  if (ad15[0]) list_insert(schedule -> devices, ad15[0] -> i2c);   // single 3 -> 0
 
-  if (ad15[1]) list_insert(schedule -> devices, ad15[1] -> i2c);
-  if (ad15[2]) list_insert(schedule -> devices, ad15[2] -> i2c);
 }
 
 void destroy_sensors() {
