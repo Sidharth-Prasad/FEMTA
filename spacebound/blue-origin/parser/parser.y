@@ -201,7 +201,7 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
       opposite -> less     = !trigger -> less;
       opposite -> fired    =  trigger -> fired;
       opposite -> singular =  trigger -> singular;
-      opposite -> reverses =  trigger -> reverses;
+      opposite -> reverses =  false;//trigger -> reverses;
       
       opposite -> threshold.decimal = trigger -> threshold.decimal;
       opposite -> charges = list_create();
@@ -217,7 +217,7 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
       }
       
       list_insert(triggers, opposite);
-      trigger_index++;
+      //trigger_index++;
     }
   }
   
