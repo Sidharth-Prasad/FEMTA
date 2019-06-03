@@ -71,9 +71,8 @@ extern int yydebug;
     COUNTS = 264,
     CHARGE = 265,
     SECONDS = 266,
-    MINUTES = 267,
-    VOLTS = 268,
-    GS = 269
+    VOLTS = 267,
+    GS = 268
   };
 #endif
 /* Tokens.  */
@@ -86,9 +85,8 @@ extern int yydebug;
 #define COUNTS 264
 #define CHARGE 265
 #define SECONDS 266
-#define MINUTES 267
-#define VOLTS 268
-#define GS 269
+#define VOLTS 267
+#define GS 268
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -104,7 +102,7 @@ union YYSTYPE
   Threshold * threshold;
   Trigger   * trigger;
 
-#line 108 "y.tab.h" /* yacc.c:1909  */
+#line 106 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

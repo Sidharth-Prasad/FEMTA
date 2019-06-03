@@ -891,8 +891,8 @@ case 9:
 YY_RULE_SETUP
 #line 38 "parser.l"
 {
-  yylval.integer = atoi(yytext);    // used by ds32
-  return MINUTES;
+  yylval.integer = 60 * atoi(yytext);    // used by ds32
+  return SECONDS;
 }
 	YY_BREAK
 case 10:
