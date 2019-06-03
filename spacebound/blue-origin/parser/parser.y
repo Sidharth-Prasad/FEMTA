@@ -207,13 +207,13 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
       opposite -> charges = list_create();
       
       for (iterate(trigger -> charges, Charge *, charge)) {
+
+        Charge * anti_charge = malloc(sizeof(Charge));
 	
-	Charge * anti_charge = malloc(sizeof(Charge));
+        anti_charge -> gpio =  charge -> gpio;
+        anti_charge -> hot  = !charge -> hot;
 	
-	anti_charge -> gpio =  charge -> gpio;
-	anti_charge -> hot  = !charge -> hot;
-	
-	list_insert(opposite -> charges, anti_charge);
+        list_insert(opposite -> charges, anti_charge);
       }
       
       list_insert(triggers, opposite);
