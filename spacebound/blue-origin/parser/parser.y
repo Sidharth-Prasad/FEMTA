@@ -54,7 +54,7 @@ void print_config();
 %token PRINT LESS_THAN MORE_THAN TRIGGER
 
 %token <string> ID
-%token <integer> HERTZ COUNTS CHARGE SECONDS MINUTES VOLTS    // should change volts to decimal later
+%token <integer> HERTZ COUNTS CHARGE SECONDS VOLTS    // should change volts to decimal later
 %token <decimal> GS
 
 %type <list>      Actions Charges Options
@@ -90,7 +90,6 @@ Argument : VOLTS                                      { $$ = make_threshold(fals
          | GS                                         { $$ = make_threshold( true,  0,  $1);              }
          | COUNTS                                     { $$ = make_threshold(false, $1, 0.0);              }
          | SECONDS                                    { $$ = make_threshold(false, $1, 0.0);              }
-         | MINUTES                                    { $$ = make_threshold(false, $1, 0.0);              }
          ;
 
 Actuator : '{'         '}'         ';'                { printf("Triggers must list pins\n"); exit(1);     }

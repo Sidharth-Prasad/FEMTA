@@ -6,6 +6,7 @@
 #include "ds32.h"
 
 #include "../system/color.h"
+#include "../system/gpio.h"
 #include "../system/i2c.h"
 
 void free_ds32(Sensor * ds32);
@@ -29,6 +30,8 @@ Sensor * init_ds32(ProtoSensor * proto) {
   fprintf(ds32 -> i2c -> file, GREEN "\n\nDS3231N\n" RESET);
   
   read_ds32(ds32 -> i2c);    // read now to get human time before other sensors are created
+
+  experiment_start_time = time(NULL);    // TEMPORARY - use system time for duration calculations
   
   printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
 	 ds32 -> name, proto -> hertz, proto -> address);
@@ -43,6 +46,8 @@ Sensor * init_ds32(ProtoSensor * proto) {
 }
 
 bool read_ds32(i2c_device * ds32_i2c) {
+  
+  Sensor * ds32 = ds32_i2c -> sensor;
   
   uint8 read_raws[7];
   
@@ -76,6 +81,24 @@ bool read_ds32(i2c_device * ds32_i2c) {
 	  meridian);
   
   fprintf(ds32_i2c -> file, "%s\n", formatted_time);
+  
+  long experiment_duration = time(NULL) - experiment_start_time;    // system time for now
+  
+  if (ds32 -> triggers) {
+    for (iterate(ds32 -> triggers, Trigger *, trigger)) {
+      
+      if (trigger -> singular && trigger -> fired) continue;
+
+      if ( trigger -> less && experiment_duration > trigger -> threshold.integer) continue;  // condition not true
+      if (!trigger -> less && experiment_duration < trigger -> threshold.integer) continue;  // ------------------
+      
+      for (iterate(trigger -> charges, Charge *, charge)) {
+	pin_set(charge -> gpio, charge -> hot);
+      }
+      
+      trigger -> fired = true;
+    }
+  }
   
   return true;
 }

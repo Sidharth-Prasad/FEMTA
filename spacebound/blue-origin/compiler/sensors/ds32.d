@@ -6,4 +6,4 @@ compiler/sensors/ds32.o: sensors/ds32.c sensors/ds32.h sensors/sensor.h \
  sensors/../system/../types/types.h \
  sensors/../system/../types/thread-types.h \
  sensors/../system/../sensors/sensor.h sensors/../types/types.h \
- sensors/../system/color.h
+ sensors/../system/color.h sensors/../system/gpio.h

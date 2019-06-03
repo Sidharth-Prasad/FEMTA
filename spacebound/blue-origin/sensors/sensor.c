@@ -41,7 +41,7 @@ void init_sensors() {
   Hashmap * ad15_tar = hashmap_create(hash_string, compare_strings, NULL, 6);
   Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
   Hashmap * fram_tar = NULL;
-
+  
   hashmap_add(ds32_tar, "Time", (void *) (int) 0);
   
   hashmap_add(adxl_tar, "X", (void *) (int) 0);

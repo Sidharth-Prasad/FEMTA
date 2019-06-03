@@ -36,8 +36,8 @@ more_than { return MORE_THAN; }
   return SECONDS;
 }
 {digit}+m {
-  yylval.integer = atoi(yytext);    // used by ds32
-  return MINUTES;
+  yylval.integer = 60 * atoi(yytext);    // used by ds32
+  return SECONDS;
 }
 
 -?{digit}+c {
