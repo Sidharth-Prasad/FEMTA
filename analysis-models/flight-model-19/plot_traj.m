@@ -17,3 +17,5 @@ ytickformat('%i');
 ylabel('Acceleration [g]');
 plot(t ./ 60, a ./ 9.81);
 xlabel('Time [min]');
+ax = gca;
+ax.FontSize = 14; 
