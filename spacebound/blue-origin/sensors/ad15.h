@@ -66,6 +66,8 @@ typedef struct AD15_Config {
   ListNode * current_mode;    // the most recent mode configured configured
   int mode_cycle;             // where in the read cycle the current mode is
   
+  double betas[2];            // regression coefficients
+  
 } AD15_Config;
 
 #endif

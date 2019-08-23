@@ -9,6 +9,7 @@
 
 #include "../system/clock.h"
 #include "../system/color.h"
+#include "../system/gpio.h"
 #include "../system/i2c.h"
 #include "../structures/list.h"
 #include "../structures/selector.h"
@@ -16,10 +17,24 @@
 #include "../parser/y.tab.h"
 
 FILE * yyin;
+void print_config();
 
 void parse_args(int argc, char ** argv) {
 
   if (argc == 1) {
+
+    yyin = fopen("/home/noah/FEMTA/spacebound/blue-origin/experiments/default.e", "r");
+    
+    if (!yyin) {
+      printf(RED "Experiment file does not exist\n" RESET);
+      exit(1);
+    }
+      
+    yyparse();
+    
+    return;
+
+    
     // default, use all sensors
     
     for (iterate(proto_sensors -> all, ProtoSensor *, proto))
@@ -88,15 +103,16 @@ int main(int argc, char ** argv) {
     exit(2);
   }
   
+  init_pins();       // set up gpio data structure
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
   
   parse_args(argc, argv);
   
+  print_config();
+  
   start_sensors();
   start_i2c();       // start reading the i2c bus
-  
-  //exit(0);
   
   Selector * selector = create_selector(NULL);
   

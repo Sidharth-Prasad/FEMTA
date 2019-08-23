@@ -40,70 +40,69 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 26 "parser.y" /* yacc.c:1909  */
+#line 30 "parser.y" /* yacc.c:1909  */
 
   
   #include <stdbool.h>
   #include "../structures/list.h"
   #include "../sensors/sensor.h"
 
-  typedef enum ParseNodeType {
-      HERTZ_NODE,
-      TRIGGER_NODE,
-      PRINT_NODE,
-  } ParseNodeType;
-  
-  typedef struct ParseNode {
+  typedef struct Threshold {
+    bool use_decimal;
+    union {
+      int integer;
+      double decimal;
+    };
+  } Threshold;
 
-    int hertz;
-    
-    Trigger * trigger;
-
-    bool print;
-
-    ParseNodeType type;
-    
-  } ParseNode;
-  
-
-#line 70 "y.tab.h" /* yacc.c:1909  */
+#line 59 "y.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    ID = 258,
-    INT = 259,
-    PRINT = 260,
-    HERTZ = 261,
-    LESS_THAN = 262,
-    MORE_THAN = 263,
-    TRIGGER = 264
+    PRINT = 258,
+    LESS_THAN = 259,
+    MORE_THAN = 260,
+    TRIGGER = 261,
+    ID = 262,
+    HERTZ = 263,
+    COUNTS = 264,
+    CHARGE = 265,
+    SECONDS = 266,
+    VOLTS = 267,
+    GS = 268
   };
 #endif
 /* Tokens.  */
-#define ID 258
-#define INT 259
-#define PRINT 260
-#define HERTZ 261
-#define LESS_THAN 262
-#define MORE_THAN 263
-#define TRIGGER 264
+#define PRINT 258
+#define LESS_THAN 259
+#define MORE_THAN 260
+#define TRIGGER 261
+#define ID 262
+#define HERTZ 263
+#define COUNTS 264
+#define CHARGE 265
+#define SECONDS 266
+#define VOLTS 267
+#define GS 268
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 52 "parser.y" /* yacc.c:1909  */
+#line 45 "parser.y" /* yacc.c:1909  */
 
   char * string;
-  int number;
-  List * list;
-  ParseNode * node;
+  int    integer;
+  double decimal;
+  List      * list;
+  Threshold * threshold;
+  Trigger   * trigger;
 
-#line 107 "y.tab.h" /* yacc.c:1909  */
+#line 106 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

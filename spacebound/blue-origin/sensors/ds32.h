@@ -24,7 +24,9 @@
 
 #define DS32_ADDRESS 0x68
 
+int initial_seconds;
 char formatted_time[32];
+long experiment_start_time;
 
 Sensor * init_ds32(ProtoSensor * proto);
 
