@@ -9,8 +9,6 @@
 #include "../system/color.h"
 #include "../system/i2c.h"
 
-#define ADXL_ADDRESS 0x53
-
 const float adxl_bias_x =  0.0371;
 const float adxl_bias_y = -0.0010;
 const float adxl_bias_z = -0.0861;
@@ -19,14 +17,14 @@ const float adxl_bias_z = -0.0861;
 void free_adxl(Sensor * adxl);
 bool read_adxl(i2c_device * adxl_i2c);
 
-Sensor * init_adxl() {
+Sensor * init_adxl(ProtoSensor * proto) {
   
   Sensor * adxl = malloc(sizeof(Sensor));
   
   adxl -> name = "ADXL345";
   adxl -> free = free_adxl;
   
-  adxl -> i2c = create_i2c_device(adxl, ADXL_ADDRESS, read_adxl, 10);    // 10ms between reads
+  adxl -> i2c = create_i2c_device(adxl, ADXL_ADDRESS, read_adxl, proto -> hertz);
   
   adxl -> i2c -> file = fopen("logs/adxl.log", "a");
   
@@ -42,6 +40,16 @@ Sensor * init_adxl() {
   
   // tell adxl to enter measurement mode (page 26)
   i2c_write_byte(adxl -> i2c, 0x2D, 0b00001000);    // bit 3 indicates measure mode
+  
+  
+  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
+	 adxl -> name, proto -> hertz, ADXL_ADDRESS);
+
+  if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
+  else                printf("\n");
+  
+  printf("logged in logs/adxl.log\n");
+  printf("An accelerometer\n\n");
   
   return adxl;
 }

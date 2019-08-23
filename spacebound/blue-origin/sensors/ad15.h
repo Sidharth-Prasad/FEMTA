@@ -35,34 +35,36 @@
 #define AD15_SDA 0x4A
 #define AD15_SCL 0x4B
 
-Sensor * init_ad15(uint8 address, char * title, List * modes, List * names);
+Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names);
 
 typedef struct AD15_Config {
   // read pages 18-19 of datasheet for more informaiton;
   // some of this has a bit of nuance.
 
   union {
-    uchar low_byte;          // ease of byte access
+    uchar low_byte;           // ease of byte access
     struct {
-      uchar COMP_QUE : 2;    // number of conversions needed to trigger comparator
-      uchar COMP_LAT : 1;    // whether to latch the comparator
-      uchar COMP_POL : 1;    // polarity of the comparator
-      uchar COMP_MODE: 1;    // type of comparator to employ
-      uchar DATA_RATE: 3;    // samples per second
+      uchar COMP_QUE : 2;     // number of conversions needed to trigger comparator
+      uchar COMP_LAT : 1;     // whether to latch the comparator
+      uchar COMP_POL : 1;     // polarity of the comparator
+      uchar COMP_MODE: 1;     // type of comparator to employ
+      uchar DATA_RATE: 3;     // samples per second
     };
   };
 
   union {
-    uchar high_byte;         // ease of byte access
+    uchar high_byte;          // ease of byte access
     struct {
-      uchar MODE: 1;         // high or low-power state
-      uchar PGA : 3;         // programmable gain amplifier
-      uchar MUX : 3;         // multiplexer setup
-      uchar OS  : 1;         // sleep state
+      uchar MODE: 1;          // high or low-power state
+      uchar PGA : 3;          // programmable gain amplifier
+      uchar MUX : 3;          // multiplexer setup
+      uchar OS  : 1;          // sleep state
     };
   };
 
-  List * modes;    // list of modes used to change config as needed
+  List * modes;               // list of modes used to change config as needed
+  ListNode * current_mode;    // the most recent mode configured configured
+  int mode_cycle;             // where in the read cycle the current mode is
   
 } AD15_Config;
 

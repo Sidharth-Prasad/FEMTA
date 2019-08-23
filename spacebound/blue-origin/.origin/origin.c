@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include <unistd.h>
 #include <pigpio.h>
 
@@ -12,6 +13,72 @@
 #include "../structures/list.h"
 #include "../structures/selector.h"
 #include "../types/types.h"
+#include "../parser/y.tab.h"
+
+FILE * yyin;
+
+void parse_args(int argc, char ** argv) {
+
+  if (argc == 1) {
+    // default, use all sensors
+    
+    for (iterate(proto_sensors -> all, ProtoSensor *, proto))
+      if (proto -> hertz)
+	proto -> requested = true;
+    
+    return;
+  }
+  
+  if (!strncmp(argv[1], "file", 4)) {
+
+    char * filename = argv[1] + 5;
+    
+    printf("%s\n", filename);
+    
+    yyin = fopen(filename, "r");
+    
+    if (!yyin) {
+      printf(RED "Experiment file %s does not exist\n" RESET, filename);
+      exit(1);
+    }
+      
+    yyparse();
+    
+    return;
+  }
+  
+  for (int i = 1; i < argc; i++) {
+    
+    char code_name[32];
+    code_name[0] = '\0';    // need to protect buffer from previous iteration
+    
+    int  hertz = 0;
+    bool print = false;
+    
+    sscanf(argv[i], "%[^*,],%d", code_name, &hertz);      
+    
+    if (!code_name[0]) {
+      sscanf(argv[i], "*%[^,],%d", code_name, &hertz);
+      print = true;
+    }
+    
+    ProtoSensor * proto = hashmap_get(proto_sensors, code_name);
+    
+    //printf("%s at %d\n", code_name, hertz);
+    
+    if (!proto) {
+      printf(RED "%s is not a sensor\n" RESET, code_name);
+      exit(1);
+    }
+    
+    proto -> requested = true;
+    proto -> print     = print;
+    
+    if (hertz) proto -> hertz = hertz;
+  }
+}
+
+
 
 int main(int argc, char ** argv) {
   
@@ -21,19 +88,15 @@ int main(int argc, char ** argv) {
     exit(2);
   }
   
-  if (argc > 1) {
-    printf("t:ADS 1115\n");
-    printf("a:analog 0x48\n");
-    printf("a:analog 0x49\n");
-    printf("a:analog 0x4A\n");
-    //printf("a:x-axis\n");
-    //printf("a:y-axis\n");
-    //printf("a:z-axis\n");
-  }
-  
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
+  
+  parse_args(argc, argv);
+  
+  start_sensors();
   start_i2c();       // start reading the i2c bus
+  
+  //exit(0);
   
   Selector * selector = create_selector(NULL);
   

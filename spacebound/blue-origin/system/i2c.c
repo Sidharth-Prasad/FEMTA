@@ -1,5 +1,5 @@
 
-
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -13,29 +13,44 @@
 #include "../structures/list.h"
 #include "../sensors/sensor.h"
 #include "../types/types.h"
+#include "../types/thread-types.h"
+
+int8 handles[0x7F];
 
 void * i2c_main();
 
-i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 interval) {
+i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 hertz) {
   // creates an i2c device, adding it to the device list
   
   i2c_device * i2c = malloc(sizeof(i2c_device));
   
   i2c -> sensor   = sensor;
   i2c -> read     = reader;
-  i2c -> interval = interval;
   i2c -> address  = address;
+
+  i2c -> hertz    = hertz;
+  
+  if (hertz) i2c -> interval = 1000 / hertz;
+  else       i2c -> interval = 0;
   
   i2c -> count = 0;
-
+  i2c -> total_reads = 0;
+  
+  i2c -> reading = false;
+  
   i2c -> file   = NULL;
   i2c -> buffer = NULL;
-  
-  i2c -> handle = i2cOpen(1, address, 0);
-  
-  printf("Added %s i2c device %x\n", sensor -> name, address);
-  
-  list_insert(schedule -> devices, i2c);
+
+  if (handles[address] == -1) {
+    i2c -> handle = i2cOpen(1, address, 0);
+    
+    //printf("Added %s i2c device %x\n", sensor -> name, address);
+    
+    handles[address] = i2c -> handle;
+  }
+  else {
+    i2c -> handle = handles[address];
+  }
   
   return i2c;
 }
@@ -49,20 +64,6 @@ void i2c_freer(void * device_ptr) {
   
   i2cClose(i2c -> handle);
   free(i2c);
-}
-
-void init_i2c() {
-  //
-  
-  schedule = malloc(sizeof(i2c_schedule));
-  
-  schedule -> devices = list_create();
-  schedule -> devices -> free = i2c_freer;
-  schedule -> thread  = malloc(sizeof(pthread));
-  
-  // open communication with the i2c bus
-  
-  
 }
 
 void start_i2c() {
@@ -133,10 +134,28 @@ bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   return true;
 }
 
+void init_i2c() {
+  //
+  
+  schedule = malloc(sizeof(i2c_schedule));
+  
+  schedule -> devices = list_create();
+  schedule -> devices -> free = i2c_freer;
+  schedule -> thread  = malloc(sizeof(Thread));
+  
+  // prepare handle array
+  for (int i = 0; i < 0x7F; i++)
+    handles[i] = -1;
+}
+
 void * i2c_main() {
   
   FILE * i2c_log = fopen("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
+
+  printf("\nStarting schedule with " MAGENTA "%d " RESET "events\n", schedule -> devices -> size);
+  
+  long i2c_interval = schedule -> interval;
   
   long last_read_duration = 0;    // tracks time taken to read i2c bus
   
@@ -149,18 +168,16 @@ void * i2c_main() {
     fprintf(i2c_log, "%ld\n", last_read_duration);
     
     for (iterate(schedule -> devices, i2c_device *, i2c)) {
-
-      i2c -> count += 10;
-
-      if (i2c -> count == i2c -> interval) {
-
+      
+      i2c -> count += i2c_interval / 1E6;
+      
+      if (i2c -> count == i2c -> interval || i2c -> reading) {
+	
 	(i2c -> read)(i2c);
 
 	i2c -> count = 0;
       }
     }
-    
-    long i2c_interval = 1E7 * 10;    // SLOW TEMP
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);

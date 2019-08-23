@@ -8,19 +8,17 @@
 #include "../system/color.h"
 #include "../system/i2c.h"
 
-#define DS32_ADDRESS 0x68
-
 void free_ds32(Sensor * ds32);
 bool read_ds32(i2c_device * ds32_i2c);
 
-Sensor * init_ds32() {
+Sensor * init_ds32(ProtoSensor * proto) {
   
   Sensor * ds32 = malloc(sizeof(Sensor));
   
   ds32 -> name = "DS3231N";
   ds32 -> free = free_ds32;
   
-  ds32 -> i2c = create_i2c_device(ds32, DS32_ADDRESS, read_ds32, 1000);    // 1s between reads
+  ds32 -> i2c = create_i2c_device(ds32, proto -> address, read_ds32, proto -> hertz);
   
   ds32 -> i2c -> file = fopen("logs/ds32.log", "a");
   
@@ -31,6 +29,15 @@ Sensor * init_ds32() {
   fprintf(ds32 -> i2c -> file, GREEN "\n\nDS3231N\n" RESET);
   
   read_ds32(ds32 -> i2c);    // read now to get human time before other sensors are created
+  
+  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
+	 ds32 -> name, proto -> hertz, proto -> address);
+
+  if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
+  else                printf("\n");
+  
+  printf("logged in logs/ds32.log\n");
+  printf("A real time clock\n\n");
   
   return ds32;
 }

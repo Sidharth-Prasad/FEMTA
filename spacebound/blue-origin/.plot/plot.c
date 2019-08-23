@@ -5,7 +5,7 @@
 #include <curses.h>
 #include <string.h>
 
-#include "list.h"
+#include "../structures/list.h"
 
 
 char * plot_title;

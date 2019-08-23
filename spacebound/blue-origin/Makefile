@@ -41,6 +41,3 @@ clean:
 	rm -f gmon.out                       # blow away profiling outputs
 	touch fake~ && mv -f *~ backups/     # move emacs backups
 
-
-
-
