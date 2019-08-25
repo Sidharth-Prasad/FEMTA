@@ -232,7 +232,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
   config -> high_byte = (next_mode << 4) | (config -> high_byte & 0b10001111);
   
   configure_ad15(ad15);
-    
+  
   return true;
 }
 

@@ -1,0 +1,14 @@
+Humidity
+Sound
+Force
+Magnetism
+Light
+Laser Return
+Flex
+Volatile Organic Compounds
+Hall Effect
+CO2
+Ultraviolet
+Color
+Hue + Saturation
+Luminosity

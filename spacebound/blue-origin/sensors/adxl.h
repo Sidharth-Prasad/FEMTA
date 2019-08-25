@@ -24,6 +24,6 @@
 
 #define ADXL_ADDRESS 0x53
 
-Sensor * init_adxl(ProtoSensor * sensor);
+Sensor * init_adxl(ProtoSensor * proto);
 
 #endif
