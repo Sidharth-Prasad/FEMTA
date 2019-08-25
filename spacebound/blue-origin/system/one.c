@@ -19,13 +19,21 @@
 
 void * one_main();
 
-one_device * create_one_device(Sensor * sensor, ProtoSensor proto, char * path, char * log_path, uint32 hertz) {
+one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
+			       char * path, char * log_path, uint32 hertz,
+			       one_reader read) {
   
-  one_device * one = malloc(sizeof(one_device));
+  one_device * one = malloc(sizeof(*one));
   
   one -> sensor = sensor;
   one -> path   = path;
   one -> log    = fopen(log_path, "a");
+  one -> read   = read;
+  
+  if (!one -> log) {
+    printf(RED "Critical: could not open %d's log file %s\n" RESET, sensor -> name, log_path);
+    exit(1);
+  }
   
   one -> hertz  = hertz;
 
@@ -74,10 +82,10 @@ void terminate_one() {
   free(schedule -> one_thread);
 }
 
-void one_main() {
+void * one_main() {
   
   // deprioritize all 1-wire communication
-  sched_param priority = 0;
+  struct sched_param priority = {0};
   
   sched_getparam(0, &priority);
   
@@ -104,7 +112,7 @@ void one_main() {
     
     // perform sensor reading
     
-    for (iterate(shedule -> one_devices, one_device *, one)) {
+    for (iterate(schedule -> one_devices, one_device *, one)) {
       
       one -> count += one_interval / 1E6;
       

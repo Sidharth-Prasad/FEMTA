@@ -5,6 +5,7 @@
 
 #include "ad15.h"
 #include "adxl.h"
+#include "ds18.h"
 #include "ds32.h"
 #include "fram.h"
 #include "sensor.h"
@@ -17,7 +18,7 @@
 
 ProtoSensor * proto_sensor_create(char * code_name, int hertz, int address, Hashmap * targets, List * betas, int bus) {
   
-  ProtoSensor * proto = malloc(sizeof(ProtoSensor));
+  ProtoSensor * proto = malloc(sizeof(*proto));
   
   proto -> code_name = code_name;
   proto -> hertz     = hertz;
@@ -33,6 +34,8 @@ ProtoSensor * proto_sensor_create(char * code_name, int hertz, int address, Hash
 }
 
 void init_sensors() {
+  
+  n_triggers = 0;
   
   sprintf(formatted_time, "[Clock not present!]");    // overwritten by clock
   

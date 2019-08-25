@@ -109,6 +109,8 @@ List * sensors;             // every active sensor on craft
 
 Hashmap * proto_sensors;    // sensors that could be specified
 
+int n_triggers;             // number of triggers
+
 void init_sensors();
 void start_sensors();
 

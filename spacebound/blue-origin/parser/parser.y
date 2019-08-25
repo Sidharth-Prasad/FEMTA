@@ -66,6 +66,7 @@ void print_config();
 %%
 
 Config   : Sensors
+         |                                            { printf("\nExperiment does not involve sensors");  }
          ;
 
 Sensors  : Sensor                
@@ -187,15 +188,15 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
   proto -> print = print;
   proto -> triggers = triggers;
   proto -> requested = true;
-
+  
   if (!triggers) return;
-
+  
   // duplicate reversing triggers
   for (iterate(triggers, Trigger *, trigger)) {
     if (trigger -> reverses) {
       
       Trigger * opposite = malloc(sizeof(Trigger));
-
+      
       opposite -> id       =  trigger -> id;
       opposite -> less     = !trigger -> less;
       opposite -> fired    =  trigger -> fired;
@@ -220,6 +221,8 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
     }
   }
   
+  n_triggers += triggers -> size;
+  
   for (iterate(triggers, Trigger *, trigger)) {
     
     if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
@@ -231,10 +234,15 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
 
 void print_config() {
   
-  printf("\n\nTriggers\n\n");
+  if (!n_triggers) {
+    printf("\n\nExperiment does not involve triggers\n\n");
+    return;
+  }
+  
+  printf("\n\n" GRAY "%d" RESET " Triggers\n\n", n_triggers);
   
   for (iterate(proto_sensors -> all, ProtoSensor *, proto)) {
-
+    
     if (!proto -> requested) continue;
     if (!proto -> triggers ) continue;
     

@@ -3,8 +3,8 @@
 ORIGIN_LINKS = -lpigpio -lpthread -lm
 PLOT_LINKS   = -lncurses
 TEST_LINKS   = -lpigpio -lpthread -lm
-FLAGS =
-#FLAGS = -g
+#FLAGS =
+FLAGS = -g
 
 .DEFAULT_GOAL := origin
 
@@ -27,7 +27,7 @@ plot: $(PLOT_OBJECTS)
 	gcc $(FLAGS) -o plot.x $(PLOT_OBJECTS) $(PLOT_LINKS)
 
 test: $(TEST_OBJECTS)
-	gcc $(FLAGS) -o test.x $(TEST_OBJECTS) $(TEST_LINKS)
+	gcc $(FLAGS) -g -o test.x $(TEST_OBJECTS) $(TEST_LINKS)
 
 -include $(ORIGIN_HEADERS) $(PLOT_HEADERS) $(TEST_HEADERS)
 

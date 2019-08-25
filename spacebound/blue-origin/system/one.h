@@ -10,6 +10,7 @@
 #include "../types/thread-types.h"
 
 typedef struct Sensor Sensor;
+typedef struct ProtoSensor ProtoSensor;
 typedef struct one_device one_device;
 
 typedef bool (*one_reader)(one_device * one);
@@ -35,6 +36,8 @@ void init_one();
 void start_one();
 void terminate_one();
 
-one_device * create_one_device(Sensor * sensor, ProtoSensor * proto, char * path, char * log_path, uint32 hertz);
+one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
+			       char * path, char * log_path, uint32 hertz,
+			       one_reader read);
 
 #endif
