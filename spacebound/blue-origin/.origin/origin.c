@@ -23,13 +23,13 @@ void parse_args(int argc, char ** argv) {
 
   if (argc == 1) {
 
-    yyin = fopen("/home/noah/FEMTA/spacebound/blue-origin/experiments/default.e", "r");
+    yyin = fopen("./experiments/default.e", "r");
     
     if (!yyin) {
       printf(RED "Experiment file does not exist\n" RESET);
       exit(1);
     }
-      
+    
     yyparse();
     
     return;
