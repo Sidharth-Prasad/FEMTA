@@ -19,7 +19,7 @@ bool read_adxl(i2c_device * adxl_i2c);
 
 Sensor * init_adxl(ProtoSensor * proto) {
   
-  Sensor * adxl = malloc(sizeof(Sensor));
+  Sensor * adxl = malloc(sizeof(*adxl));
   
   adxl -> name = "ADXL345";
   adxl -> free = free_adxl;

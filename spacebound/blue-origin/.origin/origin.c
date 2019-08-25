@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <pigpio.h>
 
+#include "../sensors/sensor.h"
 #include "../system/clock.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
@@ -104,6 +105,10 @@ int main(int argc, char ** argv) {
   }
   
   init_pins();       // set up gpio data structure
+  
+  schedule = calloc(1, sizeof(*schedule));
+  
+  init_one();        // set up the 1-wire data structures
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
   
@@ -112,6 +117,7 @@ int main(int argc, char ** argv) {
   print_config();
   
   start_sensors();
+  start_one();       // start reading the 1-wire bus
   start_i2c();       // start reading the i2c bus
   
   Selector * selector = create_selector(NULL);
@@ -135,6 +141,9 @@ int main(int argc, char ** argv) {
   pthread_join(*schedule -> thread, NULL);
   
   terminate_i2c();
+  terminate_one();
+  
+  free(schedule);
   
   // terminate pigpio library
   gpioTerminate();

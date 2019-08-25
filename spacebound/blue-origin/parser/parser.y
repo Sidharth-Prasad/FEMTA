@@ -22,7 +22,7 @@ Charge    * make_charge(int raw_charge);
 Threshold * make_threshold(bool use_decimal, int integer, double decimal);
 Trigger   * make_trigger(List * charges, List * options);
 Trigger   * modify_trigger(char * id, bool less, Threshold * threshold, Trigger * trigger);
- 
+
 void build_sensor(char * id, int hertz, List * triggers, bool print);
 void print_config();
 %}
