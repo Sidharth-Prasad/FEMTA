@@ -23,25 +23,16 @@ void print_config();
 void parse_args(int argc, char ** argv) {
 
   if (argc == 1) {
-
-    yyin = fopen("/home/noah/FEMTA/spacebound/blue-origin/experiments/default.e", "r");
+    // default: run default.e
+    
+    yyin = fopen("./experiments/default.e", "r");
     
     if (!yyin) {
       printf(RED "Experiment file does not exist\n" RESET);
       exit(1);
     }
-      
-    yyparse();
     
-    return;
-
-    
-    // default, use all sensors
-    
-    for (iterate(proto_sensors -> all, ProtoSensor *, proto))
-      if (proto -> hertz)
-	proto -> requested = true;
-    
+    yyparse();  
     return;
   }
   
@@ -57,9 +48,8 @@ void parse_args(int argc, char ** argv) {
       printf(RED "Experiment file %s does not exist\n" RESET, filename);
       exit(1);
     }
-      
-    yyparse();
     
+    yyparse();
     return;
   }
   
@@ -113,7 +103,6 @@ int main(int argc, char ** argv) {
   init_sensors();    // set up sensor info and actions
   
   parse_args(argc, argv);
-  
   print_config();
   
   start_sensors();
@@ -138,7 +127,8 @@ int main(int argc, char ** argv) {
   schedule -> term_signal = true;
   
   // join with threads
-  pthread_join(*schedule -> thread, NULL);
+  if (schedule -> i2c_active) pthread_join(*schedule -> i2c_thread, NULL);
+  if (schedule -> one_active) pthread_join(*schedule -> one_thread, NULL);
   
   terminate_i2c();
   terminate_one();
