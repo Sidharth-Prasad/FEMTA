@@ -234,7 +234,7 @@ void print_config() {
   printf("\n\nTriggers\n\n");
   
   for (iterate(proto_sensors -> all, ProtoSensor *, proto)) {
-
+      
     if (!proto -> requested) continue;
     if (!proto -> triggers ) continue;
     
