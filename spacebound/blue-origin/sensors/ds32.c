@@ -31,12 +31,12 @@ Sensor * init_ds32(ProtoSensor * proto) {
   fprintf(ds32 -> i2c -> file, GREEN "\n\nDS3231N\n" RESET);
   
   read_ds32(ds32 -> i2c);    // read now to get human time before other sensors are created
-
+  
   experiment_start_time = time(NULL);    // TEMPORARY - use system time for duration calculations
   
   printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
 	 ds32 -> name, proto -> hertz, proto -> address);
-
+  
   if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
   else                printf("\n");
   

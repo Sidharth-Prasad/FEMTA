@@ -40,7 +40,7 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   
   i2c -> file   = NULL;
   i2c -> buffer = NULL;
-
+  
   if (handles[address] == -1) {
     i2c -> handle = i2cOpen(1, address, 0);
     
@@ -53,26 +53,6 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   }
   
   return i2c;
-}
-
-void i2c_freer(void * device_ptr) {
-  // closes and frees the i2c device
-  
-  i2c_device * i2c = (i2c_device *) device_ptr;
-  
-  fclose(i2c -> file); 
-  
-  i2cClose(i2c -> handle);
-  free(i2c);
-}
-
-void start_i2c() {
-  
-  // create i2c thread
-  if (pthread_create(schedule -> thread, NULL, i2c_main, NULL)) {
-    printf(RED "Could not start i2c thread\n" RESET);
-    return;
-  }
 }
 
 uint8 i2c_read_byte(i2c_device * dev, uint8 reg) {
@@ -134,28 +114,57 @@ bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   return true;
 }
 
+
+void i2c_freer(void * device_ptr) {
+  // closes and frees the i2c device
+  
+  i2c_device * i2c = (i2c_device *) device_ptr;
+  
+  fclose(i2c -> file); 
+  
+  i2cClose(i2c -> handle);
+  free(i2c);
+}
+
 void init_i2c() {
-  //
+  // initialize i2c data structures
   
-  schedule = malloc(sizeof(i2c_schedule));
-  
-  schedule -> devices = list_create();
-  schedule -> devices -> free = i2c_freer;
-  schedule -> thread  = malloc(sizeof(Thread));
+  schedule -> i2c_devices = list_create();
+  schedule -> i2c_devices -> free = i2c_freer;
+  schedule -> i2c_thread  = malloc(sizeof(*schedule -> i2c_thread));
   
   // prepare handle array
   for (int i = 0; i < 0x7F; i++)
     handles[i] = -1;
 }
 
+void start_i2c() {
+  
+  if (!schedule -> i2c_active) return;
+  
+  printf("\nStarting i2c schedule with " MAGENTA "%d " RESET "events\n", schedule -> i2c_devices -> size);
+  
+  // create i2c thread
+  if (pthread_create(schedule -> i2c_thread, NULL, i2c_main, NULL)) {
+    printf(RED "Could not start i2c thread\n" RESET);
+    return;
+  }
+}
+
+void terminate_i2c() {
+  // frees everything associated with the i2c system
+  
+  list_destroy(schedule -> i2c_devices);      // note that this kills
+  
+  free(schedule -> i2c_thread);
+}
+
 void * i2c_main() {
   
   FILE * i2c_log = fopen("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
-
-  printf("\nStarting schedule with " MAGENTA "%d " RESET "events\n", schedule -> devices -> size);
   
-  long i2c_interval = schedule -> interval;
+  long i2c_interval = schedule -> i2c_interval;
   
   long last_read_duration = 0;    // tracks time taken to read i2c bus
   
@@ -167,17 +176,18 @@ void * i2c_main() {
     
     fprintf(i2c_log, "%ld\n", last_read_duration);
     
-    for (iterate(schedule -> devices, i2c_device *, i2c)) {
+    for (iterate(schedule -> i2c_devices, i2c_device *, i2c)) {
       
       i2c -> count += i2c_interval / 1E6;
       
       if (i2c -> count == i2c -> interval || i2c -> reading) {
 	
 	(i2c -> read)(i2c);
-
+        
 	i2c -> count = 0;
       }
     }
+    
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);
@@ -189,18 +199,8 @@ void * i2c_main() {
     
     last_read_duration = read_duration;
     
-    real_nano_sleep(time_remaining);   // 10ms minus time it took to read sensors
+    real_nano_sleep(time_remaining);   // interval minus time it took to read sensors
   }
   
   fclose(i2c_log);
-}
-
-
-void terminate_i2c() {
-  // frees everything associated with the i2c system
-  
-  list_destroy(schedule -> devices);      // note that this kills
-  
-  free(schedule -> thread);
-  free(schedule);
 }

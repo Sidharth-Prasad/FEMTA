@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <pigpio.h>
 
+#include "../sensors/sensor.h"
 #include "../system/clock.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
@@ -22,25 +23,16 @@ void print_config();
 void parse_args(int argc, char ** argv) {
 
   if (argc == 1) {
-
-    yyin = fopen("/home/noah/FEMTA/spacebound/blue-origin/experiments/default.e", "r");
+    // default: run default.e
+    
+    yyin = fopen("./experiments/default.e", "r");
     
     if (!yyin) {
       printf(RED "Experiment file does not exist\n" RESET);
       exit(1);
     }
-      
-    yyparse();
     
-    return;
-
-    
-    // default, use all sensors
-    
-    for (iterate(proto_sensors -> all, ProtoSensor *, proto))
-      if (proto -> hertz)
-	proto -> requested = true;
-    
+    yyparse();  
     return;
   }
   
@@ -56,9 +48,8 @@ void parse_args(int argc, char ** argv) {
       printf(RED "Experiment file %s does not exist\n" RESET, filename);
       exit(1);
     }
-      
-    yyparse();
     
+    yyparse();
     return;
   }
   
@@ -104,14 +95,18 @@ int main(int argc, char ** argv) {
   }
   
   init_pins();       // set up gpio data structure
+  
+  schedule = calloc(1, sizeof(*schedule));
+  
+  init_one();        // set up the 1-wire data structures
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
   
   parse_args(argc, argv);
-  
   print_config();
   
   start_sensors();
+  start_one();       // start reading the 1-wire bus
   start_i2c();       // start reading the i2c bus
   
   Selector * selector = create_selector(NULL);
@@ -132,9 +127,13 @@ int main(int argc, char ** argv) {
   schedule -> term_signal = true;
   
   // join with threads
-  pthread_join(*schedule -> thread, NULL);
+  if (schedule -> i2c_active) pthread_join(*schedule -> i2c_thread, NULL);
+  if (schedule -> one_active) pthread_join(*schedule -> one_thread, NULL);
   
   terminate_i2c();
+  terminate_one();
+  
+  free(schedule);
   
   // terminate pigpio library
   gpioTerminate();

@@ -19,5 +19,9 @@ spacebound/onboard-sensors/cpu_log*.txt
 *output.log
 ./FEMTA/spacebound/blue-origin/logs/*.log
 *.log
+<<<<<<< HEAD
+./ignored/
+=======
 compiler
 .DS_Store
+>>>>>>> 52e8549bea9c56a37204d1c0244fa2dd57c86164

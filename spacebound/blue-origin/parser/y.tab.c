@@ -86,7 +86,7 @@ Charge    * make_charge(int raw_charge);
 Threshold * make_threshold(bool use_decimal, int integer, double decimal);
 Trigger   * make_trigger(List * charges, List * options);
 Trigger   * modify_trigger(char * id, bool less, Threshold * threshold, Trigger * trigger);
- 
+
 void build_sensor(char * id, int hertz, List * triggers, bool print);
 void print_config();
 
@@ -448,7 +448,7 @@ union yyalloc
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  10
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  24
+#define YYNRULES  25
 /* YYNSTATES -- Number of states.  */
 #define YYNSTATES  49
 
@@ -497,9 +497,9 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    68,    68,    71,    72,    75,    76,    77,    78,    81,
-      82,    85,    86,    89,    90,    91,    92,    95,    96,    97,
-      98,   101,   102,   105,   106
+       0,    68,    68,    69,    72,    73,    76,    77,    78,    79,
+      82,    83,    86,    87,    90,    91,    92,    93,    96,    97,
+      98,    99,   102,   103,   106,   107
 };
 #endif
 
@@ -551,11 +551,11 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,     0,     0,     2,     3,     0,     1,     4,     0,     0,
-       0,     0,     9,     0,     0,     0,     5,     0,    10,    15,
-      16,    13,    14,     0,     0,     6,     0,     7,     0,     0,
-       8,     0,    11,    12,    21,     0,     0,    23,    17,     0,
-       0,     0,    18,     0,    19,     0,    22,    24,    20
+       3,     0,     0,     2,     4,     0,     1,     5,     0,     0,
+       0,     0,    10,     0,     0,     0,     6,     0,    11,    16,
+      17,    14,    15,     0,     0,     7,     0,     8,     0,     0,
+       9,     0,    12,    13,    22,     0,     0,    24,    18,     0,
+       0,     0,    19,     0,    20,     0,    23,    25,    21
 };
 
   /* YYPGOTO[NTERM-NUM].  */
@@ -605,17 +605,17 @@ static const yytype_uint8 yystos[] =
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    18,    19,    20,    20,    21,    21,    21,    21,    22,
-      22,    23,    23,    24,    24,    24,    24,    25,    25,    25,
-      25,    26,    26,    27,    27
+       0,    18,    19,    19,    20,    20,    21,    21,    21,    21,
+      22,    22,    23,    23,    24,    24,    24,    24,    25,    25,
+      25,    25,    26,    26,    27,    27
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     1,     1,     2,     5,     6,     6,     7,     1,
-       2,     5,     5,     1,     1,     1,     1,     3,     4,     4,
-       5,     1,     3,     1,     3
+       0,     2,     1,     0,     1,     2,     5,     6,     6,     7,
+       1,     2,     5,     5,     1,     1,     1,     1,     3,     4,
+       4,     5,     1,     3,     1,     3
 };
 
 
@@ -1291,69 +1291,69 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 5:
-#line 75 "parser.y" /* yacc.c:1646  */
-    { build_sensor((yyvsp[-4].string), (yyvsp[-3].integer), NULL, false);                }
+        case 3:
+#line 69 "parser.y" /* yacc.c:1646  */
+    { printf("\nExperiment does not involve sensors");  }
 #line 1298 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
 #line 76 "parser.y" /* yacc.c:1646  */
-    { build_sensor((yyvsp[-5].string), (yyvsp[-4].integer), NULL,  true);                }
+    { build_sensor((yyvsp[-4].string), (yyvsp[-3].integer), NULL, false);                }
 #line 1304 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
 #line 77 "parser.y" /* yacc.c:1646  */
-    { build_sensor((yyvsp[-5].string), (yyvsp[-4].integer),   (yyvsp[-2].list), false);                }
+    { build_sensor((yyvsp[-5].string), (yyvsp[-4].integer), NULL,  true);                }
 #line 1310 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
 #line 78 "parser.y" /* yacc.c:1646  */
-    { build_sensor((yyvsp[-6].string), (yyvsp[-5].integer),   (yyvsp[-3].list),  true);                }
+    { build_sensor((yyvsp[-5].string), (yyvsp[-4].integer),   (yyvsp[-2].list), false);                }
 #line 1316 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 81 "parser.y" /* yacc.c:1646  */
-    { (yyval.list) = list_from(1, (yyvsp[0].trigger));                            }
+#line 79 "parser.y" /* yacc.c:1646  */
+    { build_sensor((yyvsp[-6].string), (yyvsp[-5].integer),   (yyvsp[-3].list),  true);                }
 #line 1322 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
 #line 82 "parser.y" /* yacc.c:1646  */
-    { list_insert((yyvsp[-1].list), (yyvsp[0].trigger)); (yyval.list) = (yyvsp[-1].list);                     }
+    { (yyval.list) = list_from(1, (yyvsp[0].trigger));                            }
 #line 1328 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 85 "parser.y" /* yacc.c:1646  */
-    { (yyval.trigger) = modify_trigger((yyvsp[-4].string),  true, (yyvsp[-2].threshold), (yyvsp[0].trigger));           }
+#line 83 "parser.y" /* yacc.c:1646  */
+    { list_insert((yyvsp[-1].list), (yyvsp[0].trigger)); (yyval.list) = (yyvsp[-1].list);                     }
 #line 1334 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
 #line 86 "parser.y" /* yacc.c:1646  */
-    { (yyval.trigger) = modify_trigger((yyvsp[-4].string), false, (yyvsp[-2].threshold), (yyvsp[0].trigger));           }
+    { (yyval.trigger) = modify_trigger((yyvsp[-4].string),  true, (yyvsp[-2].threshold), (yyvsp[0].trigger));           }
 #line 1340 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 89 "parser.y" /* yacc.c:1646  */
-    { (yyval.threshold) = make_threshold(false, (yyvsp[0].integer),   0);              }
+#line 87 "parser.y" /* yacc.c:1646  */
+    { (yyval.trigger) = modify_trigger((yyvsp[-4].string), false, (yyvsp[-2].threshold), (yyvsp[0].trigger));           }
 #line 1346 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
 #line 90 "parser.y" /* yacc.c:1646  */
-    { (yyval.threshold) = make_threshold( true,  0,  (yyvsp[0].decimal));              }
+    { (yyval.threshold) = make_threshold(false, (yyvsp[0].integer),   0);              }
 #line 1352 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
 #line 91 "parser.y" /* yacc.c:1646  */
-    { (yyval.threshold) = make_threshold(false, (yyvsp[0].integer), 0.0);              }
+    { (yyval.threshold) = make_threshold( true,  0,  (yyvsp[0].decimal));              }
 #line 1358 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1364,8 +1364,8 @@ yyreduce:
     break;
 
   case 17:
-#line 95 "parser.y" /* yacc.c:1646  */
-    { printf("Triggers must list pins\n"); exit(1);     }
+#line 93 "parser.y" /* yacc.c:1646  */
+    { (yyval.threshold) = make_threshold(false, (yyvsp[0].integer), 0.0);              }
 #line 1370 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1377,42 +1377,48 @@ yyreduce:
 
   case 19:
 #line 97 "parser.y" /* yacc.c:1646  */
-    { (yyval.trigger) = make_trigger((yyvsp[-2].list), NULL);                      }
+    { printf("Triggers must list pins\n"); exit(1);     }
 #line 1382 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
 #line 98 "parser.y" /* yacc.c:1646  */
-    { (yyval.trigger) = make_trigger((yyvsp[-3].list),   (yyvsp[-1].list));                      }
+    { (yyval.trigger) = make_trigger((yyvsp[-2].list), NULL);                      }
 #line 1388 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 101 "parser.y" /* yacc.c:1646  */
-    { (yyval.list) = list_from(1, make_charge((yyvsp[0].integer)));               }
+#line 99 "parser.y" /* yacc.c:1646  */
+    { (yyval.trigger) = make_trigger((yyvsp[-3].list),   (yyvsp[-1].list));                      }
 #line 1394 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
 #line 102 "parser.y" /* yacc.c:1646  */
-    { list_insert((yyvsp[-2].list), make_charge((yyvsp[0].integer))); (yyval.list) = (yyvsp[-2].list);        }
+    { (yyval.list) = list_from(1, make_charge((yyvsp[0].integer)));               }
 #line 1400 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 105 "parser.y" /* yacc.c:1646  */
-    { (yyval.list) = list_from(1, (yyvsp[0].string));                            }
+#line 103 "parser.y" /* yacc.c:1646  */
+    { list_insert((yyvsp[-2].list), make_charge((yyvsp[0].integer))); (yyval.list) = (yyvsp[-2].list);        }
 #line 1406 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
 #line 106 "parser.y" /* yacc.c:1646  */
-    { list_insert((yyvsp[-2].list), (yyvsp[0].string)); (yyval.list) = (yyvsp[-2].list);                     }
+    { (yyval.list) = list_from(1, (yyvsp[0].string));                            }
 #line 1412 "y.tab.c" /* yacc.c:1646  */
     break;
 
+  case 25:
+#line 107 "parser.y" /* yacc.c:1646  */
+    { list_insert((yyvsp[-2].list), (yyvsp[0].string)); (yyval.list) = (yyvsp[-2].list);                     }
+#line 1418 "y.tab.c" /* yacc.c:1646  */
+    break;
 
-#line 1416 "y.tab.c" /* yacc.c:1646  */
+
+#line 1422 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1640,7 +1646,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 109 "parser.y" /* yacc.c:1906  */
+#line 110 "parser.y" /* yacc.c:1906  */
 
 
 Charge * make_charge(int raw_charge) {
@@ -1722,15 +1728,15 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
   proto -> print = print;
   proto -> triggers = triggers;
   proto -> requested = true;
-
+  
   if (!triggers) return;
-
+  
   // duplicate reversing triggers
   for (iterate(triggers, Trigger *, trigger)) {
     if (trigger -> reverses) {
       
       Trigger * opposite = malloc(sizeof(Trigger));
-
+      
       opposite -> id       =  trigger -> id;
       opposite -> less     = !trigger -> less;
       opposite -> fired    =  trigger -> fired;
@@ -1755,6 +1761,8 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
     }
   }
   
+  n_triggers += triggers -> size;
+  
   for (iterate(triggers, Trigger *, trigger)) {
     
     if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
@@ -1766,10 +1774,15 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
 
 void print_config() {
   
-  printf("\n\nTriggers\n\n");
+  if (!n_triggers) {
+    printf("\n\nExperiment does not involve triggers\n\n");
+    return;
+  }
+  
+  printf("\n\n" GRAY "%d" RESET " Triggers\n\n", n_triggers);
   
   for (iterate(proto_sensors -> all, ProtoSensor *, proto)) {
-
+    
     if (!proto -> requested) continue;
     if (!proto -> triggers ) continue;
     
