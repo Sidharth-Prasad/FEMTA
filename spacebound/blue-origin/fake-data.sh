@@ -1,4 +1,3 @@
-
 echo "t:Fake Data Stream"
 echo "a:Axis 0"
 echo "a:Axis 1"
