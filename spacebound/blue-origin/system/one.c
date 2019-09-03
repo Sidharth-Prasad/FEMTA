@@ -1,10 +1,13 @@
 
+#define _GNU_SOURCE
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sched.h>
 #include <pthread.h>
 #include <pigpio.h>
+#include <sys/prctl.h>
 #include <time.h>
 
 #include "clock.h"
@@ -84,6 +87,8 @@ void terminate_one() {
 
 void * one_main() {
   
+  prctl(PR_SET_NAME, "1-wire sched", NULL, NULL, NULL);
+  
   // deprioritize all 1-wire communication
   struct sched_param priority = {0};
   
@@ -92,7 +97,6 @@ void * one_main() {
   priority.sched_priority /= 2;
   
   sched_setparam(0, &priority);
-  
   
   FILE * one_log = fopen("logs/one.log", "a");
   fprintf(one_log, GRAY "Read duration [ns]\n" RESET);
