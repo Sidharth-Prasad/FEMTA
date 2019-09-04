@@ -7,6 +7,7 @@
 #include "../structures/list.h"
 #include "../structures/hashmap.h"
 #include "../system/color.h"
+#include "../system/error.h"
 #include "../sensors/sensor.h"
 
 extern FILE * yyin;
@@ -14,16 +15,17 @@ extern FILE * yyin;
 int yylex();
 void yyerror(char * message);
 
-typedef struct Charge Charge;
-typedef struct Threshold Threshold;
 typedef struct Trigger Trigger;
+typedef struct Numeric Numeric;
+typedef struct Specification Specification;
 
-Charge    * make_charge(int raw_charge);
-Threshold * make_threshold(bool use_decimal, int integer, double decimal);
-Trigger   * make_trigger(List * charges, List * options);
-Trigger   * modify_trigger(char * id, bool less, Threshold * threshold, Trigger * trigger);
+Numeric       * make_numeric(int integer, float decimal, char generic);
+Charge        * make_charge(bool hot, int wire, Specification * tag);
+Trigger       * make_trigger(List * charges, List * options);
+Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigger * trigger);
+Specification * make_tag(char * id, List * options, List * args);
 
-void build_sensor(char * id, int hertz, List * triggers, bool print);
+void build_sensor(char * id, Numeric * frequency, List * specifications);
 void print_config();
 %}
 
@@ -32,186 +34,392 @@ void print_config();
   #include <stdbool.h>
   #include "../structures/list.h"
   #include "../sensors/sensor.h"
-
-  typedef struct Threshold {
-    bool use_decimal;
-    union {
-      int integer;
-      double decimal;
-    };
-  } Threshold;
+  
+  typedef struct Specification {
+      
+      char * id;
+      List * options;
+      List * args;
+      
+      bool should_destroy_options;
+      bool should_destroy_args;
+      
+  } Specification;
 }
 
 %union {
-  char * string;
-  int    integer;
-  double decimal;
-  List      * list;
-  Threshold * threshold;
-  Trigger   * trigger;
+  char          * string;
+  int           * integer;
+  float         * decimal;
+  Numeric       * numeric;
+  
+  List          * list;
+  Charge        * charge;
+  Trigger       * trigger;
+  Specification * specification;
 }
 
 %token PRINT LESS_THAN MORE_THAN TRIGGER
 
-%token <string> ID
-%token <integer> HERTZ COUNTS CHARGE SECONDS VOLTS    // should change volts to decimal later
-%token <decimal> GS
-
-%type <list>      Actions Charges Options
-%type <threshold> Argument
-%type <trigger> Actuator Action
-
+%token  <string>        ID
+%token  <integer>       INT
+%token  <decimal>       FLOAT
+%token  <Numeric>       NUMERIC
+                        
+%type   <list>          Specs Charges Args Options
+%type   <charge>        Charge
+%type   <trigger>       Actuator
+%type   <specification> Spec Tag
+                        
 %start Config
+
+                        /* Notes:                                             *
+                         *                                                    *
+                         * Specifications include triggers and tags.          *
+                         * Tags may be destroyed when their specification is  *
+                         * interpreted, as is the case whith make_charge()    *
+                         *                                                    *
+                         * Units must never exceed 7 characters.              *
+                         * Additionally, two generic units exist: i and f     *
+                         *   i - the generic 32-bit integer                   *
+                         *   f - the generic 32-bit floating point number     *
+                         *                                                    *
+                         */
 
 %%
 
 Config   : Sensors
-         |                                            { printf("\nExperiment does not involve sensors");  }
+         |                                            { printf("\nExperiment does not involve sensors");       }
          ;
 
 Sensors  : Sensor                
          | Sensors Sensor
          ;
 
-Sensor   : ID HERTZ '{'         '}'       ';'         { build_sensor($1, $2, NULL, false);                }
-         | ID HERTZ '{'         '}' PRINT ';'         { build_sensor($1, $2, NULL,  true);                }
-         | ID HERTZ '{' Actions '}'       ';'         { build_sensor($1, $2,   $4, false);                }
-         | ID HERTZ '{' Actions '}' PRINT ';'         { build_sensor($1, $2,   $4,  true);                }
+Sensor   : ID NUMERIC '{'       '}' ';'               { build_sensor($1, $2, NULL);                            }
+         | ID NUMERIC '{' Specs '}' ';'               { build_sensor($1, $2,   $4);                            }
          ;
 
-Actions  : Action                                     { $$ = list_from(1, $1);                            }
-         | Actions Action                             { list_insert($1, $2); $$ = $1;                     }
+Specs    : Spec                                       { $$ = list_from(1, $1);                                 }
+         | Specs Spec                                 { list_insert($1, $2); $$ = $1;                          }
          ;
 
-Action   : ID LESS_THAN Argument TRIGGER Actuator     { $$ = modify_trigger($1,  true, $3, $5);           }
-         | ID MORE_THAN Argument TRIGGER Actuator     { $$ = modify_trigger($1, false, $3, $5);           }
+Spec     : ID LESS_THAN NUMERIC TRIGGER Actuator      { $$ = specify_trigger($1,  true, $3, $5);               }
+         | ID MORE_THAN NUMERIC TRIGGER Actuator      { $$ = specify_trigger($1, false, $3, $5);               }
+         | Tag ';'                                    { $$ = $1;                                               }
          ;
 
-Argument : VOLTS                                      { $$ = make_threshold(false, $1,   0);              }
-         | GS                                         { $$ = make_threshold( true,  0,  $1);              }
-         | COUNTS                                     { $$ = make_threshold(false, $1, 0.0);              }
-         | SECONDS                                    { $$ = make_threshold(false, $1, 0.0);              }
+Actuator : '{'         '}'         ';'                { printf("Triggers must list pins\n"); exit(3);          }
+         | '{'         '}' Options ';'                { printf("Triggers must list pins\n"); exit(3);          }
+         | '{' Charges '}'         ';'                { $$ = make_trigger($2, NULL);                           }
+         | '{' Charges '}' Options ';'                { $$ = make_trigger($2,   $4);                           }
          ;
 
-Actuator : '{'         '}'         ';'                { printf("Triggers must list pins\n"); exit(1);     }
-         | '{'         '}' Options ';'                { printf("Triggers must list pins\n"); exit(1);     }
-         | '{' Charges '}'         ';'                { $$ = make_trigger($2, NULL);                      }
-         | '{' Charges '}' Options ';'                { $$ = make_trigger($2,   $4);                      }
+Charges  : Charge                                     { $$ = list_from(1, $1);                                 }
+         | Charges ',' Charge                         { list_insert($1, $3); $$ = $1;                          }
          ;
 
-Charges  : CHARGE                                     { $$ = list_from(1, make_charge($1));               }
-         | Charges ',' CHARGE                         { list_insert($1, make_charge($3)); $$ = $1;        }
+Charge   : INT Tag                                    { $$ = make_charge($1 > 0, $1,   $2);                    }
+         | INT                                        { $$ = make_charge($1 > 0, $1, NULL);                    }
          ;
 
-Options  : ID                                         { $$ = list_from(1, $1);                            }
-         | Options ',' ID                             { list_insert($1, $3); $$ = $1;                     }
+Tag      : '[' ID                      ']'            { $$ = make_tag($2, NULL, NULL);                         }
+         | '[' ID             ':' Args ']'            { $$ = make_tag($2, NULL, $4);                           }
+         | '[' ID ',' Options ':' Args ']'            { $$ = make_tag($2,   $4, $6);                           }
+         ;
+
+Args     : Args ',' INT                               { list_insert($1,   make_numeric($3,  0, 'i')); $$ = $1; }
+         | Args ',' FLOAT                             { list_insert($1,   make_numeric( 0, $3, 'f')); $$ = $1; }
+         | INT                                        { $$ = list_from(1, make_numeric($1,  0, 'i'));          }
+         | FLOAT                                      { $$ = list_from(1, make_numeric( 0, $1, 'f'));          }
+         ;
+
+Options  : ID                                         { $$ = list_from(1, $1);                                 }
+         | Options ',' ID                             { list_insert($1, $3); $$ = $1;                          }
          ;
 
 %%
 
-Charge * make_charge(int raw_charge) {
-  // note, pin 0 not allowed. Shouldn't matter since that's SDA.0,
-  // but it's important for future bug potential
-  
-  Charge * charge = malloc(sizeof(Charge));
-  
-  charge -> gpio = raw_charge;
-  
-  charge -> hot = (raw_charge > 0);
-  if (!charge -> hot) charge -> gpio *= -1;
-  
-  return charge;
+static void specification_destroy(void * vspecification) {
+    
+    Specification * specification;
+    
+    free(specification -> id);
+    
+    if (specification -> options && specification -> should_destroy_options)
+        list_destroy(specification -> options);
+    
+    if (specification -> args && specification -> should_destroy_args)
+        list_destroy(specification -> args);
+    
+    free(specification);
 }
 
-Threshold * make_threshold(bool use_decimal, int integer, double decimal) {
-  
-  Threshold * threshold = malloc(sizeof(Threshold));
-  
-  threshold -> use_decimal = use_decimal;
-  
-  if (use_decimal) threshold -> decimal = decimal;
-  else             threshold -> integer = integer;
-  
-  return threshold;
+Numeric * make_numeric(int integer, float decimal, char generic) {
+    
+    Numeric * numeric = malloc(sizeof(*numeric));
+    
+    switch (generic) {
+        
+    case 'i':
+        numeric -> integer = integer;
+        break;
+        
+    case 'f':
+        numeric -> decimal = decimal;
+        break;
+        
+    default:
+        printf(RED "Unknown generic numeric unit %c" RESET, generic);
+        exit(ERROR_EXPERIMENTER);
+        break;
+    }
+    
+    return numeric;
+}
+
+Charge * make_charge(bool hot, int wire, Specification * tag) {
+    /* note, pin 0 not allowed. Shouldn't matter since that's SDA.0, *
+     * but it's important for future bug potential.                  */
+    
+    Charge * charge = calloc(1, sizeof(*charge));
+    
+    charge -> gpio = abs(wire);
+    charge -> hot  = hot;
+    
+    if (tag) {
+        if (strcmp(tag -> id, "pulse")) {
+            printf(RED "Unknown tag %s for charge\n" RESET, tag -> id);
+            exit(ERROR_EXPERIMENTER);
+        }
+        
+        if (tag -> args -> size != 1) {
+            printf(RED "Exactly 1 argument shoud be used for 'pulse' tag\n" RESET);
+            exit(ERROR_EXPERIMENTOR;
+        }
+        
+        charge -> duration = tag -> args -> head -> value;
+        
+        specification_destroy(tag);    // no longer needed
+    }
+    
+    return charge;
 }
 
 Trigger * make_trigger(List * charges, List * options) {
-  // creates a trigger, which gets modified later
-  
-  Trigger * trigger = malloc(sizeof(Trigger));
-  
-  trigger -> fired    = false;
-  trigger -> singular = true;     // defaults
-  trigger -> reverses = false;    // --------
-  
-  trigger -> charges = charges;
-  
-  if (!options) return trigger;
-  
-  for (iterate(options, char *, option)) {
-    if      (!strcmp(option, "singular")) trigger -> singular = true;
-    else if (!strcmp(option, "forever" )) trigger -> singular = false;
-    else if (!strcmp(option, "reverses")) trigger -> reverses = true;
-    else {
-      printf("Unknown option " RED "%s\n" RESET, option);
-      exit(1);
+    // creates a trigger, which becomes a specification later
+    
+    Trigger * trigger = malloc(sizeof(*trigger));
+    
+    trigger -> fired    = false;
+    trigger -> singular = true;     // defaults
+    trigger -> reverses = false;    // --------
+    
+    trigger -> charges = charges;
+    
+    if (!options) return trigger;
+    
+    for (iterate(options, char *, option)) {
+        if      (!strcmp(option, "singular")) trigger -> singular = true;
+        else if (!strcmp(option, "forever" )) trigger -> singular = false;
+        else if (!strcmp(option, "reverses")) trigger -> reverses = true;
+        else {
+            printf("Unknown option " RED "%s\n" RESET, option);
+            exit(ERROR_EXPERIMENTER);
+        }
     }
-  }
-  
-  return trigger;
+    
+    return trigger;
 }
 
-Trigger * modify_trigger(char * id, bool less, Threshold * threshold, Trigger * trigger) {
-  
-  trigger -> id = id;
-  trigger -> less = less;
-  
-  if (threshold -> use_decimal) trigger -> threshold.decimal = threshold -> decimal;
-  else                          trigger -> threshold.integer = threshold -> integer;
-  
-  free(threshold);
-  
-  return trigger;
+
+Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigger * trigger) {
+    /* Wraps and modifies the trigger into a specification so that sensor construction *
+     * may have a linked list consisting of nodes with the same content                */
+    
+    trigger -> id        = id;
+    trigger -> less      = less;
+    trigger -> threshold = threshold;
+    
+    Specification * specification = malloc(sizeof(*specification));
+    
+    specification -> id   = strdup("trigger");
+    specification -> args = list_from(1, trigger);
+    
+    return specification;
+}
+ 
+Specification * make_tag(char * id, List * options, List * args) {
+    
+    Specification * tag = malloc(sizeof(*tag));
+    
+    tag -> id      = id;
+    tag -> options = options;
+    tag -> args    = args;
+    
+    
+    // [ print, color : 5hz ] - no color or freq required
+    // [ smooth : ] -
+    // [ calibrate target : 1.0, 3.4, ... ]
+    
+    
+    
+    /* Perform error checking on this tag now */
+    
+    if (!strcmp(id, "print")) {
+        
+        if (options) {
+            
+            char * color      = args -> options -> head -> value;
+            char * color_code = get_color_by_name(color);
+            
+            if (!color_code) {
+                printf(RED "Color name %s not recognized\n" RESET, color);
+                exit(ERROR_EXPERIMENTER);
+            }
+        }
+    }
+    
+    else if (!strcmp(id, "smooth")) {
+        
+        if (options)
+            exit_printing("Smoothing does not support options at this time\n", ERROR_EXPERIMENTER);
+        
+        if (args) {
+            Numeric * numeric = args -> head -> value;
+            float value = numeric -> decimal;
+            
+            if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f) {
+                printf(RED "Autoregressive smoothing requires a # in [0.0, 1.0]\n" RESET);
+                exit(ERROR_EXPERIMENTER);
+            }
+        }
+    }
+    
+    else if (!strcmp(id, "calibrate")) {
+        
+        if (!args   ) exit_printing("Calibration curves require at least one constant\n", ERROR_EXPERIMENTER);
+        if (!options) exit_printing("Calibration requires a target\n" ERROR_EXPERIMENTER);
+        
+        char * curve;
+        if (options -> size > 1) curve_id = options -> head -> next -> value;
+        else                     curve_id = "poly";
+        
+        if      (!strcmp(curve, "poly"));
+        else if (!strcmp(curve, "hart")) {
+            if (args != 3)
+                exit_printing("The Steinhart and Hart Equation requires 3 constants\n", ERROR_EXPERIMENTER);
+        }
+        else {
+            printf(RED "Unknown calibration curve " CYAN "%s\n" RESET, curve);
+            exit(ERROR_EXPERIMENTER);
+        }
+    }
+    
+    else {
+        printf(RED "Invalid tag id " CYAN "%s\n" RESET, id);
+        exit(ERROR_EXPERIMENTER);
+    }
+    
+    return tag;
 }
 
-			 
-void build_sensor(char * id, int hertz, List * triggers, bool print) {
+void build_sensor(char * id, Numeric * frequency, List * specifications);
   
   ProtoSensor * proto = hashmap_get(proto_sensors, id);
   
   if (!proto) {
     printf(RED "%s is not a sensor\n" RESET, id);
-    exit(1);
+    exit(ERROR_EXPERIMENTER);
   }
   
-  proto -> hertz = hertz;
-  proto -> print = print;
-  proto -> triggers = triggers;
+  proto -> hertz = frequency -> integer;    // only support Hz for now
   proto -> requested = true;
   
-  if (!triggers) return;
+  if (!specifications) return;
   
-  // duplicate reversing triggers
+  List * triggers = list_create();
+  Hashmap * calibrations = hashmap_create(hash_string, compare_strings, NULL, 16);
+  
+  for (iterate(specifications, Specification *, specification)) {
+      
+      if (!strcmp(specification -> id, "trigger")) {
+          list_insert(triggers, specification -> args -> head -> value);
+      }
+      else if (!strcmp(specification -> id, "smooth")) {
+          
+          float auto_regression = specification -> args -> head -> value;
+          
+          if (proto -> auto_regression) {
+              printf(RED "Duplicate autoregressive constant for %s\n" RESET, id);
+              exit(ERROR_EXPERIMENTER);
+          }
+          
+          proto -> auto_regression = auto_regression;
+      }
+      else if (!strcmp(specification -> id, "calibrate")) {
+          
+          char * target = options -> head -> value;
+          
+          if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
+              printf(RED "Calibration target %s for %s is not known\n" RESET, target, id);
+              exit(ERROR_EXPERIMENTER);
+          }
+          
+          if (hashmap_exists(calibrations, target)) {
+              printf(RED "Duplicate target calibration for %s of %s found\n" RESET, target, id);
+              exit(ERROR_EXPERIMENTER);
+          }
+          
+          hashmap_add(calibrations, target, specification);
+      }
+  }
+  
+  
+  
   for (iterate(triggers, Trigger *, trigger)) {
+
+      // check trigger targets
+      if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
+          printf(RED "Trigger target %s unknown\n" RESET, trigger -> id);
+          exit(1);
+      }
+      
+      // assign trigger calibrations
+      Specification * specification = hashmap_get(calibrations, trigger -> id);
+      
+      if (specification) {
+          
+          char * curve;
+          if (specification -> options -> size > 1) curve = specification -> options -> head -> next -> value;
+          else                                      curve = "poly";
+          
+          trigger -> curve     = strdup(curve);
+          trigger -> constants = specification -> args;
+      }
+      
+      // duplicate reversing triggers
+      
     if (trigger -> reverses) {
       
-      Trigger * opposite = malloc(sizeof(Trigger));
+      Trigger * opposite = malloc(sizeof(*opposite));
       
-      opposite -> id       =  trigger -> id;
+      opposite -> id       =  strdup(trigger -> id);
       opposite -> less     = !trigger -> less;
       opposite -> fired    =  trigger -> fired;
       opposite -> singular =  trigger -> singular;
-      opposite -> reverses =  false;//trigger -> reverses;
+      opposite -> reverses =  false;
       
       opposite -> threshold.decimal = trigger -> threshold.decimal;
       opposite -> charges = list_create();
       
       for (iterate(trigger -> charges, Charge *, charge)) {
 
-        Charge * anti_charge = malloc(sizeof(Charge));
+        Charge * anti_charge = malloc(sizeof(*charge));
 	
-        anti_charge -> gpio =  charge -> gpio;
-        anti_charge -> hot  = !charge -> hot;
+        anti_charge -> gpio     =  charge -> gpio;
+        anti_charge -> hot      = !charge -> hot;
+        anti_charge -> duration =  charge -> duration;
 	
         list_insert(opposite -> charges, anti_charge);
       }
@@ -221,15 +429,12 @@ void build_sensor(char * id, int hertz, List * triggers, bool print) {
     }
   }
   
-  n_triggers += triggers -> size;
+  hashmap_destroy(target_calibrations);
   
-  for (iterate(triggers, Trigger *, trigger)) {
-    
-    if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
-      printf(RED "Trigger target %s unknown\n" RESET, trigger -> id);
-      exit(1);
-    }
-  }
+  specifications -> free = specification_destroy;
+  list_destroy(specifications);
+  
+  n_triggers += triggers -> size;
 }
 
 void print_config() {
@@ -242,7 +447,7 @@ void print_config() {
   printf("\n\n" GRAY "%d" RESET " Triggers\n\n", n_triggers);
   
   for (iterate(proto_sensors -> all, ProtoSensor *, proto)) {
-      
+    
     if (!proto -> requested) continue;
     if (!proto -> triggers ) continue;
     
@@ -254,23 +459,23 @@ void print_config() {
       
       if (trigger -> less) printf(GRAY " <");
       else                 printf(GRAY " >");
-
-
+      
+      
       
       printf(" { " RESET);
       
       for (iterate(trigger -> charges, Charge *, charge)) {
-
+        
 	if (charge -> hot) printf(YELLOW "+" RESET);
 	else               printf(YELLOW "-" RESET);
 	
 	printf("%d ", charge -> gpio);
       }
-
+      
       if (!trigger -> singular) printf(GRAY "}" YELLOW " *\n" RESET);
       else                      printf(GRAY "}\n");
     }
-
+    
     printf("\n");
   }
 }

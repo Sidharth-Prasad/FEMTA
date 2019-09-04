@@ -40,22 +40,25 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 30 "parser.y" /* yacc.c:1909  */
+#line 32 "parser.y" /* yacc.c:1909  */
 
   
   #include <stdbool.h>
   #include "../structures/list.h"
   #include "../sensors/sensor.h"
+  
+  typedef struct Specification {
+      
+      char * id;
+      List * options;
+      List * args;
+      
+      bool should_destroy_options;
+      bool should_destroy_args;
+      
+  } Specification;
 
-  typedef struct Threshold {
-    bool use_decimal;
-    union {
-      int integer;
-      double decimal;
-    };
-  } Threshold;
-
-#line 59 "y.tab.h" /* yacc.c:1909  */
+#line 62 "y.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -67,12 +70,9 @@ extern int yydebug;
     MORE_THAN = 260,
     TRIGGER = 261,
     ID = 262,
-    HERTZ = 263,
-    COUNTS = 264,
-    CHARGE = 265,
-    SECONDS = 266,
-    VOLTS = 267,
-    GS = 268
+    INT = 263,
+    FLOAT = 264,
+    NUMERIC = 265
   };
 #endif
 /* Tokens.  */
@@ -81,26 +81,26 @@ extern int yydebug;
 #define MORE_THAN 260
 #define TRIGGER 261
 #define ID 262
-#define HERTZ 263
-#define COUNTS 264
-#define CHARGE 265
-#define SECONDS 266
-#define VOLTS 267
-#define GS 268
+#define INT 263
+#define FLOAT 264
+#define NUMERIC 265
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 45 "parser.y" /* yacc.c:1909  */
+#line 50 "parser.y" /* yacc.c:1909  */
 
-  char * string;
-  int    integer;
-  double decimal;
-  List      * list;
-  Threshold * threshold;
-  Trigger   * trigger;
+  char          * string;
+  int           * integer;
+  float         * decimal;
+  Numeric       * numeric;
+  
+  List          * list;
+  Charge        * charge;
+  Trigger       * trigger;
+  Specification * specification;
 
 #line 106 "y.tab.h" /* yacc.c:1909  */
 };

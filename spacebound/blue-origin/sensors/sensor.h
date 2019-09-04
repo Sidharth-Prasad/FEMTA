@@ -21,23 +21,34 @@ typedef void (* sensor_free)(Sensor * sensor);
 
 typedef struct Charge {
   
-  char gpio;
-  bool hot;
+  char gpio;        // the broadcom number of the pin
+  bool hot;         // whether wire should be hot or cold
+  int  duration;    // used for pulsing
   
 } Charge;
 
-typedef struct Trigger {
-  
-  char * id;
-  bool less;
+typedef struct Numeric {
   
   union {
-    int    integer;
-    double decimal;
-  } threshold;
+    int   integer;    // the numerical value 
+    float decimal;    // -------------------
+  };
   
-  List * charges;
+  char units[8];      // the units code
   
+} Numeric;
+
+typedef struct Trigger {
+  
+  char * id;              // target (like A01)
+  
+  char * curve;           // calibration
+  List * constants;       // -----------
+  
+  Numeric * threshold;
+  List    * charges;
+  
+  bool less;
   bool fired;
   bool singular;
   bool reverses;
@@ -57,6 +68,8 @@ typedef struct Sensor {
   
   List * triggers;       // sensor triggers
   Hashmap * targets;     // that which can be triggered
+
+  float auto_regression;
   
   List * betas;          // the regression coefficients
   
@@ -78,7 +91,7 @@ typedef struct ProtoSensor {
   List * triggers;           // gpio triggers
   Hashmap * targets;         // that which can be triggered
   
-  List * betas;              // the regression coefficients
+  float auto_regression;     
   
   bool print;                // whether sensor is printed to console
   bool requested;            // whether sensor is requested
@@ -113,5 +126,6 @@ int n_triggers;             // number of triggers
 
 void init_sensors();
 void start_sensors();
+void compute_curve(char * curve_id, List * constants);
 
 #endif

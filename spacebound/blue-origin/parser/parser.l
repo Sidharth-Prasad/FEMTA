@@ -13,10 +13,8 @@ void yyerror(char * message);
 white  [ \t\r\n]+
 letter [A-Za-z_]
 digit  [0-9]
-id     ({letter}|{digit})+
 
 %%
-
 
 \/\/.* {}                                                                    // 1 line comment
 \/\*(([^*/]|\n)|(\*+([^*/]|\n)|\/([^*/]|\n)*|\/\*([^*/]|\n)*))*\**\*\/ {}    // multi comment
@@ -26,49 +24,48 @@ trigger   { return TRIGGER;   }
 less_than { return LESS_THAN; }
 more_than { return MORE_THAN; }
 
-{digit}+Hz {
-  yylval.integer = atoi(yytext);    // used by all sensors
-  return HERTZ;
-}
-
-{digit}+s {
-  yylval.integer = atoi(yytext);    // used by ds32
-  return SECONDS;
-}
-{digit}+m {
-  yylval.integer = 60 * atoi(yytext);    // used by ds32
-  return SECONDS;
-}
-
--?{digit}+c {
-  yylval.integer = atoi(yytext);    // used by ad15
-  return COUNTS;
-}
-
--?{digit}+\.{digit}+g {
-  yylval.decimal = atof(yytext);    // used by adxl
-  return GS;
-}
-
--?{digit}+\.{digit}+v {
-  double voltage = atof(yytext);    // used by ad15
+-?{digit}+{letter}+ {
+  // note, units may never exceed 7 characters
   
-  yylval.integer = (voltage + .00082419) / 0.0001873938;    // average calibration
+  yylval.numeric = malloc(sizeof(*yylval.numeric));
   
-  return VOLTS;
+  sscanf("%d%s", &yylval.integer, &yylval.units);
+  return NUMERIC;
 }
 
-(-|\+){digit}+ {
-  yylval.integer = atoi(yytext);    // used by all sensors
-  return CHARGE;
+-?{digit}+\.{digit}+{letter}+ {
+  // note, units may never exceed 7 characters
+  
+  yylval.numeric = malloc(sizeof(*yylval.numeric));
+  
+  sscanf("%f%s", &yylval.decimal, &yylval.units);
+  return NUMERIC;
 }
 
-{id} {
+-?{digit}+ {
+  yylval.numeric = calloc(1, sizeof(*yylval.numeric));
+  
+  yylval.numeric -> integer  = atoi(yytext);
+  yylval.numeric -> units[0] = 'i';             // the generic 32-bit int
+  
+  return NUMERIC;
+}
+
+-?{digit}+\.{digit}+ {
+  yylval.numeric = calloc(1, sizeof(*yylval.numeric));
+  
+  yylval.numeric -> decimal  = atof(yytext);
+  yylval.numeric -> units[0] = 'f';             // the generic 32-bit float
+  
+  return NUMERIC;
+}
+
+({letter}|{digit})+ {
   yylval.string = strdup(yytext);
   return ID;
 }
 
-[=\{\},;] {
+[=\{\}\+\-,;\[\]] {
   return yytext[0];
 }
 

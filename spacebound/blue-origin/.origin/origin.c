@@ -89,11 +89,10 @@ void parse_args(int argc, char ** argv) {
 int main(int argc, char ** argv) {
   
   // start pigpio library
-  if (gpioInitialise() < 0) {
-    printf(RED "pigpio unable to start\n" RESET);
-    exit(2);
-  }
-  
+  if (gpioInitialise() < 0)
+    exit_printing("pigpio unable to start\n", ERROR_OPERATING_SYSTEM);
+
+  init_color();      // init colorized printing to the console
   init_pins();       // set up gpio data structure
   
   schedule = calloc(1, sizeof(*schedule));
@@ -137,6 +136,7 @@ int main(int argc, char ** argv) {
   
   // terminate pigpio library
   gpioTerminate();
+  terminate_color();
   
   return EXIT_SUCCESS;
 }
