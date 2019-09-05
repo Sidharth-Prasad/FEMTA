@@ -90,8 +90,8 @@ bool read_ds32(i2c_device * ds32_i2c) {
       
       if (trigger -> singular && trigger -> fired) continue;
 
-      if ( trigger -> less && experiment_duration > trigger -> threshold.integer) continue;  // condition not true
-      if (!trigger -> less && experiment_duration < trigger -> threshold.integer) continue;  // ------------------
+      if ( trigger -> less && experiment_duration > trigger -> threshold -> integer) continue;  // condition not true
+      if (!trigger -> less && experiment_duration < trigger -> threshold -> integer) continue;  // ------------------
       
       for (iterate(trigger -> charges, Charge *, charge)) {
 	pin_set(charge -> gpio, charge -> hot);

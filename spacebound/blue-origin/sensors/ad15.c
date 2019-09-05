@@ -186,8 +186,8 @@ bool read_ad15(i2c_device * ad15_i2c) {
       int cycle = (int) hashmap_get(ad15 -> targets, trigger -> id);
       if (config -> mode_cycle != cycle) continue;                              // wrong target
       
-      if ( trigger -> less && counts > trigger -> threshold.integer) continue;  // condition not true
-      if (!trigger -> less && counts < trigger -> threshold.integer) continue;  // ------------------
+      if ( trigger -> less && counts > trigger -> threshold -> integer) continue;  // condition not true
+      if (!trigger -> less && counts < trigger -> threshold -> integer) continue;  // ------------------
       
       for (iterate(trigger -> charges, Charge *, charge)) {
 	pin_set(charge -> gpio, charge -> hot);	

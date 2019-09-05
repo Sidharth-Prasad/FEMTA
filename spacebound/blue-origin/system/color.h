@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "../structure/hashmap.h"
+#include "../structures/hashmap.h"
 
 #define RED     "\e[31m"
 #define GREEN   "\e[32m"

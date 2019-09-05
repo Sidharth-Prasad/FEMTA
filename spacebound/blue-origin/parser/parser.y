@@ -19,8 +19,7 @@ typedef struct Trigger Trigger;
 typedef struct Numeric Numeric;
 typedef struct Specification Specification;
 
-Numeric       * make_numeric(int integer, float decimal, char generic);
-Charge        * make_charge(bool hot, int wire, Specification * tag);
+Charge        * make_charge(Numeric * wire, Specification * tag);
 Trigger       * make_trigger(List * charges, List * options);
 Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigger * trigger);
 Specification * make_tag(char * id, List * options, List * args);
@@ -62,9 +61,7 @@ void print_config();
 %token PRINT LESS_THAN MORE_THAN TRIGGER
 
 %token  <string>        ID
-%token  <integer>       INT
-%token  <decimal>       FLOAT
-%token  <Numeric>       NUMERIC
+%token  <numeric>       NUMERIC
                         
 %type   <list>          Specs Charges Args Options
 %type   <charge>        Charge
@@ -89,103 +86,82 @@ void print_config();
 %%
 
 Config   : Sensors
-         |                                            { printf("\nExperiment does not involve sensors");       }
+         |                                            { printf("\nExperiment does not involve sensors"); }
          ;
 
 Sensors  : Sensor                
          | Sensors Sensor
          ;
 
-Sensor   : ID NUMERIC '{'       '}' ';'               { build_sensor($1, $2, NULL);                            }
-         | ID NUMERIC '{' Specs '}' ';'               { build_sensor($1, $2,   $4);                            }
+Sensor   : ID NUMERIC '{'       '}' ';'               { build_sensor($1, $2, NULL);                      }
+         | ID NUMERIC '{' Specs '}' ';'               { build_sensor($1, $2,   $4);                      }
          ;
 
-Specs    : Spec                                       { $$ = list_from(1, $1);                                 }
-         | Specs Spec                                 { list_insert($1, $2); $$ = $1;                          }
+Specs    : Spec                                       { $$ = list_from(1, $1);                           }
+         | Specs Spec                                 { list_insert($1, $2); $$ = $1;                    }
          ;
 
-Spec     : ID LESS_THAN NUMERIC TRIGGER Actuator      { $$ = specify_trigger($1,  true, $3, $5);               }
-         | ID MORE_THAN NUMERIC TRIGGER Actuator      { $$ = specify_trigger($1, false, $3, $5);               }
-         | Tag ';'                                    { $$ = $1;                                               }
+Spec     : ID LESS_THAN NUMERIC TRIGGER Actuator      { $$ = specify_trigger($1,  true, $3, $5);         }
+         | ID MORE_THAN NUMERIC TRIGGER Actuator      { $$ = specify_trigger($1, false, $3, $5);         }
+         | Tag ';'                                    { $$ = $1;                                         }
          ;
 
-Actuator : '{'         '}'         ';'                { printf("Triggers must list pins\n"); exit(3);          }
-         | '{'         '}' Options ';'                { printf("Triggers must list pins\n"); exit(3);          }
-         | '{' Charges '}'         ';'                { $$ = make_trigger($2, NULL);                           }
-         | '{' Charges '}' Options ';'                { $$ = make_trigger($2,   $4);                           }
+Actuator : '{'         '}'         ';'                { printf("Triggers must list pins\n"); exit(3);    }
+         | '{'         '}' Options ';'                { printf("Triggers must list pins\n"); exit(3);    }
+         | '{' Charges '}'         ';'                { $$ = make_trigger($2, NULL);                     }
+         | '{' Charges '}' Options ';'                { $$ = make_trigger($2,   $4);                     }
          ;
 
-Charges  : Charge                                     { $$ = list_from(1, $1);                                 }
-         | Charges ',' Charge                         { list_insert($1, $3); $$ = $1;                          }
+Charges  : Charge                                     { $$ = list_from(1, $1);                           }
+         | Charges ',' Charge                         { list_insert($1, $3); $$ = $1;                    }
          ;
 
-Charge   : INT Tag                                    { $$ = make_charge($1 > 0, $1,   $2);                    }
-         | INT                                        { $$ = make_charge($1 > 0, $1, NULL);                    }
+Charge   : NUMERIC Tag                                { $$ = make_charge($1,   $2);                      }
+         | NUMERIC                                    { $$ = make_charge($1, NULL);                      }
          ;
 
-Tag      : '[' ID                      ']'            { $$ = make_tag($2, NULL, NULL);                         }
-         | '[' ID             ':' Args ']'            { $$ = make_tag($2, NULL, $4);                           }
-         | '[' ID ',' Options ':' Args ']'            { $$ = make_tag($2,   $4, $6);                           }
+Tag      : '[' ID                      ']'            { $$ = make_tag($2, NULL, NULL);                   }
+         | '[' ID ':'         ':' Args ']'            { $$ = make_tag($2, NULL,   $5);                   }
+         | '[' ID ':' Options ':' Args ']'            { $$ = make_tag($2,   $4,   $6);                   }
          ;
 
-Args     : Args ',' INT                               { list_insert($1,   make_numeric($3,  0, 'i')); $$ = $1; }
-         | Args ',' FLOAT                             { list_insert($1,   make_numeric( 0, $3, 'f')); $$ = $1; }
-         | INT                                        { $$ = list_from(1, make_numeric($1,  0, 'i'));          }
-         | FLOAT                                      { $$ = list_from(1, make_numeric( 0, $1, 'f'));          }
+Args     : Args ',' NUMERIC                           { list_insert($1, $3); $$ = $1;                    }
+         | NUMERIC                                    { $$ = list_from(1, $1);                           }
          ;
 
-Options  : ID                                         { $$ = list_from(1, $1);                                 }
-         | Options ',' ID                             { list_insert($1, $3); $$ = $1;                          }
+Options  : ID                                         { $$ = list_from(1, $1);                           }
+         | Options ',' ID                             { list_insert($1, $3); $$ = $1;                    }
          ;
 
 %%
 
 static void specification_destroy(void * vspecification) {
     
-    Specification * specification;
+    Specification * specification = vspecification;
     
-    free(specification -> id);
-    
-    if (specification -> options && specification -> should_destroy_options)
+    /*if (specification -> options && specification -> should_destroy_options)
         list_destroy(specification -> options);
     
     if (specification -> args && specification -> should_destroy_args)
-        list_destroy(specification -> args);
+    list_destroy(specification -> args);*/
     
+    free(specification -> id);
     free(specification);
 }
 
-Numeric * make_numeric(int integer, float decimal, char generic) {
-    
-    Numeric * numeric = malloc(sizeof(*numeric));
-    
-    switch (generic) {
-        
-    case 'i':
-        numeric -> integer = integer;
-        break;
-        
-    case 'f':
-        numeric -> decimal = decimal;
-        break;
-        
-    default:
-        printf(RED "Unknown generic numeric unit %c" RESET, generic);
-        exit(ERROR_EXPERIMENTER);
-        break;
-    }
-    
-    return numeric;
-}
-
-Charge * make_charge(bool hot, int wire, Specification * tag) {
+Charge * make_charge(Numeric * wire, Specification * tag) {
     /* note, pin 0 not allowed. Shouldn't matter since that's SDA.0, *
      * but it's important for future bug potential.                  */
-    
+
+    if (strcmp(wire -> units, "i")) {
+        printf(RED "Charge wires must be integers" RESET);
+	exit(ERROR_EXPERIMENTER);        
+    }
+  
     Charge * charge = calloc(1, sizeof(*charge));
     
-    charge -> gpio = abs(wire);
-    charge -> hot  = hot;
+    charge -> gpio = abs(wire -> integer);
+    charge -> hot  = (wire -> integer > 0);
     
     if (tag) {
         if (strcmp(tag -> id, "pulse")) {
@@ -195,10 +171,10 @@ Charge * make_charge(bool hot, int wire, Specification * tag) {
         
         if (tag -> args -> size != 1) {
             printf(RED "Exactly 1 argument shoud be used for 'pulse' tag\n" RESET);
-            exit(ERROR_EXPERIMENTOR;
+            exit(ERROR_EXPERIMENTER);
         }
         
-        charge -> duration = tag -> args -> head -> value;
+        charge -> duration = (int) tag -> args -> head -> value;
         
         specification_destroy(tag);    // no longer needed
     }
@@ -236,7 +212,7 @@ Trigger * make_trigger(List * charges, List * options) {
 Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigger * trigger) {
     /* Wraps and modifies the trigger into a specification so that sensor construction *
      * may have a linked list consisting of nodes with the same content                */
-    
+  
     trigger -> id        = id;
     trigger -> less      = less;
     trigger -> threshold = threshold;
@@ -250,7 +226,7 @@ Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigg
 }
  
 Specification * make_tag(char * id, List * options, List * args) {
-    
+  
     Specification * tag = malloc(sizeof(*tag));
     
     tag -> id      = id;
@@ -267,10 +243,10 @@ Specification * make_tag(char * id, List * options, List * args) {
     /* Perform error checking on this tag now */
     
     if (!strcmp(id, "print")) {
-        
+      
         if (options) {
-            
-            char * color      = args -> options -> head -> value;
+	  
+            char * color      = (char *) options -> head -> value;
             char * color_code = get_color_by_name(color);
             
             if (!color_code) {
@@ -280,15 +256,24 @@ Specification * make_tag(char * id, List * options, List * args) {
         }
     }
     
-    else if (!strcmp(id, "smooth")) {
+    else if (!strcmp(id, "pulse")) {
         
         if (options)
+            exit_printing("Pulsing does not support options at this time\n", ERROR_EXPERIMENTER);
+	
+        if (!args || args -> size != 1)
+            exit_printing("Pulsing requires exactly 1 argument\n", ERROR_EXPERIMENTER);
+    }
+    
+    else if (!strcmp(id, "smooth")) {
+      
+        if (options)
             exit_printing("Smoothing does not support options at this time\n", ERROR_EXPERIMENTER);
-        
+	
         if (args) {
-            Numeric * numeric = args -> head -> value;
+	    Numeric * numeric = (Numeric *) args -> head -> value;
             float value = numeric -> decimal;
-            
+	    
             if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f) {
                 printf(RED "Autoregressive smoothing requires a # in [0.0, 1.0]\n" RESET);
                 exit(ERROR_EXPERIMENTER);
@@ -297,18 +282,18 @@ Specification * make_tag(char * id, List * options, List * args) {
     }
     
     else if (!strcmp(id, "calibrate")) {
-        
+      
         if (!args   ) exit_printing("Calibration curves require at least one constant\n", ERROR_EXPERIMENTER);
-        if (!options) exit_printing("Calibration requires a target\n" ERROR_EXPERIMENTER);
-        
+        if (!options) exit_printing("Calibration requires a target\n", ERROR_EXPERIMENTER);
+	
         char * curve;
-        if (options -> size > 1) curve_id = options -> head -> next -> value;
-        else                     curve_id = "poly";
+        if (options -> size > 1) curve = (char *) options -> head -> next -> value;
+        else                     curve = "poly";
         
         if      (!strcmp(curve, "poly"));
         else if (!strcmp(curve, "hart")) {
-            if (args != 3)
-                exit_printing("The Steinhart and Hart Equation requires 3 constants\n", ERROR_EXPERIMENTER);
+            if (args -> size != 3)
+	        exit_printing("The Steinhart and Hart Equation requires 3 constants\n", ERROR_EXPERIMENTER);
         }
         else {
             printf(RED "Unknown calibration curve " CYAN "%s\n" RESET, curve);
@@ -324,7 +309,7 @@ Specification * make_tag(char * id, List * options, List * args) {
     return tag;
 }
 
-void build_sensor(char * id, Numeric * frequency, List * specifications);
+void build_sensor(char * id, Numeric * frequency, List * specifications) {
   
   ProtoSensor * proto = hashmap_get(proto_sensors, id);
   
@@ -335,9 +320,9 @@ void build_sensor(char * id, Numeric * frequency, List * specifications);
   
   proto -> hertz = frequency -> integer;    // only support Hz for now
   proto -> requested = true;
-  
+
   if (!specifications) return;
-  
+
   List * triggers = list_create();
   Hashmap * calibrations = hashmap_create(hash_string, compare_strings, NULL, 16);
   
@@ -346,20 +331,25 @@ void build_sensor(char * id, Numeric * frequency, List * specifications);
       if (!strcmp(specification -> id, "trigger")) {
           list_insert(triggers, specification -> args -> head -> value);
       }
+      else if (!strcmp(specification -> id, "print")) {
+          proto -> print = true;
+      }
       else if (!strcmp(specification -> id, "smooth")) {
+	
+          Numeric * numeric = specification -> args -> head -> value;
+	  
+          float auto_regressive = numeric -> decimal;
           
-          float auto_regression = specification -> args -> head -> value;
-          
-          if (proto -> auto_regression) {
+          if (proto -> auto_regressive) {
               printf(RED "Duplicate autoregressive constant for %s\n" RESET, id);
               exit(ERROR_EXPERIMENTER);
           }
           
-          proto -> auto_regression = auto_regression;
+          proto -> auto_regressive = auto_regressive;
       }
       else if (!strcmp(specification -> id, "calibrate")) {
           
-          char * target = options -> head -> value;
+          char * target = specification -> options -> head -> value;
           
           if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
               printf(RED "Calibration target %s for %s is not known\n" RESET, target, id);
@@ -378,7 +368,7 @@ void build_sensor(char * id, Numeric * frequency, List * specifications);
   
   
   for (iterate(triggers, Trigger *, trigger)) {
-
+      
       // check trigger targets
       if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
           printf(RED "Trigger target %s unknown\n" RESET, trigger -> id);
@@ -400,36 +390,38 @@ void build_sensor(char * id, Numeric * frequency, List * specifications);
       
       // duplicate reversing triggers
       
-    if (trigger -> reverses) {
+      if (trigger -> reverses) {
       
-      Trigger * opposite = malloc(sizeof(*opposite));
-      
-      opposite -> id       =  strdup(trigger -> id);
-      opposite -> less     = !trigger -> less;
-      opposite -> fired    =  trigger -> fired;
-      opposite -> singular =  trigger -> singular;
-      opposite -> reverses =  false;
-      
-      opposite -> threshold.decimal = trigger -> threshold.decimal;
-      opposite -> charges = list_create();
-      
-      for (iterate(trigger -> charges, Charge *, charge)) {
-
-        Charge * anti_charge = malloc(sizeof(*charge));
-	
-        anti_charge -> gpio     =  charge -> gpio;
-        anti_charge -> hot      = !charge -> hot;
-        anti_charge -> duration =  charge -> duration;
-	
-        list_insert(opposite -> charges, anti_charge);
+          Trigger * opposite = malloc(sizeof(*opposite));
+	  
+	  opposite -> id       =  strdup(trigger -> id);
+	  opposite -> less     = !trigger -> less;
+	  opposite -> fired    =  trigger -> fired;
+	  opposite -> singular =  trigger -> singular;
+	  opposite -> reverses =  false;
+	  
+	  opposite -> threshold = trigger -> threshold;
+	  opposite -> charges = list_create();
+	  
+	  for (iterate(trigger -> charges, Charge *, charge)) {
+	      
+              Charge * anti_charge = malloc(sizeof(*charge));
+	      
+	      anti_charge -> gpio     =  charge -> gpio;
+	      anti_charge -> hot      = !charge -> hot;
+	      anti_charge -> duration =  charge -> duration;
+	      
+	      list_insert(opposite -> charges, anti_charge);
+	  }
+	  
+	  list_insert(triggers, opposite);
+	  //trigger_index++;
       }
-      
-      list_insert(triggers, opposite);
-      //trigger_index++;
-    }
   }
   
-  hashmap_destroy(target_calibrations);
+  proto -> triggers = triggers;
+  
+  hashmap_destroy(calibrations);
   
   specifications -> free = specification_destroy;
   list_destroy(specifications);

@@ -4,7 +4,7 @@
 
 #include "color.h"
 
-#include "../structure/hashmap.h"
+#include "../structures/hashmap.h"
 
 static Hashmap * colors_by_name;
 

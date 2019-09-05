@@ -69,8 +69,8 @@ bool read_ds18(one_device * ds18_one) {
 
       if (trigger -> singular && trigger -> fired) continue;
 
-      if ( trigger -> less && temperature > trigger -> threshold.decimal) continue;  // condition not true
-      if (!trigger -> less && temperature < trigger -> threshold.decimal) continue;  // ------------------
+      if ( trigger -> less && temperature > trigger -> threshold -> decimal) continue;  // condition not true
+      if (!trigger -> less && temperature < trigger -> threshold -> decimal) continue;  // ------------------
       
       for (iterate(trigger -> charges, Charge *, charge))
 	pin_set(charge -> gpio, charge -> hot);

@@ -19,30 +19,30 @@ digit  [0-9]
 \/\/.* {}                                                                    // 1 line comment
 \/\*(([^*/]|\n)|(\*+([^*/]|\n)|\/([^*/]|\n)*|\/\*([^*/]|\n)*))*\**\*\/ {}    // multi comment
 
-print     { return PRINT;     }
 trigger   { return TRIGGER;   }
 less_than { return LESS_THAN; }
 more_than { return MORE_THAN; }
 
--?{digit}+{letter}+ {
+(-|\+)?{digit}+{letter}+ {
   // note, units may never exceed 7 characters
   
   yylval.numeric = malloc(sizeof(*yylval.numeric));
   
-  sscanf("%d%s", &yylval.integer, &yylval.units);
+  sscanf(yytext, "%d%s", &yylval.numeric -> integer, yylval.numeric -> units);
+  
   return NUMERIC;
 }
 
--?{digit}+\.{digit}+{letter}+ {
+(-|\+)?{digit}+\.{digit}+{letter}+ {
   // note, units may never exceed 7 characters
   
   yylval.numeric = malloc(sizeof(*yylval.numeric));
   
-  sscanf("%f%s", &yylval.decimal, &yylval.units);
+  sscanf(yytext, "%f%s", &yylval.numeric -> decimal, yylval.numeric -> units);
   return NUMERIC;
 }
 
--?{digit}+ {
+(-|\+)?{digit}+ {
   yylval.numeric = calloc(1, sizeof(*yylval.numeric));
   
   yylval.numeric -> integer  = atoi(yytext);
@@ -51,7 +51,7 @@ more_than { return MORE_THAN; }
   return NUMERIC;
 }
 
--?{digit}+\.{digit}+ {
+(-|\+)?{digit}+\.{digit}+ {
   yylval.numeric = calloc(1, sizeof(*yylval.numeric));
   
   yylval.numeric -> decimal  = atof(yytext);
@@ -65,7 +65,7 @@ more_than { return MORE_THAN; }
   return ID;
 }
 
-[=\{\}\+\-,;\[\]] {
+[=\{\}\+\-,:;\[\]] {
   return yytext[0];
 }
 

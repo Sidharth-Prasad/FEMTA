@@ -40,7 +40,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 32 "parser.y" /* yacc.c:1909  */
+#line 31 "parser.y" /* yacc.c:1909  */
 
   
   #include <stdbool.h>
@@ -70,9 +70,7 @@ extern int yydebug;
     MORE_THAN = 260,
     TRIGGER = 261,
     ID = 262,
-    INT = 263,
-    FLOAT = 264,
-    NUMERIC = 265
+    NUMERIC = 263
   };
 #endif
 /* Tokens.  */
@@ -81,16 +79,14 @@ extern int yydebug;
 #define MORE_THAN 260
 #define TRIGGER 261
 #define ID 262
-#define INT 263
-#define FLOAT 264
-#define NUMERIC 265
+#define NUMERIC 263
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 50 "parser.y" /* yacc.c:1909  */
+#line 49 "parser.y" /* yacc.c:1909  */
 
   char          * string;
   int           * integer;
@@ -102,7 +98,7 @@ union YYSTYPE
   Trigger       * trigger;
   Specification * specification;
 
-#line 106 "y.tab.h" /* yacc.c:1909  */
+#line 102 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

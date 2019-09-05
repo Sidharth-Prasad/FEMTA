@@ -69,7 +69,7 @@ typedef struct Sensor {
   List * triggers;       // sensor triggers
   Hashmap * targets;     // that which can be triggered
 
-  float auto_regression;
+  float auto_regressive; 
   
   List * betas;          // the regression coefficients
   
@@ -91,7 +91,7 @@ typedef struct ProtoSensor {
   List * triggers;           // gpio triggers
   Hashmap * targets;         // that which can be triggered
   
-  float auto_regression;     
+  float auto_regressive;     
   
   bool print;                // whether sensor is printed to console
   bool requested;            // whether sensor is requested

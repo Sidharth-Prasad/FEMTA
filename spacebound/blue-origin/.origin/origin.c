@@ -9,6 +9,7 @@
 
 #include "../sensors/sensor.h"
 #include "../system/clock.h"
+#include "../system/error.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"
@@ -103,6 +104,8 @@ int main(int argc, char ** argv) {
   
   parse_args(argc, argv);
   print_config();
+
+  exit(0);
   
   start_sensors();
   start_one();       // start reading the 1-wire bus
@@ -124,6 +127,8 @@ int main(int argc, char ** argv) {
   
   // tell threads to terminate
   schedule -> term_signal = true;
+  
+  printf("DEBUG: Active - %d %d\n", schedule -> i2c_active, schedule -> one_active);
   
   // join with threads
   if (schedule -> i2c_active) pthread_join(*schedule -> i2c_thread, NULL);

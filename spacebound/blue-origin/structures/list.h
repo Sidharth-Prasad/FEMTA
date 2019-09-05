@@ -49,7 +49,7 @@ void list_destroy(List * list);                       // removes all nodes and f
     * NAME##_node  =         (void *)  (LIST -> head),                      \
     * NAME##_index = 0;                                                     \
                                                                             \
-  (long) NAME##_index < (LIST -> size) &&                                   \
+  (int) NAME##_index < (LIST -> size) &&				    \
   ((NAME = (TYPE) *(int *) &((ListNode *) NAME##_node) -> value) || true);  \
                                                                             \
   NAME##_index   = ((void *) NAME##_index + 1),                             \
