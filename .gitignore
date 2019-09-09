@@ -24,3 +24,4 @@ compiler
 spacebound/blue-origin/compiler/
 .DS_Store
 
+*.dot
