@@ -18,18 +18,18 @@ uint16 fram_head;
 
 Sensor * init_fram(ProtoSensor * proto) {
   
-  Sensor * fram = malloc(sizeof(Sensor));
+  Sensor * fram = sensor_from_proto(proto);
   
   fram -> name = "FRAM";
   fram -> free = free_fram;
   
   fram -> i2c = create_i2c_device(fram, FRAM_ADDRESS, read_fram, proto -> hertz);
   
-  fram -> i2c -> file = fopen("logs/fram.log", "a");
+  fram -> i2c -> log = fopen("logs/fram.log", "a");
   
-  setlinebuf(fram -> i2c -> file);    // write out every read
+  setlinebuf(fram -> i2c -> log);    // write out every read
   
-  fprintf(fram -> i2c -> file, GRAY "\n\nFRAM\nStart time %s\n" RESET, formatted_time);
+  fprintf(fram -> i2c -> log, GRAY "\n\nFRAM\nStart time %s\n" RESET, formatted_time);
   
   printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
 	 fram -> name, proto -> hertz, FRAM_ADDRESS);
@@ -113,14 +113,14 @@ bool read_fram(i2c_device * fram_i2c) {
   
   read_fram_data(fram_i2c, address, read_buffer, format_length);
   
-  //fprintf(fram_i2c -> file, "value: %s\n", read_buffer);
+  //fprintf(fram_i2c -> log, "value: %s\n", read_buffer);
 
-  fprintf(fram_i2c -> file, "value[ ");
+  fprintf(fram_i2c -> log, "value[ ");
   
   for (char i = 0; i < format_length; i++)
-    print_byte(fram_i2c -> file, read_buffer[i]);
+    print_byte(fram_i2c -> log, read_buffer[i]);
   
-  fprintf(fram_i2c -> file, " ]\n");
+  fprintf(fram_i2c -> log, " ]\n");
   
   //i2c_read_bytes(fram_i2c, 0x00, read_raws, 7);
   
@@ -128,5 +128,5 @@ bool read_fram(i2c_device * fram_i2c) {
 }
 
 void free_fram(Sensor * fram) {
-  
+  // Nothing special has to happen  
 }

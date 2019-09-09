@@ -19,16 +19,16 @@ bool read_adxl(i2c_device * adxl_i2c);
 
 Sensor * init_adxl(ProtoSensor * proto) {
   
-  Sensor * adxl = malloc(sizeof(*adxl));
+  Sensor * adxl = sensor_from_proto(proto);
   
   adxl -> name = "ADXL345";
   adxl -> free = free_adxl;
   
   adxl -> i2c = create_i2c_device(adxl, ADXL_ADDRESS, read_adxl, proto -> hertz);
   
-  adxl -> i2c -> file = fopen("logs/adxl.log", "a");
+  adxl -> i2c -> log = fopen("logs/adxl.log", "a");
   
-  fprintf(adxl -> i2c -> file, RED "\n\nADXL345\nStart time %s\nAccel x\tAccel y\tAccel z\n" RESET, formatted_time);
+  fprintf(adxl -> i2c -> log, RED "\n\nADXL345\nStart time %s\nAccel x\tAccel y\tAccel z\n" RESET, formatted_time);
   
   // set up data format for acceleration measurements (page 28)
   // tell adxl to use full resolution when measuring acceleration (bit    3)
@@ -78,7 +78,7 @@ bool read_adxl(i2c_device * adxl_i2c) {
 
   //printf("d:%f %f %f\n",
   
-  fprintf(adxl_i2c -> file, "%.3f\t%.3f\t%.3f\n",
+  fprintf(adxl_i2c -> log, "%.3f\t%.3f\t%.3f\n",
 	  xAccel * 0.004 - adxl_bias_x,
 	  yAccel * 0.004 - adxl_bias_y,
 	  zAccel * 0.004 - adxl_bias_z);
@@ -87,7 +87,5 @@ bool read_adxl(i2c_device * adxl_i2c) {
 }
 
 void free_adxl(Sensor * adxl) {
-  
-  
-  
+  // Nothing special has to happen
 }

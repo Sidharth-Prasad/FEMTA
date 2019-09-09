@@ -40,4 +40,6 @@ one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
 			       char * path, char * log_path, uint32 hertz,
 			       one_reader read);
 
+void one_close(one_device * one);
+
 #endif

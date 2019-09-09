@@ -10,8 +10,8 @@
 #include "../system/one.h"
 #include "../types/types.h"
 
-#define I2C_BUS 0x0
-#define ONE_BUS 0x1
+#define I2C_BUS 0x1
+#define ONE_BUS 0x2
 
 typedef struct Sensor Sensor;
 typedef struct i2c_device i2c_device;
@@ -35,18 +35,16 @@ typedef struct Numeric {
   };
   
   char units[8];      // the units code
+  bool is_decimal;    // representation
   
 } Numeric;
 
 typedef struct Trigger {
   
   char * id;              // target (like A01)
-  
-  char * curve;           // calibration
-  List * constants;       // -----------
-  
-  Numeric * threshold;
-  List    * charges;
+    
+  Numeric * threshold;    // threshold for condition
+  List    * charges;      // wires for actuation
   
   bool less;
   bool fired;
@@ -58,20 +56,22 @@ typedef struct Trigger {
 
 typedef struct Sensor {
   
-  char * name;           // component name
-  bool   print;          // whether sensor prints
+  char * name;              // component name
+  char * code_name;         // abbreviated name
+  bool   print;             // whether sensor prints
   
   union {
-    i2c_device * i2c;    // i2c communications info
-    one_device * one;    // 1-wire communications info
+    i2c_device * i2c;       // i2c communications info
+    one_device * one;       // 1-wire communications info
   };
+  int bus;                  // which bus is used
   
-  List * triggers;       // sensor triggers
-  Hashmap * targets;     // that which can be triggered
-
-  float auto_regressive; 
+  List    * triggers;       // sensor triggers
+  Hashmap * targets;        // that which can be triggered
+  Hashmap * calibrations;   // calibrations for each target
+  Hashmap * output_units;   // units for each trigger
   
-  List * betas;          // the regression coefficients
+  float auto_regressive;    
   
   sensor_free free;      // how to free sensor
   
@@ -88,8 +88,10 @@ typedef struct ProtoSensor {
   
   int bus;                   // which bus this is connected to
   
-  List * triggers;           // gpio triggers
+  List    * triggers;        // gpio triggers
   Hashmap * targets;         // that which can be triggered
+  Hashmap * calibrations;   // calibrations for each target
+  Hashmap * output_units;    // units for each trigger
   
   float auto_regressive;     
   
@@ -124,8 +126,12 @@ Hashmap * proto_sensors;    // sensors that could be specified
 
 int n_triggers;             // number of triggers
 
+float to_standard_units(Numeric * dest, Numeric * source);
+float convert_to(char * units, float value);
+
 void init_sensors();
 void start_sensors();
-void compute_curve(char * curve_id, List * constants);
+void terminate_sensors();
+Sensor * sensor_from_proto(ProtoSensor *);
 
 #endif

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "ad15.h"
 #include "adxl.h"
@@ -12,9 +13,11 @@
 
 #include "../structures/list.h"
 #include "../structures/hashmap.h"
+#include "../system/class.h"
 #include "../system/color.h"
 #include "../math/mathematics.h"
 
+void sensor_call_free(void *);
 
 ProtoSensor * proto_sensor_create(char * code_name, int address, Hashmap * targets, int bus) {
   
@@ -25,7 +28,28 @@ ProtoSensor * proto_sensor_create(char * code_name, int address, Hashmap * targe
   proto -> targets   = targets;
   proto -> bus       = bus;
   
+  if (targets && targets -> size) {
+    proto -> calibrations = hashmap_create(hash_string, compare_strings, NULL, targets -> size/2);
+    proto -> output_units = hashmap_create(hash_string, compare_strings, NULL, targets -> size/2);
+  }
+  
   return proto;
+}
+
+Sensor * sensor_from_proto(ProtoSensor * proto) {
+  
+  Sensor * sensor = calloc(1, sizeof(*sensor));
+  
+  sensor -> bus             = proto -> bus;
+  sensor -> print           = proto -> print;
+  sensor -> targets         = proto -> targets;
+  sensor -> triggers        = proto -> triggers;
+  sensor -> code_name       = proto -> code_name;
+  sensor -> calibrations    = proto -> calibrations;
+  sensor -> output_units    = proto -> output_units;
+  sensor -> auto_regressive = proto -> auto_regressive;
+  
+  return sensor;
 }
 
 void init_sensors() {
@@ -131,11 +155,13 @@ void start_sensors() {
   schedule -> i2c_interval = i2c_divisor * 1E6;
   schedule -> one_interval = one_divisor * 1E6;
   
-  sensors = list_create();
+  sensors = list_that_frees(sensor_call_free);
   
   
   
   ProtoSensor * proto;
+
+  /* i2c sensors */
   
   // ds32
   proto = hashmap_get(proto_sensors, "ds32");
@@ -211,19 +237,32 @@ void start_sensors() {
   if (ad15[2]) list_insert(schedule -> i2c_devices, ad15[2] -> i2c);
   if (ad15[3]) list_insert(schedule -> i2c_devices, ad15[3] -> i2c);
   if (ad15[0]) list_insert(schedule -> i2c_devices, ad15[0] -> i2c);   // single 3 -> 0
+
   
-  
+  /* 1-wire sensors */
   
   // ds18
   proto = hashmap_get(proto_sensors, "ds18");
   
   if (proto -> requested) {
     Sensor * ds18 = init_ds18(proto);
-    list_insert(sensors,                 ds18       );    // first so we can get the time
+    list_insert(sensors,                 ds18       );
     list_insert(schedule -> one_devices, ds18 -> one);
   }
 }
 
-void destroy_sensors() {
-  // TODO
+void sensor_call_free(void * vsensor) {
+  
+  Sensor * sensor = vsensor;
+  
+  printf(YELLOW "Removing sensor %s\n" RESET, sensor -> name);
+  
+  if      (sensor -> bus == I2C_BUS) i2c_close(sensor -> i2c);
+  else if (sensor -> bus == ONE_BUS) one_close(sensor -> one);
+  $(sensor, free);
+}
+
+void terminate_sensors() {  
+  list_destroy(sensors);
+  sensors = NULL;
 }

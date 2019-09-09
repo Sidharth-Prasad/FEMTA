@@ -20,72 +20,7 @@
 
 FILE * yyin;
 void print_config();
-
-void parse_args(int argc, char ** argv) {
-
-  if (argc == 1) {
-    // default: run default.e
-    
-    yyin = fopen("./experiments/default.e", "r");
-    
-    if (!yyin) {
-      printf(RED "Experiment file does not exist\n" RESET);
-      exit(1);
-    }
-    
-    yyparse();  
-    return;
-  }
-  
-  if (!strncmp(argv[1], "file", 4)) {
-
-    char * filename = argv[1] + 5;
-    
-    printf("%s\n", filename);
-    
-    yyin = fopen(filename, "r");
-    
-    if (!yyin) {
-      printf(RED "Experiment file %s does not exist\n" RESET, filename);
-      exit(1);
-    }
-    
-    yyparse();
-    return;
-  }
-  
-  for (int i = 1; i < argc; i++) {
-    
-    char code_name[32];
-    code_name[0] = '\0';    // need to protect buffer from previous iteration
-    
-    int  hertz = 0;
-    bool print = false;
-    
-    sscanf(argv[i], "%[^*,],%d", code_name, &hertz);      
-    
-    if (!code_name[0]) {
-      sscanf(argv[i], "*%[^,],%d", code_name, &hertz);
-      print = true;
-    }
-    
-    ProtoSensor * proto = hashmap_get(proto_sensors, code_name);
-    
-    //printf("%s at %d\n", code_name, hertz);
-    
-    if (!proto) {
-      printf(RED "%s is not a sensor\n" RESET, code_name);
-      exit(1);
-    }
-    
-    proto -> requested = true;
-    proto -> print     = print;
-    
-    if (hertz) proto -> hertz = hertz;
-  }
-}
-
-
+void parse_args(int, char **);
 
 int main(int argc, char ** argv) {
   
@@ -105,7 +40,7 @@ int main(int argc, char ** argv) {
   parse_args(argc, argv);
   print_config();
 
-  exit(0);
+  //  gpioTerminate(); exit(0);
   
   start_sensors();
   start_one();       // start reading the 1-wire bus
@@ -134,8 +69,9 @@ int main(int argc, char ** argv) {
   if (schedule -> i2c_active) pthread_join(*schedule -> i2c_thread, NULL);
   if (schedule -> one_active) pthread_join(*schedule -> one_thread, NULL);
   
-  terminate_i2c();
-  terminate_one();
+  terminate_sensors();    // close and destroy all sensor-related structures
+  terminate_i2c();        // destroy i2c bus structures
+  terminate_one();        // destroy 1-wire bus structures
   
   free(schedule);
   
@@ -144,4 +80,71 @@ int main(int argc, char ** argv) {
   terminate_color();
   
   return EXIT_SUCCESS;
+}
+
+
+void parse_args(int argc, char ** argv) {
+
+  if (argc == 1) {
+    // default: run default.e
+    
+    yyin = fopen("./experiments/default.e", "r");
+    
+    if (!yyin) {
+      printf(RED "Experiment file does not exist\n" RESET);
+      exit(1);
+    }
+    
+    yyparse();  
+    return;
+  }
+  
+  if (!strncmp(argv[1], "file", 4)) {
+    /* parse a file for specifications */
+    
+    char * filename = argv[1] + 5;
+    
+    printf("%s\n", filename);
+    
+    yyin = fopen(filename, "r");
+    
+    if (!yyin) {
+      printf(RED "Experiment file %s does not exist\n" RESET, filename);
+      exit(1);
+    }
+    
+    yyparse();
+    return;
+  }
+  
+  for (int i = 1; i < argc; i++) {
+    /* read command line arguments rather than file */
+    
+    char code_name[32];
+    code_name[0] = '\0';    // need to protect buffer from previous iteration
+    
+    int  hertz = 0;
+    bool print = false;
+    
+    sscanf(argv[i], "%[^*,],%d", code_name, &hertz);      
+    
+    if (!code_name[0]) {
+      sscanf(argv[i], "*%[^,],%d", code_name, &hertz);
+      print = true;
+    }
+    
+    ProtoSensor * proto = hashmap_get(proto_sensors, code_name);
+    
+    //printf("%s at %d\n", code_name, hertz);
+    
+    if (!proto) {
+      printf(RED "%s is not a sensor\n" RESET, code_name);
+      exit(1);
+    }
+    
+    proto -> requested = true;
+    proto -> print     = print;
+    
+    if (hertz) proto -> hertz = hertz;
+  }
 }

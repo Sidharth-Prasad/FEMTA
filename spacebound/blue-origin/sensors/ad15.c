@@ -67,13 +67,10 @@ void configure_ad15(Sensor * ad15);
 
 Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names) {
 
-  Sensor * ad15 = malloc(sizeof(Sensor));
+  Sensor * ad15 = sensor_from_proto(proto);
   
   ad15 -> name = "ADS1115";
   ad15 -> free = free_ad15;
-  ad15 -> print = proto -> print;
-  ad15 -> targets = proto -> targets;
-  ad15 -> triggers = proto -> triggers;
   
   ad15 -> i2c = create_i2c_device(ad15, proto -> address, read_ad15, proto -> hertz);
   
@@ -81,18 +78,18 @@ Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names
   
   sprintf(file_name, "logs/ad15-%x.log", proto -> address);
   
-  FILE * file = fopen(file_name, "a");
+  FILE * log = fopen(file_name, "a");
   
-  ad15 -> i2c -> file = file;
+  ad15 -> i2c -> log = log;
   
-  fprintf(file, RED "\n\n");
-  fprintf(file, "ADS115 - %s\n", title);
-  fprintf(file, "Start time %s\n", formatted_time);
+  fprintf(log, RED "\n\n");
+  fprintf(log, "ADS115 - %s\n", title);
+  fprintf(log, "Start time %s\n", formatted_time);
   
   for (iterate(names, char *, column_name))
-    fprintf(file, "%s\t", column_name);
+    fprintf(log, "%s\t", column_name);
   
-  fprintf(file, "\n" RESET);
+  fprintf(log, "\n" RESET);
   
   // set up the configuration  (page 19)
 
@@ -175,7 +172,10 @@ bool read_ad15(i2c_device * ad15_i2c) {
   i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);
   
   uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
-
+  
+  float measure = counts;
+  List * calibration = NULL;
+  
   // act on potential triggers
   
   if (ad15 -> triggers) {
@@ -199,7 +199,11 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   // log and print
   
-  fprintf(ad15_i2c -> file, "%d\t", (int16) counts);
+  fprintf(ad15_i2c -> log, "%d\t", (int16) counts);
+  
+  if (config -> current_mode == config -> modes -> head)
+    if (should_print)
+      printf("%s ", ad15 -> code_name);
   
   if (should_print) {
     double volts = 6.114 * (double) ((int16) counts) / 32768.0;
@@ -213,7 +217,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
     
     if (should_print) printf("\n");
     
-    fprintf(ad15_i2c -> file, "\n");
+    fprintf(ad15_i2c -> log, "\n");
     
     ad15_i2c -> reading = false;
     ad15_i2c -> total_reads++;
@@ -237,5 +241,5 @@ bool read_ad15(i2c_device * ad15_i2c) {
 }
 
 void free_ad15(Sensor * ad15) {
-  
+  // Nothing special has to happen
 }

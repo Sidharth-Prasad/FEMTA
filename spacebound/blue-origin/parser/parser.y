@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../math/units.h"
 #include "../structures/list.h"
 #include "../structures/hashmap.h"
 #include "../system/color.h"
@@ -31,6 +32,7 @@ void print_config();
 %code requires {
   
   #include <stdbool.h>
+  #include "../math/units.h"
   #include "../structures/list.h"
   #include "../sensors/sensor.h"
   
@@ -58,7 +60,7 @@ void print_config();
   Specification * specification;
 }
 
-%token PRINT LESS_THAN MORE_THAN TRIGGER
+%token TRIGGER
 
 %token  <string>        ID
 %token  <numeric>       NUMERIC
@@ -101,8 +103,8 @@ Specs    : Spec                                       { $$ = list_from(1, $1);  
          | Specs Spec                                 { list_insert($1, $2); $$ = $1;                    }
          ;
 
-Spec     : ID LESS_THAN NUMERIC TRIGGER Actuator      { $$ = specify_trigger($1,  true, $3, $5);         }
-         | ID MORE_THAN NUMERIC TRIGGER Actuator      { $$ = specify_trigger($1, false, $3, $5);         }
+Spec     : ID '<' NUMERIC TRIGGER Actuator            { $$ = specify_trigger($1,  true, $3, $5);         }
+         | ID '>' NUMERIC TRIGGER Actuator            { $$ = specify_trigger($1, false, $3, $5);         }
          | Tag ';'                                    { $$ = $1;                                         }
          ;
 
@@ -135,6 +137,17 @@ Options  : ID                                         { $$ = list_from(1, $1);  
 
 %%
 
+static void represent_as_decimal(Numeric * numeric) {
+    
+    if (numeric -> is_decimal) return;
+    
+    numeric -> decimal    = (float) numeric -> integer;
+    numeric -> is_decimal = true;
+    
+    if (!strcmp(numeric -> units, "i"))    // change generic unit if needed
+      numeric -> units[0] = 'f';           // -----------------------------
+}
+
 static void specification_destroy(void * vspecification) {
     
     Specification * specification = vspecification;
@@ -152,12 +165,12 @@ static void specification_destroy(void * vspecification) {
 Charge * make_charge(Numeric * wire, Specification * tag) {
     /* note, pin 0 not allowed. Shouldn't matter since that's SDA.0, *
      * but it's important for future bug potential.                  */
-
+  
     if (strcmp(wire -> units, "i")) {
         printf(RED "Charge wires must be integers" RESET);
 	exit(ERROR_EXPERIMENTER);        
     }
-  
+    
     Charge * charge = calloc(1, sizeof(*charge));
     
     charge -> gpio = abs(wire -> integer);
@@ -185,7 +198,7 @@ Charge * make_charge(Numeric * wire, Specification * tag) {
 Trigger * make_trigger(List * charges, List * options) {
     // creates a trigger, which becomes a specification later
     
-    Trigger * trigger = malloc(sizeof(*trigger));
+    Trigger * trigger = calloc(1, sizeof(*trigger));
     
     trigger -> fired    = false;
     trigger -> singular = true;     // defaults
@@ -212,19 +225,21 @@ Trigger * make_trigger(List * charges, List * options) {
 Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigger * trigger) {
     /* Wraps and modifies the trigger into a specification so that sensor construction *
      * may have a linked list consisting of nodes with the same content                */
-  
+    
+    represent_as_decimal(threshold);
+    
     trigger -> id        = id;
     trigger -> less      = less;
     trigger -> threshold = threshold;
     
     Specification * specification = malloc(sizeof(*specification));
     
-    specification -> id   = strdup("trigger");
-    specification -> args = list_from(1, trigger);
+    specification -> id      = strdup("trigger");
+    specification -> options = list_from(1, trigger);
     
     return specification;
 }
- 
+
 Specification * make_tag(char * id, List * options, List * args) {
   
     Specification * tag = malloc(sizeof(*tag));
@@ -271,7 +286,7 @@ Specification * make_tag(char * id, List * options, List * args) {
             exit_printing("Smoothing does not support options at this time\n", ERROR_EXPERIMENTER);
 	
         if (args) {
-	    Numeric * numeric = (Numeric *) args -> head -> value;
+	    Numeric * numeric = (Numeric *) list_get(args, 0);
             float value = numeric -> decimal;
 	    
             if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f) {
@@ -285,10 +300,9 @@ Specification * make_tag(char * id, List * options, List * args) {
       
         if (!args   ) exit_printing("Calibration curves require at least one constant\n", ERROR_EXPERIMENTER);
         if (!options) exit_printing("Calibration requires a target\n", ERROR_EXPERIMENTER);
+	if (options -> size < 2) exit_printing("Calibration requires a unit\n", ERROR_EXPERIMENTER);
 	
-        char * curve;
-        if (options -> size > 1) curve = (char *) options -> head -> next -> value;
-        else                     curve = "poly";
+        char * curve = (char *) list_get(options, 1);
         
         if      (!strcmp(curve, "poly"));
         else if (!strcmp(curve, "hart")) {
@@ -320,23 +334,24 @@ void build_sensor(char * id, Numeric * frequency, List * specifications) {
   
   proto -> hertz = frequency -> integer;    // only support Hz for now
   proto -> requested = true;
-
+  
   if (!specifications) return;
-
+  
   List * triggers = list_create();
-  Hashmap * calibrations = hashmap_create(hash_string, compare_strings, NULL, 16);
   
   for (iterate(specifications, Specification *, specification)) {
       
       if (!strcmp(specification -> id, "trigger")) {
-          list_insert(triggers, specification -> args -> head -> value);
+	  list_insert(triggers, list_get(specification -> options, 0));
       }
+      
       else if (!strcmp(specification -> id, "print")) {
           proto -> print = true;
       }
+      
       else if (!strcmp(specification -> id, "smooth")) {
-	
-          Numeric * numeric = specification -> args -> head -> value;
+	  
+          Numeric * numeric = list_get(specification -> args, 0);
 	  
           float auto_regressive = numeric -> decimal;
           
@@ -347,21 +362,32 @@ void build_sensor(char * id, Numeric * frequency, List * specifications) {
           
           proto -> auto_regressive = auto_regressive;
       }
+      
       else if (!strcmp(specification -> id, "calibrate")) {
           
-          char * target = specification -> options -> head -> value;
-          
+          char * target = list_get(specification -> options, 0);
+	  char * curve  = list_get(specification -> options, 1);
+	  char * unit   = list_get(specification -> options, 2);
+	  
           if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
               printf(RED "Calibration target %s for %s is not known\n" RESET, target, id);
               exit(ERROR_EXPERIMENTER);
           }
-          
-          if (hashmap_exists(calibrations, target)) {
+	  
+          if (hashmap_exists(proto -> calibrations, target)) {
               printf(RED "Duplicate target calibration for %s of %s found\n" RESET, target, id);
               exit(ERROR_EXPERIMENTER);
           }
-          
-          hashmap_add(calibrations, target, specification);
+	  
+	  // force all calibration constants to be decimals
+	  for (iterate(specification -> args, Numeric *, constant))
+	    represent_as_decimal(constant);
+	  
+	  // make first node the calibration type
+	  list_insert_first(specification -> args, curve);
+	  
+	  hashmap_add(proto -> calibrations, target, specification -> args);
+	  hashmap_add(proto -> output_units, target,                  unit);
       }
   }
   
@@ -372,36 +398,23 @@ void build_sensor(char * id, Numeric * frequency, List * specifications) {
       // check trigger targets
       if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
           printf(RED "Trigger target %s unknown\n" RESET, trigger -> id);
-          exit(1);
-      }
-      
-      // assign trigger calibrations
-      Specification * specification = hashmap_get(calibrations, trigger -> id);
-      
-      if (specification) {
-          
-          char * curve;
-          if (specification -> options -> size > 1) curve = specification -> options -> head -> next -> value;
-          else                                      curve = "poly";
-          
-          trigger -> curve     = strdup(curve);
-          trigger -> constants = specification -> args;
+          exit(ERROR_EXPERIMENTER);
       }
       
       // duplicate reversing triggers
       
       if (trigger -> reverses) {
-      
-          Trigger * opposite = malloc(sizeof(*opposite));
+	
+	  Trigger * opposite = calloc(1, sizeof(*opposite));
 	  
 	  opposite -> id       =  strdup(trigger -> id);
 	  opposite -> less     = !trigger -> less;
 	  opposite -> fired    =  trigger -> fired;
 	  opposite -> singular =  trigger -> singular;
 	  opposite -> reverses =  false;
-	  
+	  	  
 	  opposite -> threshold = trigger -> threshold;
-	  opposite -> charges = list_create();
+	  opposite -> charges   = list_create();
 	  
 	  for (iterate(trigger -> charges, Charge *, charge)) {
 	      
@@ -415,13 +428,10 @@ void build_sensor(char * id, Numeric * frequency, List * specifications) {
 	  }
 	  
 	  list_insert(triggers, opposite);
-	  //trigger_index++;
       }
   }
   
   proto -> triggers = triggers;
-  
-  hashmap_destroy(calibrations);
   
   specifications -> free = specification_destroy;
   list_destroy(specifications);
@@ -447,11 +457,19 @@ void print_config() {
     
     for (iterate(proto -> triggers, Trigger *, trigger)) {
       
+      Numeric * numeric = trigger -> threshold;
+      
+      Numeric standard;
+      to_standard_units(&standard, numeric);
+      
       printf(CYAN "    %s" RESET, trigger -> id);
       
-      if (trigger -> less) printf(GRAY " <");
-      else                 printf(GRAY " >");
-      
+      if (trigger -> less)
+	printf(GRAY " <" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
+	       numeric -> decimal, numeric -> units, standard.decimal, standard.units);
+      else
+	printf(GRAY " >" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
+	       numeric -> decimal, numeric -> units, standard.decimal, standard.units);
       
       
       printf(" { " RESET);

@@ -16,7 +16,7 @@ bool read_ds18(one_device * ds18_one);
 
 Sensor * init_ds18(ProtoSensor * proto) {
   
-  Sensor * ds18 = malloc(sizeof(*ds18));
+  Sensor * ds18 = sensor_from_proto(proto);
   
   ds18 -> name = "DS18B20";
   ds18 -> free = free_ds18;
@@ -55,7 +55,7 @@ bool read_ds18(one_device * ds18_one) {
   int temperature_code = atoi(strchr(strchr(raw, '=') + 1, '=') + 1);
   
   if (!temperature_code || temperature_code == 85000) {
-    printf("Could not read %s for ds18: error code %d\n", ds18_one -> path, temperature_code);
+    //printf("Could not read %s for ds18: error code %d\n", ds18_one -> path, temperature_code);
     return false;
   }
   
@@ -84,5 +84,5 @@ bool read_ds18(one_device * ds18_one) {
 }
 
 void free_ds18(Sensor * ds18) {
-  
+  // Nothing special has to happen
 }

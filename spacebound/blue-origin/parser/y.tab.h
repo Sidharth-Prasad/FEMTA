@@ -40,10 +40,11 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 31 "parser.y" /* yacc.c:1909  */
+#line 32 "parser.y" /* yacc.c:1909  */
 
   
   #include <stdbool.h>
+  #include "../math/units.h"
   #include "../structures/list.h"
   #include "../sensors/sensor.h"
   
@@ -58,35 +59,29 @@ extern int yydebug;
       
   } Specification;
 
-#line 62 "y.tab.h" /* yacc.c:1909  */
+#line 63 "y.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    PRINT = 258,
-    LESS_THAN = 259,
-    MORE_THAN = 260,
-    TRIGGER = 261,
-    ID = 262,
-    NUMERIC = 263
+    TRIGGER = 258,
+    ID = 259,
+    NUMERIC = 260
   };
 #endif
 /* Tokens.  */
-#define PRINT 258
-#define LESS_THAN 259
-#define MORE_THAN 260
-#define TRIGGER 261
-#define ID 262
-#define NUMERIC 263
+#define TRIGGER 258
+#define ID 259
+#define NUMERIC 260
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 49 "parser.y" /* yacc.c:1909  */
+#line 51 "parser.y" /* yacc.c:1909  */
 
   char          * string;
   int           * integer;
@@ -98,7 +93,7 @@ union YYSTYPE
   Trigger       * trigger;
   Specification * specification;
 
-#line 102 "y.tab.h" /* yacc.c:1909  */
+#line 97 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

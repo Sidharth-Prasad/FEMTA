@@ -23,4 +23,6 @@ void pin_set(char broadcom, bool hot) {
     pins[broadcom].hot = hot;
     gpioWrite(broadcom, (int) hot);
   }
+  
+  printf("DEBUG: %d set %d\n", broadcom, hot);
 }

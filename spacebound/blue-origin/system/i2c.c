@@ -38,8 +38,7 @@ i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader
   
   i2c -> reading = false;
   
-  i2c -> file   = NULL;
-  i2c -> buffer = NULL;
+  i2c -> log    = NULL;
   
   if (handles[address] == -1) {
     i2c -> handle = i2cOpen(1, address, 0);
@@ -66,7 +65,6 @@ bool i2c_read_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   
   if (i2cReadI2CBlockData(dev -> handle, reg, buf, n) < 0) {
     printf(RED "Could not read bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    //exit(3);
     return false;
   }
   return true;
@@ -77,7 +75,6 @@ bool i2c_raw_read(i2c_device * dev, uint8 * buf, char n) {
   
   if (i2cReadDevice(dev -> handle, buf, n)) {
     printf(RED "Could not read raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    //exit(3);
     return false;
   }
   return true;
@@ -88,7 +85,6 @@ bool i2c_raw_write(i2c_device * dev, uint8 * buf, char n) {
   
   if (i2cWriteDevice(dev -> handle, buf, n)) {
     printf(RED "Could not write raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    //exit(3);
     return false;
   }
 }
@@ -98,7 +94,6 @@ bool i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {
   
   if (i2cWriteByteData(dev -> handle, reg, value) < 0) {
     printf(RED "Could not write byte to " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    //exit(3);
     return false;
   }
 }
@@ -108,20 +103,16 @@ bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
   
   if (i2cWriteI2CBlockData(dev -> handle, reg, buf, n)) {
     printf(RED "Could not write bytes to " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    //exit(3);
     return false;
   }
   return true;
 }
 
 
-void i2c_freer(void * device_ptr) {
+void i2c_close(i2c_device * i2c) {
   // closes and frees the i2c device
   
-  i2c_device * i2c = (i2c_device *) device_ptr;
-  
-  fclose(i2c -> file); 
-  
+  fclose(i2c -> log);
   i2cClose(i2c -> handle);
   free(i2c);
 }
@@ -130,7 +121,6 @@ void init_i2c() {
   // initialize i2c data structures
   
   schedule -> i2c_devices = list_create();
-  schedule -> i2c_devices -> free = i2c_freer;
   schedule -> i2c_thread  = malloc(sizeof(*schedule -> i2c_thread));
   
   // prepare handle array
@@ -157,6 +147,9 @@ void terminate_i2c() {
   list_destroy(schedule -> i2c_devices);      // note that this kills
   
   free(schedule -> i2c_thread);
+  
+  schedule -> i2c_devices = NULL;
+  schedule -> i2c_thread  = NULL;
 }
 
 void * i2c_main() {
@@ -202,5 +195,6 @@ void * i2c_main() {
     real_nano_sleep(time_remaining);   // interval minus time it took to read sensors
   }
   
-  fclose(i2c_log);
+  fclose(i2c_log);  
+  return NULL;
 }

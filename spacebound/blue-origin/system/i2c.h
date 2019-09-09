@@ -18,8 +18,8 @@ typedef struct i2c_device {
   
   Sensor * sensor;
   
-  FILE * file;             // log file
-  char * buffer;           // buffer for file I/O
+  FILE * log;              // log file
+  //char * buffer;           // buffer for file I/O
   
   uint8 address;           // address on bus
   
@@ -41,7 +41,6 @@ typedef struct i2c_device {
 
 void init_i2c();
 void start_i2c();
-
 void terminate_i2c();
 
 bool i2c_write_byte (i2c_device * dev, uint8 reg, uint8 value);
@@ -51,6 +50,8 @@ bool i2c_raw_write  (i2c_device * dev,            uint8 * buf, char n);
 bool i2c_raw_read   (i2c_device * dev,            uint8 * buf, char n);
 
 uint8 i2c_read_byte(i2c_device * dev, uint8 reg);
+
+void i2c_close(i2c_device * i2c);
 
 i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 interval);
 

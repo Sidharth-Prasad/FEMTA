@@ -6,6 +6,7 @@
 
 #include "ds32.h"
 
+#include "../math/units.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"
@@ -15,24 +16,25 @@ bool read_ds32(i2c_device * ds32_i2c);
 
 Sensor * init_ds32(ProtoSensor * proto) {
   
-  Sensor * ds32 = malloc(sizeof(Sensor));
+  Sensor * ds32 = sensor_from_proto(proto);
   
   ds32 -> name = "DS3231N";
   ds32 -> free = free_ds32;
   
   ds32 -> i2c = create_i2c_device(ds32, proto -> address, read_ds32, proto -> hertz);
   
-  ds32 -> i2c -> file = fopen("logs/ds32.log", "a");
+  ds32 -> i2c -> log = fopen("logs/ds32.log", "a");
   
-  setlinebuf(ds32 -> i2c -> file);    // write out every read
+  setlinebuf(ds32 -> i2c -> log);    // write out every read
   
   //set_time_ds32(ds32);
   
-  fprintf(ds32 -> i2c -> file, GREEN "\n\nDS3231N\n" RESET);
+  fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\n" RESET);
+  
+  // ORDER MATTERS
+  experiment_start_time = time(NULL);    // TEMPORARY - use system time for duration calculations
   
   read_ds32(ds32 -> i2c);    // read now to get human time before other sensors are created
-  
-  experiment_start_time = time(NULL);    // TEMPORARY - use system time for duration calculations
   
   printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
 	 ds32 -> name, proto -> hertz, proto -> address);
@@ -81,21 +83,36 @@ bool read_ds32(i2c_device * ds32_i2c) {
 	  hours_tens, hours_ones, minutes_tens, minutes_ones, seconds_tens, seconds_ones,
 	  meridian);
   
-  fprintf(ds32_i2c -> file, "%s\n", formatted_time);
+  fprintf(ds32_i2c -> log, "%s\n", formatted_time);
   
-  long experiment_duration = time(NULL) - experiment_start_time;    // system time for now
+  float experiment_duration = (float) (time(NULL) - experiment_start_time);    // system time for now
+  
+  char * curve = hashmap_get(ds32 -> output_units, "Time");
+  List * calibration = hashmap_get(ds32 -> calibrations, "Time");
+  
+  if (calibration) {
+    experiment_duration = compute_curve(experiment_duration, calibration);
+  }
+  
+  
+  if (ds32 -> print)
+    printf("%s     %f  -  %s\n", ds32 -> code_name, experiment_duration, formatted_time);
   
   if (ds32 -> triggers) {
     for (iterate(ds32 -> triggers, Trigger *, trigger)) {
       
       if (trigger -> singular && trigger -> fired) continue;
-
-      if ( trigger -> less && experiment_duration > trigger -> threshold -> integer) continue;  // condition not true
-      if (!trigger -> less && experiment_duration < trigger -> threshold -> integer) continue;  // ------------------
       
-      for (iterate(trigger -> charges, Charge *, charge)) {
+      Numeric * requested_threshold = trigger -> threshold;
+      Numeric threshold;
+      
+      to_standard_units(&threshold, requested_threshold);
+      
+      if ( trigger -> less && experiment_duration > threshold.decimal) continue;  // condition not true
+      if (!trigger -> less && experiment_duration < threshold.decimal) continue;  // ------------------
+      
+      for (iterate(trigger -> charges, Charge *, charge))
 	pin_set(charge -> gpio, charge -> hot);
-      }
       
       trigger -> fired = true;
     }
@@ -120,7 +137,5 @@ void set_time_ds32(Sensor * ds32) {
 }
 
 void free_ds32(Sensor * ds32) {
-  
-  
-  
+  // Nothing special has to happpen
 }

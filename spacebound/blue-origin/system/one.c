@@ -57,6 +57,10 @@ one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
   return one;
 }
 
+void one_close(one_device * one) {
+  free(one);
+}
+
 void init_one() {
   // initialize 1-wire data structures
   
@@ -83,6 +87,9 @@ void terminate_one() {
   list_destroy(schedule -> one_devices);
   
   free(schedule -> one_thread);
+  
+  schedule -> one_devices = NULL;
+  schedule -> one_thread  = NULL;
 }
 
 void * one_main() {
@@ -142,4 +149,6 @@ void * one_main() {
     
     real_nano_sleep(time_remaining);
   }
+  
+  return NULL;
 }
