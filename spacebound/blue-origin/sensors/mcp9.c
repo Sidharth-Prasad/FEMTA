@@ -24,8 +24,6 @@ Sensor * init_mcp9(ProtoSensor * proto) {
   
   mcp9 -> print = proto -> print;
 
-  setlinebuf(mcp9 -> i2c -> log);  // write out every read
-
   fprintf(mcp9 -> i2c -> log, GREEN "\nMCP9808\n" RESET);
   printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
 	 mcp9 -> name, proto -> hertz, proto -> address);
@@ -38,18 +36,22 @@ Sensor * init_mcp9(ProtoSensor * proto) {
 bool read_mcp9(i2c_device * mcp9_i2c) {
   /*
    * Binary address 0011000; hex address 18
-   * 0th bit: 1 is read, 0 is write
    * Can read max every t_conv, or 250ms w/ 0.0625 *C accuracy
    * Can read max every 30ms w/ 0.5 *C accuracy
+   *
+   * A high-to-low transition of the SDA line (while SCL is high) is the Start
+   * condition. All data transfers must be preceded by a Start condition from
+   * the master. A low-to-high transition of the SDA line (while SCL is high)
+   * signifies a Stop condition.
    */
   
   Sensor * mcp9 = mcp9_i2c -> sensor;
 
-  uint8 read_raws[2];
+  uint8 read_raws[2], upper, lower;
   int sign = 1;
   double temp;
   
-  if (!i2c_read_bytes(mcp_i2c, 0x05, read_raws, 2)) return false;
+  if (!i2c_read_bytes(mcp9_i2c, 0x05, read_raws, 2)) return false;
 
   upper = read_raws[0];
   lower = read_raws[1];
@@ -63,11 +65,11 @@ bool read_mcp9(i2c_device * mcp9_i2c) {
     temp = upper << 4 + lower >> 4;  // Get ambient temp. (+)
   }
 
-  fprintf(mcp9 -> log, "%d\n", temp);
+  fprintf(mcp9 -> i2c -> log, "%f\n", temp);
 
   return true;
 }
 
 void free_mcp9(Sensor * ds32) {
-  // TODO: Does the MCP9808 have special release conditions?
+  // Times out and resets after 25-35 ms of no change on SDA/SCL lines
 }

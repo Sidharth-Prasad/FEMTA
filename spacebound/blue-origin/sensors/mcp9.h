@@ -20,7 +20,7 @@
 #include "sensor.h"
 #include "../system/i2c.h"
 
-#define MCP9_ADDRESS 18
+#define MCP9_ADDRESS 1F
 
 Sensor * init_mcp9(ProtoSensor * proto);
 
