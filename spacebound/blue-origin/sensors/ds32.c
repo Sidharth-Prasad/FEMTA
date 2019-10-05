@@ -6,6 +6,7 @@
 
 #include "ds32.h"
 
+#include "../.origin/origin.h"
 #include "../math/units.h"
 #include "../system/color.h"
 #include "../system/gpio.h"

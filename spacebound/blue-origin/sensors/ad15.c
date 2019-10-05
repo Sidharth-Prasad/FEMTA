@@ -7,6 +7,7 @@
 #include "ad15.h"
 #include "ds32.h"
 
+#include "../.origin/origin.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"

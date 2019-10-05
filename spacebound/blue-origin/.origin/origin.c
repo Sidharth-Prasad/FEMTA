@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <pigpio.h>
 
+#include "origin.h"
+
 #include "../sensors/sensor.h"
 #include "../system/clock.h"
 #include "../system/error.h"
@@ -17,6 +19,8 @@
 #include "../structures/selector.h"
 #include "../types/types.h"
 #include "../parser/y.tab.h"
+
+bool console_error_messages = true;
 
 FILE * yyin;
 void print_config();
@@ -48,16 +52,19 @@ int main(int argc, char ** argv) {
   
   Selector * selector = create_selector(NULL);
   
-  add_selector_command(selector, 'q', "quit",  flip_bool, &reading_user_input);
-  add_selector_command(selector, 'c', "char", output_str, (void *) "quit");
+  add_selector_command(selector, 'q', NULL,    flip_bool,     &reading_user_input);
+  add_selector_command(selector, 'e', NULL,    flip_bool, &console_error_messages);
+  add_selector_command(selector, 'm', NULL,   output_str,                    NULL);
+  add_selector_command(selector, '+', NULL,  pin_set_hot,                    NULL);
+  add_selector_command(selector, '-', NULL, pin_set_cold,                    NULL);
   
   reading_user_input = true;
   
-  char input;
+  char input[32];
   while (reading_user_input) {
-    input = getc(stdin);
+    fgets(input, 32, stdin);
     
-    execute_selector(selector, input);
+    execute_selector(selector, input[0], input);
   }
   
   // tell threads to terminate

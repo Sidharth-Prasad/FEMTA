@@ -26,3 +26,19 @@ void pin_set(char broadcom, bool hot) {
   
   printf("DEBUG: %d set %d\n", broadcom, hot);
 }
+
+void pin_set_hot(void * nil, char * vbroadcom) {
+  
+  char broadcom = atoi((char *) vbroadcom + 1);
+  
+  printf("Set %d hot\n", broadcom);
+  //pin_set(broadcom, true);
+}
+
+void pin_set_cold(void * nil, char * vbroadcom) {
+  
+  char broadcom = atoi((char *) vbroadcom + 1);
+  
+  printf("Set %d cold\n", broadcom);
+  //pin_set(broadcom, false);
+}
