@@ -4,7 +4,7 @@ ORIGIN_LINKS = -lpigpio -lpthread -lm
 PLOT_LINKS   = -lncurses
 TEST_LINKS   = -lpigpio -lpthread -lm
 #FLAGS =
-FLAGS = -g
+FLAGS = -g -Werror=return-type
 
 .DEFAULT_GOAL := origin
 
@@ -41,3 +41,6 @@ clean:
 	rm -f gmon.out                       # blow away profiling outputs
 	touch fake~ && mv -f *~ backups/     # move emacs backups
 
+wipe:
+	rm -f auto.log
+	rm -f logs/*.log

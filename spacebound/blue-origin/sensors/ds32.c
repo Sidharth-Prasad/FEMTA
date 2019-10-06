@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <pigpio.h>
 
 #include "ds32.h"
 
@@ -13,6 +14,11 @@
 
 void free_ds32(Sensor * ds32);
 bool read_ds32(i2c_device * ds32_i2c);
+bool ds32_start_square_wave(i2c_device * ds32_i2c);
+
+void schedule_tick(int gpio, int level, uint32_t tick) {
+  schedule -> interrupts++;
+}
 
 Sensor * init_ds32(ProtoSensor * proto) {
   
@@ -21,7 +27,7 @@ Sensor * init_ds32(ProtoSensor * proto) {
   ds32 -> name = "DS3231N";
   ds32 -> free = free_ds32;
   
-  ds32 -> i2c = create_i2c_device(ds32, proto -> address, read_ds32, proto -> hertz);
+  ds32 -> i2c = create_i2c_device(ds32, proto, read_ds32);
   
   ds32 -> i2c -> log = fopen("logs/ds32.log", "a");
   
@@ -29,13 +35,18 @@ Sensor * init_ds32(ProtoSensor * proto) {
   
   //set_time_ds32(ds32);
   
-  fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\n" RESET);
+  fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\nHuman Time\tExperiment Duration [s]\tTemperature [C]\n" RESET);
   
-  // ORDER MATTERS
-  experiment_start_time = time(NULL);    // TEMPORARY - use system time for duration calculations
+  // Establish time experiment information
+  ds32_start_square_wave(ds32 -> i2c);
+  gpioSetISRFunc(20, RISING_EDGE, 0, schedule_tick);    // start counting interrupts
+  read_ds32(ds32 -> i2c);                               // get human time before other sensors are created
   
-  read_ds32(ds32 -> i2c);    // read now to get human time before other sensors are created
+  List * time_calibration = hashmap_get(ds32 -> calibrations, "Time");
+  schedule -> interrupt_interval = compute_curve(1.0f, time_calibration);
   
+  
+  // Print a nice message to the user
   printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
 	 ds32 -> name, proto -> hertz, proto -> address);
   
@@ -48,13 +59,41 @@ Sensor * init_ds32(ProtoSensor * proto) {
   return ds32;
 }
 
+bool ds32_start_square_wave(i2c_device * ds32_i2c) {
+  // asks the ds32 to start emitting square waves at a rate of 1.024 kHz.
+  
+  /* Bits, from left to right, brackets going in binary order
+   * 
+   *  7: Let oscillator use battery        {no, yes} (Crazy to not say 'yes')
+   *  6: Enable square wave                {no, yes} (We use this for interrupts)
+   *  5: Immediately adjust to temperature {no, yes} (Happens every 64s anyways, 2ms delay if yes)
+   * 34: Frequency for square wave         {1Hz, 1.024kHz, 4.096kHz, 8.192kHz} (01 yields sub-ms)
+   *  2: What to use the SQR pn for        {square waves, alarms}
+   *  1: Enable Alarm 2?                   {no, yes}
+   *  0: Enable Alarm 1?                   {no, yes}
+   * 
+   */
+  
+  if (!i2c_write_byte(ds32_i2c, 0x0E, 0b01101000)) {
+    printf(RED "Could not enable ds32 square waves!\n" RESET);
+    return false;
+  }
+  
+  uint8 reg = i2c_read_byte(ds32_i2c, 0x0E);
+  
+  printf("DEBUG: %u\n", reg);
+  
+  return true;
+}
+
 bool read_ds32(i2c_device * ds32_i2c) {
   
   Sensor * ds32 = ds32_i2c -> sensor;
   
-  uint8 read_raws[7];
+  uint8 read_raws[9];
   
-  if (!i2c_read_bytes(ds32_i2c, 0x00, read_raws, 7)) return false;
+  if (!i2c_read_bytes(ds32_i2c, 0x00, read_raws + 0, 7)) return false;
+  if (!i2c_read_bytes(ds32_i2c, 0x11, read_raws + 7, 2)) return false;
   
   char seconds_ones = '0' + ((0b00001111 & read_raws[0]) >> 0);    // 0 tens ones
   char seconds_tens = '0' + ((0b01110000 & read_raws[0]) >> 4);    // -----------
@@ -83,9 +122,10 @@ bool read_ds32(i2c_device * ds32_i2c) {
 	  hours_tens, hours_ones, minutes_tens, minutes_ones, seconds_tens, seconds_ones,
 	  meridian);
   
-  fprintf(ds32_i2c -> log, "%s\n", formatted_time);
+  float temperature = 1.0f * read_raws[7] + (read_raws[8] >> 6) * 0.25f;
   
-  float experiment_duration = (float) (time(NULL) - experiment_start_time);    // system time for now
+  
+  float experiment_duration = (float) schedule -> interrupts;
   
   char * curve = hashmap_get(ds32 -> output_units, "Time");
   List * calibration = hashmap_get(ds32 -> calibrations, "Time");
@@ -96,7 +136,9 @@ bool read_ds32(i2c_device * ds32_i2c) {
   
   
   if (ds32 -> print)
-    printf("%s     %f  -  %s\n", ds32 -> code_name, experiment_duration, formatted_time);
+    printf("%s     %s  %.4fs %.2fC\n", ds32 -> code_name, formatted_time, experiment_duration, temperature);
+  
+  fprintf(ds32_i2c -> log, "%s\t%.4f\t%.2f\n", formatted_time, experiment_duration, temperature);
   
   if (ds32 -> triggers) {
     for (iterate(ds32 -> triggers, Trigger *, trigger)) {

@@ -68,7 +68,7 @@ trigger   { return TRIGGER;   }
   return ID;
 }
 
-[=\{\}\+\-,:;\[\]><] {
+[/=\{\}\+\-,:;\[\]><] {
   return yytext[0];
 }
 

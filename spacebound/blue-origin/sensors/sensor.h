@@ -83,7 +83,8 @@ typedef struct ProtoSensor {
   
   char * code_name;          // abbreviated name
   
-  int hertz;                 // frequency in hertz
+  int hertz;                 // bus communication frequency in hertz
+  int hertz_denominator;     // engenders fractional frequency through deferrals
   uint8 address;             // i2c address
   
   int bus;                   // which bus this is connected to
@@ -102,32 +103,35 @@ typedef struct ProtoSensor {
 
 typedef struct Schedule {
   
-  List * i2c_devices;      // list of all i2c device pointers
-  List * one_devices;      // list of all 1-wire device pointers
+  List * i2c_devices;          // list of all i2c device pointers
+  List * one_devices;          // list of all 1-wire device pointers
   
-  long i2c_interval;       // scheduler spacing for the i2c protocol
-  long one_interval;       // scheduler spacing for the 1-wire protocol
+  long i2c_interval;           // scheduler spacing for the i2c protocol
+  long one_interval;           // scheduler spacing for the 1-wire protocol
   
-  bool i2c_active;         // whether experiment uses i2c
-  bool one_active;         // whether experiment uses 1-wire
+  bool i2c_active;             // whether experiment uses i2c
+  bool one_active;             // whether experiment uses 1-wire
   
-  Thread * i2c_thread;     // i2c thread
-  Thread * one_thread;     // 1-wire thread (deprioritized)
-  bool term_signal;        // when set to true, schedule terminates
+  int   interrupts;            // interrupts since schedule creation
+  float interrupt_interval;    // time between each interrupt
+  
+  Thread * i2c_thread;         // i2c thread
+  Thread * one_thread;         // 1-wire thread (deprioritized)
+  bool term_signal;            // when set to true, schedule terminates
   
 } Schedule;
 
 Schedule * schedule;
 
 
-List * sensors;             // every active sensor on craft
-
+List    * sensors;          // every active sensor on craft
 Hashmap * proto_sensors;    // sensors that could be specified
 
 int n_triggers;             // number of triggers
 
 float to_standard_units(Numeric * dest, Numeric * source);
 float convert_to(char * units, float value);
+float time_passed();    // time since experiment start
 
 void init_sensors();
 void start_sensors();

@@ -10,6 +10,7 @@
 #include "../types/thread-types.h"
 
 typedef struct Sensor Sensor;
+typedef struct ProtoSensor ProtoSensor;
 typedef struct i2c_device i2c_device;
 
 typedef bool (* i2c_reader)(i2c_device * i2c);
@@ -19,13 +20,14 @@ typedef struct i2c_device {
   Sensor * sensor;
   
   FILE * log;              // log file
-  //char * buffer;           // buffer for file I/O
   
   uint8 address;           // address on bus
   
-  ushort interval;         // time span between reads in ms
-  ushort hertz;            // reads per second
-  ushort count;            // counts since last read
+  int interval;            // time span between reads in ms
+  int hertz;               // schedule frequency in hertz
+  int hertz_denominator;     // engenders fractional frequency through deferrals
+  int bus_deferrals;       // how many bus deferrals since last read
+  int count;               // counts since last read
   
   bool reading;            // when true, scheduler knows to re-read
   
@@ -53,6 +55,6 @@ uint8 i2c_read_byte(i2c_device * dev, uint8 reg);
 
 void i2c_close(i2c_device * i2c);
 
-i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 interval);
+i2c_device * create_i2c_device(Sensor * sensor, ProtoSensor * proto, i2c_reader reader);
 
 #endif

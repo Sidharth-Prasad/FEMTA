@@ -22,9 +22,11 @@ typedef struct one_device {
   char * path;             // where to get data
   FILE * log;              // log file
   
-  ushort interval;         // time span between reads in ms
-  ushort hertz;            // reads per second
-  ushort count;            // counts since last read
+  int interval;            // time span between schedules in ms
+  int hertz;               // reads per second
+  int hertz_denominator;   // engenders fractional frequency through deferrals
+  int bus_deferrals;       // how many bus deferrals since last read
+  int count;               // counts since last read
   
   int total_reads;         // total times this sensor has been read
   
@@ -37,8 +39,7 @@ void start_one();
 void terminate_one();
 
 one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
-			       char * path, char * log_path, uint32 hertz,
-			       one_reader read);
+			       char * path, char * log_path, one_reader read);
 
 void one_close(one_device * one);
 

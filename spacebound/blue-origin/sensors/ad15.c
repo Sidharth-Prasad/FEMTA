@@ -72,7 +72,7 @@ Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names
   ad15 -> name = "ADS1115";
   ad15 -> free = free_ad15;
   
-  ad15 -> i2c = create_i2c_device(ad15, proto -> address, read_ad15, proto -> hertz);
+  ad15 -> i2c = create_i2c_device(ad15, proto, read_ad15);
   
   char file_name[32];
   

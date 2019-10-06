@@ -1,9 +1,12 @@
 
+#define _GNU_SOURCE
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <pigpio.h>
+#include <sys/prctl.h>
 #include <time.h>
 
 #include "clock.h"
@@ -19,36 +22,28 @@ int8 handles[0x7F];
 
 void * i2c_main();
 
-i2c_device * create_i2c_device(Sensor * sensor, uint8 address, i2c_reader reader, uint16 hertz) {
+i2c_device * create_i2c_device(Sensor * sensor, ProtoSensor * proto, i2c_reader reader) {
   // creates an i2c device, adding it to the device list
   
-  i2c_device * i2c = malloc(sizeof(i2c_device));
+  i2c_device * i2c = calloc(1, sizeof(*i2c));
   
   i2c -> sensor   = sensor;
   i2c -> read     = reader;
-  i2c -> address  = address;
-
-  i2c -> hertz    = hertz;
   
-  if (hertz) i2c -> interval = 1000 / hertz;
-  else       i2c -> interval = 0;
+  i2c -> address           = proto -> address;
+  i2c -> hertz             = proto -> hertz;
+  i2c -> hertz_denominator = proto -> hertz_denominator;
   
-  i2c -> count = 0;
-  i2c -> total_reads = 0;
+  if (i2c -> hertz)
+    i2c -> interval = 1000 / (i2c -> hertz);
   
-  i2c -> reading = false;
-  
-  i2c -> log    = NULL;
-  
-  if (handles[address] == -1) {
-    i2c -> handle = i2cOpen(1, address, 0);
-    
-    //printf("Added %s i2c device %x\n", sensor -> name, address);
-    
-    handles[address] = i2c -> handle;
+  // see if we need to open another i2c instance
+  if (handles[i2c -> address] == -1) {
+    i2c -> handle = i2cOpen(1, i2c -> address, 0);
+    handles[i2c -> address] = i2c -> handle;
   }
   else {
-    i2c -> handle = handles[address];
+    i2c -> handle = handles[i2c -> address];
   }
   
   return i2c;
@@ -87,6 +82,7 @@ bool i2c_raw_write(i2c_device * dev, uint8 * buf, char n) {
     printf(RED "Could not write raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
     return false;
   }
+  return true;
 }
 
 bool i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {
@@ -96,6 +92,7 @@ bool i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {
     printf(RED "Could not write byte to " YELLOW "%s\n" RESET, dev -> sensor -> name);
     return false;
   }
+  return true;
 }
 
 bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
@@ -154,10 +151,12 @@ void terminate_i2c() {
 
 void * i2c_main() {
   
+  prctl(PR_SET_NAME, "i2c sched", NULL, NULL, NULL);
+  
   FILE * i2c_log = fopen("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
   
-  long i2c_interval = schedule -> i2c_interval;
+  long bus_interval = schedule -> i2c_interval;
   
   long last_read_duration = 0;    // tracks time taken to read i2c bus
   
@@ -171,7 +170,7 @@ void * i2c_main() {
     
     for (iterate(schedule -> i2c_devices, i2c_device *, i2c)) {
       
-      i2c -> count += i2c_interval / 1E6;
+      i2c -> count += bus_interval / 1E6;
       
       if (i2c -> count == i2c -> interval || i2c -> reading) {
 	
@@ -185,7 +184,7 @@ void * i2c_main() {
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);
     
-    long time_remaining = i2c_interval - read_duration;
+    long time_remaining = bus_interval - read_duration;
     
     if (time_remaining < 0)
       time_remaining = 0;               // taking too long to read!

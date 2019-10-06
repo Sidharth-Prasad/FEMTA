@@ -25,7 +25,7 @@ Trigger       * make_trigger(List * charges, List * options);
 Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigger * trigger);
 Specification * make_tag(char * id, List * options, List * args);
 
-void build_sensor(char * id, Numeric * frequency, List * specifications);
+void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * specifications);
 void print_config();
 %}
 
@@ -95,8 +95,10 @@ Sensors  : Sensor
          | Sensors Sensor
          ;
 
-Sensor   : ID NUMERIC '{'       '}' ';'               { build_sensor($1, $2, NULL);                      }
-         | ID NUMERIC '{' Specs '}' ';'               { build_sensor($1, $2,   $4);                      }
+Sensor   : ID NUMERIC             '{'       '}' ';'   { build_sensor($1, $2, NULL, NULL);                }
+         | ID NUMERIC             '{' Specs '}' ';'   { build_sensor($1, $2, NULL,   $4);                }
+         | ID NUMERIC '/' NUMERIC '{'       '}' ';'   { build_sensor($1, $2,   $4, NULL);                }
+         | ID NUMERIC '/' NUMERIC '{' Specs '}' ';'   { build_sensor($1, $2,   $4,   $6);                }
          ;
 
 Specs    : Spec                                       { $$ = list_from(1, $1);                           }
@@ -323,7 +325,7 @@ Specification * make_tag(char * id, List * options, List * args) {
     return tag;
 }
 
-void build_sensor(char * id, Numeric * frequency, List * specifications) {
+void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * specifications) {
   
   ProtoSensor * proto = hashmap_get(proto_sensors, id);
   
@@ -332,7 +334,15 @@ void build_sensor(char * id, Numeric * frequency, List * specifications) {
     exit(ERROR_EXPERIMENTER);
   }
   
-  proto -> hertz = frequency -> integer;    // only support Hz for now
+  if ((               strcmp(frequency   -> units, "Hz") && strcmp(frequency   -> units, "i")) ||
+      (denominator && strcmp(denominator -> units, "Hz") && strcmp(denominator -> units, "i")))
+    exit_printing("Sensor frequency uses bad units", ERROR_EXPERIMENTER);
+  
+  proto -> hertz = frequency -> integer;    // base Hz for scheduling
+  
+  if (denominator) proto -> hertz_denominator = denominator -> integer;
+  else             proto -> hertz_denominator = 0;
+  
   proto -> requested = true;
   
   if (!specifications) return;

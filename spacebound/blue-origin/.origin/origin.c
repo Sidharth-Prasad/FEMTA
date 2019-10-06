@@ -1,4 +1,5 @@
 
+#define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -6,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pigpio.h>
+#include <sys/prctl.h>
 
 #include "../sensors/sensor.h"
 #include "../system/clock.h"
@@ -45,6 +47,8 @@ int main(int argc, char ** argv) {
   start_sensors();
   start_one();       // start reading the 1-wire bus
   start_i2c();       // start reading the i2c bus
+  
+  prctl(PR_SET_NAME, "Console", NULL, NULL, NULL);
   
   Selector * selector = create_selector(NULL);
   

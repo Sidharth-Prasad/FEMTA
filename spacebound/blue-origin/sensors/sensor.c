@@ -202,6 +202,7 @@ void start_sensors() {
   
   if (proto -> requested) {
     ad15[0] = init_ad15(proto, "Single channels", list_from(4, A0, A1, A2, A3), list_from(4, "A0", "A1", "A2", "A3"));
+    //ad15[0] = init_ad15(proto, "Single channels", list_from(1, A0), list_from(1, "A0"));
     list_insert(sensors, ad15[0]);
   }
 
@@ -237,7 +238,7 @@ void start_sensors() {
   if (ad15[2]) list_insert(schedule -> i2c_devices, ad15[2] -> i2c);
   if (ad15[3]) list_insert(schedule -> i2c_devices, ad15[3] -> i2c);
   if (ad15[0]) list_insert(schedule -> i2c_devices, ad15[0] -> i2c);   // single 3 -> 0
-
+  
   
   /* 1-wire sensors */
   
@@ -249,6 +250,10 @@ void start_sensors() {
     list_insert(sensors,                 ds18       );
     list_insert(schedule -> one_devices, ds18 -> one);
   }
+}
+
+float time_passed() {
+  return (schedule -> interrupts) * (schedule -> interrupt_interval);
 }
 
 void sensor_call_free(void * vsensor) {
