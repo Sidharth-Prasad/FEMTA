@@ -9,6 +9,9 @@ typedef struct Pin {
     int duty;
   };
   
+  int ms_till_hot;
+  int ms_till_cold;
+  
 } Pin;
 
 Pin pins[40];

@@ -1,5 +1,5 @@
 
 
 ds32 1Hz {  
-  //[print];
+  [print];
 };

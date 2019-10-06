@@ -15,6 +15,7 @@ void init_pins() {
   
   gpioWrite(23, 0);
   gpioWrite(24, 0);
+  gpioWrite(27, 0);
 }
 
 void pin_set(char broadcom, bool hot) {
@@ -32,7 +33,7 @@ void pin_set_hot(void * nil, char * vbroadcom) {
   char broadcom = atoi((char *) vbroadcom + 1);
   
   printf("Set %d hot\n", broadcom);
-  //pin_set(broadcom, true);
+  pin_set(broadcom, true);
 }
 
 void pin_set_cold(void * nil, char * vbroadcom) {
@@ -40,5 +41,5 @@ void pin_set_cold(void * nil, char * vbroadcom) {
   char broadcom = atoi((char *) vbroadcom + 1);
   
   printf("Set %d cold\n", broadcom);
-  //pin_set(broadcom, false);
+  pin_set(broadcom, false);
 }
