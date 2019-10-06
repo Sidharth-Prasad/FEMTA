@@ -201,33 +201,44 @@ void start_sensors() {
   proto = hashmap_get(proto_sensors, "ad15_gnd");
   
   if (proto -> requested) {
-    ad15[0] = init_ad15(proto, "Single channels", list_from(4, A0, A1, A2, A3), list_from(4, "A0", "A1", "A2", "A3"));
-    //ad15[0] = init_ad15(proto, "Single channels", list_from(1, A0), list_from(1, "A0"));
+    ad15[0] = init_ad15(proto, "Single channels",
+			list_from(4, A0, A1, A2, A3),
+			list_from(4, "10kOhm", "+3.3V", "Thermister 2", "Thermister 1"));
+
     list_insert(sensors, ad15[0]);
   }
 
   proto = hashmap_get(proto_sensors, "ad15_vdd");
 
   if (proto -> requested) {
-    ad15[1] = init_ad15(proto, "Alcohol Pressure", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
+    ad15[1] = init_ad15(proto, "Alcohol Pressure",
+			list_from(4, A0, A1, A2, A3),
+			list_from(4, "ground", "+5V", "Thermister 3", "Thermister 6"));
+    
     list_insert(sensors, ad15[1]);
   }
 
   proto = hashmap_get(proto_sensors, "ad15_sda");
 
   if (proto -> requested) {
-    ad15[2] = init_ad15(proto, "Ambient Air", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
+    //ad15[2] = init_ad15(proto, "Alcohol Pressure", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
+    ad15[2] = init_ad15(proto, "Ambient Air",
+			list_from(4, A0, A1, A2, A3),
+			list_from(4, "Thermister 5", "Thermister 4", "Thermister 7", "Thermister 8"));
+    
     list_insert(sensors, ad15[2]);
   }
 
   proto = hashmap_get(proto_sensors, "ad15_scl");
 
   if (proto -> requested) {
-    ad15[3] = init_ad15(proto, "Differentials", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));    
+    ad15[3] = init_ad15(proto, "Differentials",
+			list_from(4, A0, A1, A2, A3),
+			list_from(4, "Thermister 9", "Thermister 10", "Thermister 11", "Thermister 12"));
     list_insert(sensors, ad15[3]);
   }
   
-  
+  /*
   if (ad15[0]) list_insert(schedule -> i2c_devices, ad15[0] -> i2c);   // single 0 -> 1
   if (ad15[1]) list_insert(schedule -> i2c_devices, ad15[1] -> i2c);
   if (ad15[2]) list_insert(schedule -> i2c_devices, ad15[2] -> i2c);
@@ -238,6 +249,12 @@ void start_sensors() {
   if (ad15[2]) list_insert(schedule -> i2c_devices, ad15[2] -> i2c);
   if (ad15[3]) list_insert(schedule -> i2c_devices, ad15[3] -> i2c);
   if (ad15[0]) list_insert(schedule -> i2c_devices, ad15[0] -> i2c);   // single 3 -> 0
+  */
+  
+  for (int channel = 0; channel < 4; channel++)
+    for (int sensor_index = 0; sensor_index < 4; sensor_index++)
+      if (ad15[sensor_index])
+	list_insert(schedule -> i2c_devices, ad15[sensor_index] -> i2c);
   
   
   /* 1-wire sensors */

@@ -1,5 +1,5 @@
-compiler/.origin/origin.o: .origin/origin.c .origin/../sensors/sensor.h \
- .origin/../sensors/../structures/list.h \
+compiler/.origin/origin.o: .origin/origin.c .origin/origin.h \
+ .origin/../sensors/sensor.h .origin/../sensors/../structures/list.h \
  .origin/../sensors/../structures/../types/thread-types.h \
  .origin/../sensors/../structures/hashmap.h \
  .origin/../sensors/../structures/list.h \

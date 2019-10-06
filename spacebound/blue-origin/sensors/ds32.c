@@ -7,6 +7,7 @@
 
 #include "ds32.h"
 
+#include "../.origin/origin.h"
 #include "../math/units.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
@@ -125,7 +126,7 @@ bool read_ds32(i2c_device * ds32_i2c) {
   float temperature = 1.0f * read_raws[7] + (read_raws[8] >> 6) * 0.25f;
   
   
-  float experiment_duration = (float) schedule -> interrupts;
+  experiment_duration = (float) schedule -> interrupts;
   
   char * curve = hashmap_get(ds32 -> output_units, "Time");
   List * calibration = hashmap_get(ds32 -> calibrations, "Time");

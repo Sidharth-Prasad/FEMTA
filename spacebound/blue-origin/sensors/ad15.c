@@ -7,6 +7,7 @@
 #include "ad15.h"
 #include "ds32.h"
 
+#include "../.origin/origin.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"
@@ -66,7 +67,7 @@ bool read_ad15(i2c_device * ad15_i2c);
 void configure_ad15(Sensor * ad15);
 
 Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names) {
-
+  
   Sensor * ad15 = sensor_from_proto(proto);
   
   ad15 -> name = "ADS1115";
@@ -85,6 +86,7 @@ Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names
   fprintf(log, RED "\n\n");
   fprintf(log, "ADS115 - %s\n", title);
   fprintf(log, "Start time %s\n", formatted_time);
+  fprintf(log, "Time [s]\t");
   
   for (iterate(names, char *, column_name))
     fprintf(log, "%s\t", column_name);
@@ -198,16 +200,21 @@ bool read_ad15(i2c_device * ad15_i2c) {
   }
   
   // log and print
+
+  double volts = 6.114 * (double) ((int16) counts) / 32768.0;
   
-  fprintf(ad15_i2c -> log, "%d\t", (int16) counts);
-  
-  if (config -> current_mode == config -> modes -> head)
+  if (config -> current_mode == config -> modes -> head) {
+    // must be on first node
+    
     if (should_print)
-      printf("%s ", ad15 -> code_name);
+      printf("%s\t%lfs\t", ad15 -> code_name, experiment_duration);
+    
+    fprintf(ad15_i2c -> log, "%lf\t", experiment_duration);
+  }
+
+  fprintf(ad15_i2c -> log, "%lf\t", volts);
   
   if (should_print) {
-    double volts = 6.114 * (double) ((int16) counts) / 32768.0;
-    
     if (volts >= 0.0) printf(" ");
     printf("%.9lfv\t", volts);
   }
