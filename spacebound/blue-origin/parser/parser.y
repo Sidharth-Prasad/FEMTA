@@ -4,12 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../math/mathematics.h"
 #include "../math/units.h"
+#include "../sensors/sensor.h"
 #include "../structures/list.h"
 #include "../structures/hashmap.h"
 #include "../system/color.h"
 #include "../system/error.h"
-#include "../sensors/sensor.h"
+#include "../system/gpio.h"
+
 
 extern FILE * yyin;
 
@@ -150,6 +153,17 @@ static void represent_as_decimal(Numeric * numeric) {
       numeric -> units[0] = 'f';           // -----------------------------
 }
 
+static void represent_as_integer(Numeric * numeric) {
+    
+    if (!numeric -> is_decimal) return;
+    
+    numeric -> integer    = (int) numeric -> decimal;
+    numeric -> is_decimal = false;
+    
+    if (!strcmp(numeric -> units, "f"))    // change generic unit if needed
+      numeric -> units[0] = 'i';           // -----------------------------
+}
+
 static void specification_destroy(void * vspecification) {
     
     Specification * specification = vspecification;
@@ -165,9 +179,9 @@ static void specification_destroy(void * vspecification) {
 }
 
 Charge * make_charge(Numeric * wire, Specification * tag) {
-    /* note, pin 0 not allowed. Shouldn't matter since that's SDA.0, *
-     * but it's important for future bug potential.                  */
-  
+    /* note, pin 0 not allowed.                      *
+     * but it's important for future bug potential.  */
+    
     if (strcmp(wire -> units, "i")) {
         printf(RED "Charge wires must be integers" RESET);
 	exit(ERROR_EXPERIMENTER);        
@@ -177,6 +191,11 @@ Charge * make_charge(Numeric * wire, Specification * tag) {
     
     charge -> gpio = abs(wire -> integer);
     charge -> hot  = (wire -> integer > 0);
+    
+    if (!between(0, charge -> gpio, 27)) {
+        printf(RED "Broadcom %d does not exist\n" RESET, charge -> gpio);
+	exit(ERROR_EXPERIMENTER);
+    }
     
     if (tag) {
         if (strcmp(tag -> id, "pulse")) {
@@ -188,8 +207,15 @@ Charge * make_charge(Numeric * wire, Specification * tag) {
             printf(RED "Exactly 1 argument shoud be used for 'pulse' tag\n" RESET);
             exit(ERROR_EXPERIMENTER);
         }
-        
-        charge -> duration = (int) tag -> args -> head -> value;
+	
+	Numeric * pulse_duration = tag -> args -> head -> value;
+	
+	represent_as_integer(pulse_duration);                 // convert to ms
+	pulse_duration -> integer *= 1000;                    // -------------
+	to_standard_units(pulse_duration, pulse_duration);    // -------------
+	
+	charge -> duration = pulse_duration -> integer;
+	pin_inform_pulses(charge -> gpio);
         
         specification_destroy(tag);    // no longer needed
     }
@@ -344,24 +370,34 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   else             proto -> hertz_denominator = 0;
   
   proto -> requested = true;
+
+  proto -> triggers = list_create();
   
   if (!specifications) return;
   
-  List * triggers = list_create();
-  
   for (iterate(specifications, Specification *, specification)) {
-      
+    
+      List * options = specification -> options;
+      List * args    = specification -> args;
+    
       if (!strcmp(specification -> id, "trigger")) {
-	  list_insert(triggers, list_get(specification -> options, 0));
+	  list_insert(proto -> triggers, list_get(options, 0));
       }
       
       else if (!strcmp(specification -> id, "print")) {
-          proto -> print = true;
+	  
+          if (options)
+	    proto -> print_code = get_color_by_name(list_get(options, 0));
+	  
+	  if (args)
+	    proto -> print_hertz = ((Numeric *) list_get(args, 0)) -> decimal;
+	  
+	  proto -> print = true;
       }
       
       else if (!strcmp(specification -> id, "smooth")) {
 	  
-          Numeric * numeric = list_get(specification -> args, 0);
+          Numeric * numeric = list_get(args, 0);
 	  
           float auto_regressive = numeric -> decimal;
           
@@ -375,9 +411,9 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
       
       else if (!strcmp(specification -> id, "calibrate")) {
           
-          char * target = list_get(specification -> options, 0);
-	  char * curve  = list_get(specification -> options, 1);
-	  char * unit   = list_get(specification -> options, 2);
+          char * target = list_get(options, 0);
+	  char * curve  = list_get(options, 1);
+	  char * unit   = list_get(options, 2);
 	  
           if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
               printf(RED "Calibration target %s for %s is not known\n" RESET, target, id);
@@ -396,14 +432,14 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  // make first node the calibration type
 	  list_insert_first(specification -> args, curve);
 	  
-	  hashmap_add(proto -> calibrations, target, specification -> args);
-	  hashmap_add(proto -> output_units, target,                  unit);
+	  hashmap_add(proto -> calibrations, target, args);
+	  hashmap_add(proto -> output_units, target, unit);
       }
   }
   
   
   
-  for (iterate(triggers, Trigger *, trigger)) {
+  for (iterate(proto -> triggers, Trigger *, trigger)) {
       
       // check trigger targets
       if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
@@ -437,16 +473,14 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	      list_insert(opposite -> charges, anti_charge);
 	  }
 	  
-	  list_insert(triggers, opposite);
+	  list_insert(proto -> triggers, opposite);
       }
   }
-  
-  proto -> triggers = triggers;
   
   specifications -> free = specification_destroy;
   list_destroy(specifications);
   
-  n_triggers += triggers -> size;
+  n_triggers += proto -> triggers -> size;
 }
 
 void print_config() {
@@ -460,8 +494,8 @@ void print_config() {
   
   for (iterate(proto_sensors -> all, ProtoSensor *, proto)) {
     
-    if (!proto -> requested) continue;
-    if (!proto -> triggers ) continue;
+    if (!proto -> requested       ) continue;
+    if (!proto -> triggers -> size) continue;
     
     printf(GREEN "%s\n" RESET, proto -> code_name);
     

@@ -8,4 +8,5 @@ compiler/system/i2c.o: system/i2c.c system/clock.h system/color.h \
  system/../sensors/../system/../types/types.h \
  system/../sensors/../system/../types/thread-types.h \
  system/../sensors/../types/types.h system/../structures/list.h \
- system/../types/types.h system/../types/thread-types.h
+ system/../types/types.h system/../types/thread-types.h \
+ system/../system/gpio.h system/../system/../sensors/sensor.h

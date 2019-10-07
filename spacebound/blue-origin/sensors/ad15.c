@@ -160,10 +160,10 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   bool should_print = false;
   
-  if (ad15_i2c -> hertz >= 5)
-    should_print = ad15 -> print && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz / 5));
+  if (ad15_i2c -> hertz >= ad15 -> print_hertz)
+    should_print = (ad15 -> print) && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz / print_hertz));
   else
-    should_print = ad15 -> print && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz    ));
+    should_print = (ad15 -> print) && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz              ));
   
   ad15_i2c -> reading = true;    // this sensor does partial reads
   
@@ -180,25 +180,24 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   // act on potential triggers
   
-  if (ad15 -> triggers) {
-    for (iterate(ad15 -> triggers, Trigger *, trigger)) {
+  for (iterate(ad15 -> triggers, Trigger *, trigger)) {
+    
+    if (trigger -> singular && trigger -> fired) continue;                    // singular triggers never reload
+    
+    int cycle = (int) hashmap_get(ad15 -> targets, trigger -> id);
+    if (config -> mode_cycle != cycle) continue;                              // wrong target
+    
+    if ( trigger -> less && counts > trigger -> threshold -> integer) continue;  // condition not true
+    if (!trigger -> less && counts < trigger -> threshold -> integer) continue;  // ------------------
+    
+    for (iterate(trigger -> charges, Charge *, charge)) {
+      pin_set(charge -> gpio, charge -> hot);
       
-      if (trigger -> singular && trigger -> fired) continue;                    // singular triggers never reload
-      
-      int cycle = (int) hashmap_get(ad15 -> targets, trigger -> id);
-      if (config -> mode_cycle != cycle) continue;                              // wrong target
-      
-      if ( trigger -> less && counts > trigger -> threshold -> integer) continue;  // condition not true
-      if (!trigger -> less && counts < trigger -> threshold -> integer) continue;  // ------------------
-      
-      for (iterate(trigger -> charges, Charge *, charge)) {
-	pin_set(charge -> gpio, charge -> hot);	
-      }
-      
-      trigger -> fired = true;
     }
+    
+    trigger -> fired = true;
   }
-  
+    
   // log and print
 
   double volts = 6.114 * (double) ((int16) counts) / 32768.0;
@@ -207,7 +206,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
     // must be on first node
     
     if (should_print)
-      printf("%s\t%lfs\t", ad15 -> code_name, experiment_duration);
+      printf("%s%s  %lfs\t", ad15 -> print_code, ad15 -> code_name, experiment_duration);
     
     fprintf(ad15_i2c -> log, "%lf\t", experiment_duration);
   }
@@ -222,7 +221,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
   if (config -> current_mode == config -> modes -> head -> prev) {
     // must be on last mode
     
-    if (should_print) printf("\n");
+    if (should_print) printf("\n" RESET);
     
     fprintf(ad15_i2c -> log, "\n");
     

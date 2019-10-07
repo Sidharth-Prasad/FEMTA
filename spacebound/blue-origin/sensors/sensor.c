@@ -28,6 +28,9 @@ ProtoSensor * proto_sensor_create(char * code_name, int address, Hashmap * targe
   proto -> targets   = targets;
   proto -> bus       = bus;
   
+  proto -> print_code  = RESET;
+  proto -> print_hertz = 5;
+  
   if (targets && targets -> size) {
     proto -> calibrations = hashmap_create(hash_string, compare_strings, NULL, targets -> size/2);
     proto -> output_units = hashmap_create(hash_string, compare_strings, NULL, targets -> size/2);
@@ -45,6 +48,8 @@ Sensor * sensor_from_proto(ProtoSensor * proto) {
   sensor -> targets         = proto -> targets;
   sensor -> triggers        = proto -> triggers;
   sensor -> code_name       = proto -> code_name;
+  sensor -> print_code      = proto -> print_code;
+  sensor -> print_hertz     = proto -> print_hertz;
   sensor -> calibrations    = proto -> calibrations;
   sensor -> output_units    = proto -> output_units;
   sensor -> auto_regressive = proto -> auto_regressive;
@@ -168,8 +173,8 @@ void start_sensors() {
   
   if (proto -> requested) {
     Sensor * ds32 = init_ds32(proto);
-    list_insert(sensors,                 ds32       );    // first so we can get the time
-    list_insert(schedule -> i2c_devices, ds32 -> i2c);
+    list_insert(sensors,                 ds32       );
+    list_insert(schedule -> i2c_devices, ds32 -> i2c);    // first so we can get the time
   }
   
   
@@ -287,4 +292,16 @@ void sensor_call_free(void * vsensor) {
 void terminate_sensors() {  
   list_destroy(sensors);
   sensors = NULL;
+}
+
+void flip_print(void * nil, char * raw_text) {
+  // toggle sensor printing for the sensor specified
+  
+  if (strlen(raw_text) < 3) return;  // no such sensor
+  
+  raw_text[strlen(raw_text) - 1] = '\0';
+  
+  for (iterate(sensors, Sensor *, sensor))
+    if (!strcmp(sensor -> code_name, raw_text + 2))
+      sensor -> print = !sensor -> print;
 }

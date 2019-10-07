@@ -40,7 +40,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 32 "parser.y" /* yacc.c:1909  */
+#line 35 "parser.y" /* yacc.c:1909  */
 
   
   #include <stdbool.h>
@@ -81,7 +81,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 51 "parser.y" /* yacc.c:1909  */
+#line 54 "parser.y" /* yacc.c:1909  */
 
   char          * string;
   int           * integer;

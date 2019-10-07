@@ -17,6 +17,7 @@ void init_color() {
   hashmap_add(colors_by_name, "yellow" , YELLOW );
   hashmap_add(colors_by_name, "blue"   , BLUE   );
   hashmap_add(colors_by_name, "magenta", MAGENTA);
+  hashmap_add(colors_by_name, "purple" , MAGENTA);
   hashmap_add(colors_by_name, "cyan"   , CYAN   );
   hashmap_add(colors_by_name, "gray"   , GRAY   );
 }

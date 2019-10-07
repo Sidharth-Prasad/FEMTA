@@ -35,6 +35,9 @@ compiler/%.o: %.c
 	@mkdir -p $(dir $(basename $@))
 	gcc -o $@ -MMD -c $(FLAGS) $<
 
+parser: $(wildcard parser/*.y parser/*.l)
+	cd parser && yacc -d parser.y && lex parser.l && cd ..
+
 clean:
 	rm -rf compiler                      # blow away compiled objects
 	rm -f *.x                            # blow away binaries

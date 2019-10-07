@@ -33,19 +33,18 @@ int main(int argc, char ** argv) {
   // start pigpio library
   if (gpioInitialise() < 0)
     exit_printing("pigpio unable to start\n", ERROR_OPERATING_SYSTEM);
-
-  init_color();      // init colorized printing to the console
-  init_pins();       // set up gpio data structure
   
   schedule = calloc(1, sizeof(*schedule));
   
+  init_color();      // init colorized printing to the console
+  init_pins();       // set up gpio data structure
   init_one();        // set up the 1-wire data structures
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
   
   parse_args(argc, argv);
   print_config();
-
+  
   //  gpioTerminate(); exit(0);
   
   start_sensors();
@@ -61,6 +60,7 @@ int main(int argc, char ** argv) {
   add_selector_command(selector, 'm', NULL,   output_str,                    NULL);
   add_selector_command(selector, '+', NULL,  pin_set_hot,                    NULL);
   add_selector_command(selector, '-', NULL, pin_set_cold,                    NULL);
+  add_selector_command(selector, 'p', NULL,   flip_print,                    NULL);
   
   reading_user_input = true;
   
@@ -84,6 +84,7 @@ int main(int argc, char ** argv) {
   terminate_i2c();        // destroy i2c bus structures
   terminate_one();        // destroy 1-wire bus structures
   
+  list_destroy(schedule -> pulse_pins);
   free(schedule);
   
   // terminate pigpio library

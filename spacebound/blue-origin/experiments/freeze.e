@@ -6,9 +6,12 @@ ad15_scl 1Hz {};
 
 //ds18 1Hz {};
 
-ds32 1Hz {
+ds32 20/3Hz {
   
-  Time > 0.0min trigger { +27 } reverses;
+  Time > 4s trigger {
+       +27 [pulse :: 350ms]
+  };
   
   [calibrate : Time, poly, s : 0.0009765625, 0.0];
+  [print : gray : 5Hz];
 };

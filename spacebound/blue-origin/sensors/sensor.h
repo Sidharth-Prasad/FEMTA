@@ -59,6 +59,8 @@ typedef struct Sensor {
   char * name;              // component name
   char * code_name;         // abbreviated name
   bool   print;             // whether sensor prints
+  char * print_code;        // color to use while printing
+  int    print_hertz;       // frequency for printing
   
   union {
     i2c_device * i2c;       // i2c communications info
@@ -82,9 +84,11 @@ typedef struct Sensor {
 typedef struct ProtoSensor {
   
   char * code_name;          // abbreviated name
+  char * print_code;         // color to use while printing
   
   int hertz;                 // bus communication frequency in hertz
   int hertz_denominator;     // engenders fractional frequency through deferrals
+  int print_hertz;           // frequency for printing
   uint8 address;             // i2c address
   
   int bus;                   // which bus this is connected to
@@ -105,6 +109,7 @@ typedef struct Schedule {
   
   List * i2c_devices;          // list of all i2c device pointers
   List * one_devices;          // list of all 1-wire device pointers
+  List * pulse_pins;           // list of all pins that may pulse
   
   long i2c_interval;           // scheduler spacing for the i2c protocol
   long one_interval;           // scheduler spacing for the 1-wire protocol
@@ -137,5 +142,7 @@ void init_sensors();
 void start_sensors();
 void terminate_sensors();
 Sensor * sensor_from_proto(ProtoSensor *);
+
+void flip_print(void * nil, char * raw_text);
 
 #endif

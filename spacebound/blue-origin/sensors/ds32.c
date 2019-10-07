@@ -131,34 +131,31 @@ bool read_ds32(i2c_device * ds32_i2c) {
   char * curve = hashmap_get(ds32 -> output_units, "Time");
   List * calibration = hashmap_get(ds32 -> calibrations, "Time");
   
-  if (calibration) {
+  if (calibration)
     experiment_duration = compute_curve(experiment_duration, calibration);
-  }
-  
   
   if (ds32 -> print)
-    printf("%s     %s  %.4fs %.2fC\n", ds32 -> code_name, formatted_time, experiment_duration, temperature);
+    printf("%s%s      %.4fs\t%.2fC\t%s\n" RESET,
+	   ds32 -> print_code, ds32 -> code_name, experiment_duration, temperature, formatted_time);
   
-  fprintf(ds32_i2c -> log, "%s\t%.4f\t%.2f\n", formatted_time, experiment_duration, temperature);
+  fprintf(ds32_i2c -> log, "%.4f\t%.2\t%sf\n", experiment_duration, temperature, formatted_time);
   
-  if (ds32 -> triggers) {
-    for (iterate(ds32 -> triggers, Trigger *, trigger)) {
-      
-      if (trigger -> singular && trigger -> fired) continue;
-      
-      Numeric * requested_threshold = trigger -> threshold;
-      Numeric threshold;
-      
-      to_standard_units(&threshold, requested_threshold);
-      
-      if ( trigger -> less && experiment_duration > threshold.decimal) continue;  // condition not true
-      if (!trigger -> less && experiment_duration < threshold.decimal) continue;  // ------------------
-      
-      for (iterate(trigger -> charges, Charge *, charge))
-	pin_set(charge -> gpio, charge -> hot);
-      
-      trigger -> fired = true;
-    }
+  for (iterate(ds32 -> triggers, Trigger *, trigger)) {
+    
+    if (trigger -> singular && trigger -> fired) continue;
+    
+    Numeric * requested_threshold = trigger -> threshold;
+    Numeric threshold;
+    
+    to_standard_units(&threshold, requested_threshold);
+    
+    if ( trigger -> less && experiment_duration > threshold.decimal) continue;  // condition not true
+    if (!trigger -> less && experiment_duration < threshold.decimal) continue;  // ------------------
+    
+    for (iterate(trigger -> charges, Charge *, charge))
+      fire(charge);
+    
+    trigger -> fired = true;
   }
   
   return true;

@@ -7,13 +7,21 @@
 #include "gpio.h"
 #include "color.h"
 
-Pin pins[40];
+#include "../sensors/sensor.h"
+#include "../structures/list.h"
+
+Pin pins[28];
 
 void init_pins() {
   
-  for (int i = 0; i < 40; i++) {
-    pins[i].hot  = -1;
-    pins[i].duty = -1;
+  schedule -> pulse_pins = list_create();
+  
+  for (int i = 0; i < 28; i++) {
+    pins[i].broadcom = i;
+    pins[i].hot      = -1;
+    pins[i].duty     = -1;
+    pins[i].pulses   = false;
+    pins[i].ms_until_pulse_completes = 0;
   }
   
   gpioWrite(23, 0);
@@ -21,13 +29,21 @@ void init_pins() {
   gpioWrite(27, 0);
 }
 
-void pin_set(char broadcom, bool hot) {
+void pin_inform_pulses(char broadcom) {
+  // let system know this pin pulses
   
+  if (!pins[broadcom].pulses)
+    list_insert(schedule -> pulse_pins, &pins[broadcom]);    // first time
+  
+  pins[broadcom].pulses = true;
+}
+
+void pin_set(char broadcom, bool hot) {
+  printf(YELLOW "DEBUG: %d set %d\n" RESET, broadcom, hot);
   if (pins[broadcom].hot != hot) {
     pins[broadcom].hot = hot;
     gpioWrite(broadcom, (int) hot);
     
-    printf(YELLOW "DEBUG: %d set %d\n" RESET, broadcom, hot);
   }
 }
 
@@ -45,4 +61,15 @@ void pin_set_cold(void * nil, char * vbroadcom) {
   
   printf("Set %d cold\n", broadcom);
   pin_set(broadcom, false);
+}
+
+void fire(Charge * charge) {
+  // fires a charge, setting up any pulsing
+  
+  pin_set(charge -> gpio, charge -> hot);
+  
+  if (!charge -> duration) return;
+  
+  pins[charge -> gpio].ms_until_pulse_completes = charge -> duration;
+  pins[charge -> gpio].pulse_final_state = !charge -> hot;
 }

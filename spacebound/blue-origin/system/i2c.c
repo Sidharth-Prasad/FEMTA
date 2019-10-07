@@ -13,8 +13,9 @@
 #include "color.h"
 #include "i2c.h"
 
-#include "../structures/list.h"
 #include "../sensors/sensor.h"
+#include "../structures/list.h"
+#include "../system/gpio.h"
 #include "../types/types.h"
 #include "../types/thread-types.h"
 
@@ -36,6 +37,10 @@ i2c_device * create_i2c_device(Sensor * sensor, ProtoSensor * proto, i2c_reader 
   
   if (i2c -> hertz)
     i2c -> interval = 1000 / (i2c -> hertz);
+  
+  if (!i2c -> hertz_denominator)
+    i2c -> hertz_denominator = 1;
+  
   
   // see if we need to open another i2c instance
   if (handles[i2c -> address] == -1) {
@@ -156,7 +161,8 @@ void * i2c_main() {
   FILE * i2c_log = fopen("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
   
-  long bus_interval = schedule -> i2c_interval;
+  long bus_interval    = schedule -> i2c_interval;
+  long bus_interval_ms = schedule -> i2c_interval / (long) 1E6;
   
   long last_read_duration = 0;    // tracks time taken to read i2c bus
   
@@ -168,18 +174,35 @@ void * i2c_main() {
     
     fprintf(i2c_log, "%ld\n", last_read_duration);
     
+    
+    // pulse pins
+    for (iterate(schedule -> pulse_pins, Pin *, pin)) {
+      
+      //printf("PULES COUNTDOWN: %d " YELLOW "%d" RESET "\n", pin -> broadcom, pin -> ms_until_pulse_completes);
+      
+      if (!pin -> ms_until_pulse_completes) continue;
+      
+      pin -> ms_until_pulse_completes -= bus_interval_ms;
+      
+      if (pin -> ms_until_pulse_completes <= 0) {
+	pin_set(pin -> broadcom, pin -> pulse_final_state);
+	pin -> ms_until_pulse_completes = 0;
+      }
+    }
+    
+    
+    // read sensors
     for (iterate(schedule -> i2c_devices, i2c_device *, i2c)) {
       
-      i2c -> count += bus_interval / 1E6;
+      i2c -> count += bus_interval_ms;
       
-      if (i2c -> count == i2c -> interval || i2c -> reading) {
+      if (i2c -> count == (i2c -> interval) * (i2c -> hertz_denominator) || i2c -> reading) {
 	
 	(i2c -> read)(i2c);
         
 	i2c -> count = 0;
       }
-    }
-    
+    }    
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);

@@ -3,7 +3,7 @@
 #include "mathematics.h"
 
 
-constant int gcd(int a, int b) {
+compiler_constant int gcd(int a, int b) {
   // greatest common divisor
   // algorithm adapted from Dr. Samuel Wagstaff
   
