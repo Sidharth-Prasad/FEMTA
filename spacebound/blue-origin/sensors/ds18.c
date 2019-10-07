@@ -36,8 +36,9 @@ Sensor * init_ds18(ProtoSensor * proto) {
   ds18 -> one = create_one_device
     //(ds18, proto, "/sys/bus/w1/devices/28-0115a6756cff/w1_slave", "logs/ds18.log", read_ds18);
     //(ds18, proto, "/sys/bus/w1/devices/28-000008e222e7/w1_slave", "logs/ds18.log", read_ds18);
-    (ds18, proto, "/sys/bus/w1/devices/28-000008e3f48b/w1_slave", "logs/ds18.log", read_ds18);
-  
+    //(ds18, proto, "/sys/bus/w1/devices/28-000008e3f48b/w1_slave", "logs/ds18.log", read_ds18);
+    (ds18, proto, "/sys/bus/w1/devices/28-0315a66ea4ff/w1_slave", "logs/ds18.log", read_ds18);
+
   fprintf(ds18 -> one -> log, RED "\n\nDS18B20\n Start time %s\nTemp *C\n" RESET, formatted_time);
   
   return ds18;
@@ -50,7 +51,7 @@ bool read_ds18(one_device * ds18_one) {
   FILE * file = fopen(ds18_one -> path, "r");
   
   if (!file) {
-    printf("Could not read %s for ds18: %s\n", ds18_one -> path, strerror(errno));
+    printf(RED "Could not read %s for ds18: %s\n" RESET, ds18_one -> path, strerror(errno));
     
     /*gpioSetMode(4, PI_OUTPUT);
     pin_set(4, 0); real_nano_sleep(3000000000);
@@ -80,7 +81,7 @@ bool read_ds18(one_device * ds18_one) {
   int temperature_code = atoi(strchr(strchr(raw, '=') + 1, '=') + 1);
   
   if (!temperature_code || temperature_code == 85000) {
-    printf("Could not read %s for ds18: error code %d\n", ds18_one -> path, temperature_code);
+    printf(RED "Could not read %s for ds18: error code %d\n" RESET, ds18_one -> path, temperature_code);
     return false;
   }
   

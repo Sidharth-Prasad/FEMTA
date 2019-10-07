@@ -4,7 +4,7 @@ ad15_vdd 1Hz {};
 ad15_sda 1Hz {};
 ad15_scl 1Hz {};
 
-//ds18 1Hz {};
+ds18 1Hz { [print]; };
 
 ds32 20/3Hz {
   
@@ -13,5 +13,5 @@ ds32 20/3Hz {
   };
   
   [calibrate : Time, poly, s : 0.0009765625, 0.0];
-  [print : gray : 5Hz];
+  //  [print : gray : 5Hz];
 };
