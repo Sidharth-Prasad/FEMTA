@@ -19,7 +19,10 @@ digit  [0-9]
 \/\/.* {}                                                                    // 1 line comment
 \/\*(([^*/]|\n)|(\*+([^*/]|\n)|\/([^*/]|\n)*|\/\*([^*/]|\n)*))*\**\*\/ {}    // multi comment
 
-trigger   { return TRIGGER;   }
+if        { return IF;        }
+set       { return SET;       }
+enter     { return ENTER;     }
+leave     { return LEAVE;     }
 
 (-|\+)?{digit}+{letter}+ {
   // note, units may never exceed 7 characters
@@ -68,7 +71,7 @@ trigger   { return TRIGGER;   }
   return ID;
 }
 
-[/=\{\}\+\-,:;\[\]><] {
+[/=\{\}\+\-,:;\[\]><\(\)] {
   return yytext[0];
 }
 

@@ -138,7 +138,7 @@ bool read_ds32(i2c_device * ds32_i2c) {
     printf("%s%s      %.4fs\t%.2fC\t%s\n" RESET,
 	   ds32 -> print_code, ds32 -> code_name, experiment_duration, temperature, formatted_time);
   
-  fprintf(ds32_i2c -> log, "%.4f\t%.2\t%sf\n", experiment_duration, temperature, formatted_time);
+  fprintf(ds32_i2c -> log, "%.4f\t%.2f\t%s\n", experiment_duration, temperature, formatted_time);
   
   for (iterate(ds32 -> triggers, Trigger *, trigger)) {
     

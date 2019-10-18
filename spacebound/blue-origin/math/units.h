@@ -1,12 +1,33 @@
 #ifndef HEADER_GAURD_UNITS
 #define HEADER_GAURD_UNITS
 
+#include <stdbool.h>
+
 #include "../sensors/sensor.h"
 #include "../structures/list.h"
 
-float to_standard_units(Numeric * dest, Numeric * source);
-float convert_to(char * units, float value);
+typedef float (* Conversion)(float value);
 
-float compute_curve(float value, List * calibration);
+typedef struct PathElement {
+  
+  bool universal;
+  
+  union {
+    List * calibration;       // if sensor specific
+    Conversion conversion;    // if universal conversion (Ex: Celcius to Fahrenheit)
+  };
+  
+} PathElement;
+
+void init_units();
+void drop_units();
+void print_units_supported();
+
+Conversion get_universal_conversion(char * from, char * to);
+
+PathElement * path_element_from_conversion(Conversion conversion);
+PathElement * path_element_from_calibration(List * calibration);
+
+float path_compute(List * path, float x);
 
 #endif

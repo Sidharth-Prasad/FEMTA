@@ -11,11 +11,12 @@
 #include "fram.h"
 #include "sensor.h"
 
+#include "../math/mathematics.h"
+#include "../math/units.h"
 #include "../structures/list.h"
 #include "../structures/hashmap.h"
 #include "../system/class.h"
 #include "../system/color.h"
-#include "../math/mathematics.h"
 
 void sensor_call_free(void *);
 
@@ -31,10 +32,10 @@ ProtoSensor * proto_sensor_create(char * code_name, int address, Hashmap * targe
   proto -> print_code  = RESET;
   proto -> print_hertz = 5;
   
-  if (targets && targets -> size) {
-    proto -> calibrations = hashmap_create(hash_string, compare_strings, NULL, targets -> size/2);
-    proto -> output_units = hashmap_create(hash_string, compare_strings, NULL, targets -> size/2);
-  }
+  if (targets && targets -> size)
+    proto -> output_paths = calloc(targets -> elements, sizeof(*proto -> output_paths));
+  else
+    proto -> output_paths = NULL;
   
   return proto;
 }
@@ -50,8 +51,7 @@ Sensor * sensor_from_proto(ProtoSensor * proto) {
   sensor -> code_name       = proto -> code_name;
   sensor -> print_code      = proto -> print_code;
   sensor -> print_hertz     = proto -> print_hertz;
-  sensor -> calibrations    = proto -> calibrations;
-  sensor -> output_units    = proto -> output_units;
+  sensor -> output_paths    = proto -> output_paths;
   sensor -> auto_regressive = proto -> auto_regressive;
   
   return sensor;
@@ -71,7 +71,8 @@ void init_sensors() {
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
   Hashmap * fram_tar = NULL;
   
-  hashmap_add(ds32_tar, "Time", (void *) (int) 0);
+  hashmap_add(ds32_tar, "Time"       , (void *) (int) 0);
+  hashmap_add(ds32_tar, "Temperature", (void *) (int) 1);
   
   hashmap_add(ds18_tar, "Temperature", (void *) (int) 0);
   
@@ -79,12 +80,12 @@ void init_sensors() {
   hashmap_add(adxl_tar, "Y", (void *) (int) 1);
   hashmap_add(adxl_tar, "Z", (void *) (int) 2);
   
-  hashmap_add(ad15_tar, "A01", (void *) (int) 0);
-  hashmap_add(ad15_tar, "A23", (void *) (int) 1);
-  hashmap_add(ad15_tar, "A0" , (void *) (int) 0);
-  hashmap_add(ad15_tar, "A1" , (void *) (int) 1);
-  hashmap_add(ad15_tar, "A2" , (void *) (int) 2);
-  hashmap_add(ad15_tar, "A3" , (void *) (int) 3); 
+  hashmap_add(ad15_tar, "A01", (void *) (int) 0);    // if this doesn't make sense to you,
+  hashmap_add(ad15_tar, "A23", (void *) (int) 1);    // really think it through cause it's 
+  hashmap_add(ad15_tar, "A0" , (void *) (int) 0);    // critical to the ad15's interface
+  hashmap_add(ad15_tar, "A1" , (void *) (int) 1);    // 
+  hashmap_add(ad15_tar, "A2" , (void *) (int) 2);    // 
+  hashmap_add(ad15_tar, "A3" , (void *) (int) 3);    // 
   
   
   hashmap_add(proto_sensors, "adxl"    , proto_sensor_create("adxl", ADXL_ADDRESS, adxl_tar, I2C_BUS));

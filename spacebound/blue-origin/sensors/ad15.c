@@ -160,8 +160,8 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   bool should_print = false;
   
-  if (ad15_i2c -> hertz >= ad15 -> print_hertz)
-    should_print = (ad15 -> print) && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz / ad15 -> print_hertz));
+  if (ad15_i2c -> hertz >= 5)
+    should_print = (ad15 -> print) && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz / 5));
   else
     should_print = (ad15 -> print) && !(ad15_i2c -> total_reads % (ad15_i2c -> hertz                      ));
   

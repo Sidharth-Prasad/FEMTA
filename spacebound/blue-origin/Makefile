@@ -35,7 +35,7 @@ compiler/%.o: %.c
 	@mkdir -p $(dir $(basename $@))
 	gcc -o $@ -MMD -c $(FLAGS) $<
 
-parser: $(wildcard parser/*.y parser/*.l)
+parser: $(wildcard parser/*.y parser/*.l parser/trick.nil)
 	cd parser && yacc -d parser.y && lex parser.l && cd ..
 
 clean:

@@ -11,6 +11,7 @@
 
 #include "origin.h"
 
+#include "../math/units.h"
 #include "../sensors/sensor.h"
 #include "../system/clock.h"
 #include "../system/error.h"
@@ -37,6 +38,7 @@ int main(int argc, char ** argv) {
   schedule = calloc(1, sizeof(*schedule));
   
   init_color();      // init colorized printing to the console
+  init_units();      // init unit conversion structures
   init_pins();       // set up gpio data structure
   init_one();        // set up the 1-wire data structures
   init_i2c();        // set up the i2c data structures
@@ -45,7 +47,7 @@ int main(int argc, char ** argv) {
   parse_args(argc, argv);
   print_config();
   
-  //  gpioTerminate(); exit(0);
+  gpioTerminate(); exit(0);
   
   start_sensors();
   start_one();       // start reading the 1-wire bus
@@ -74,8 +76,6 @@ int main(int argc, char ** argv) {
   // tell threads to terminate
   schedule -> term_signal = true;
   
-  printf("DEBUG: Active - %d %d\n", schedule -> i2c_active, schedule -> one_active);
-  
   // join with threads
   if (schedule -> i2c_active) pthread_join(*schedule -> i2c_thread, NULL);
   if (schedule -> one_active) pthread_join(*schedule -> one_thread, NULL);
@@ -89,6 +89,8 @@ int main(int argc, char ** argv) {
   
   // terminate pigpio library
   gpioTerminate();
+  
+  drop_units();
   terminate_color();
   
   return EXIT_SUCCESS;

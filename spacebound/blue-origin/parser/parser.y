@@ -24,8 +24,8 @@ typedef struct Numeric Numeric;
 typedef struct Specification Specification;
 
 Charge        * make_charge(Numeric * wire, Specification * tag);
-Trigger       * make_trigger(List * charges, List * options);
-Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigger * trigger);
+Trigger       * make_trigger(List * charges);
+Specification * specify_trigger(char * id, bool less, Numeric * threshold, List * options, Trigger * trigger);
 Specification * make_tag(char * id, List * options, List * args);
 
 void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * specifications);
@@ -63,7 +63,7 @@ void print_config();
   Specification * specification;
 }
 
-%token TRIGGER
+%token IF SET ENTER LEAVE
 
 %token  <string>        ID
 %token  <numeric>       NUMERIC
@@ -91,53 +91,53 @@ void print_config();
 %%
 
 Config   : Sensors
-         |                                            { printf("\nExperiment does not involve sensors"); }
+         |                                                 { printf("\nExperiment does not use sensors");   }
          ;
 
 Sensors  : Sensor                
          | Sensors Sensor
          ;
 
-Sensor   : ID NUMERIC             '{'       '}' ';'   { build_sensor($1, $2, NULL, NULL);                }
-         | ID NUMERIC             '{' Specs '}' ';'   { build_sensor($1, $2, NULL,   $4);                }
-         | ID NUMERIC '/' NUMERIC '{'       '}' ';'   { build_sensor($1, $2,   $4, NULL);                }
-         | ID NUMERIC '/' NUMERIC '{' Specs '}' ';'   { build_sensor($1, $2,   $4,   $6);                }
+Sensor   : ID NUMERIC             '{'       '}' ';'        { build_sensor($1, $2, NULL, NULL);              }
+         | ID NUMERIC             '{' Specs '}' ';'        { build_sensor($1, $2, NULL,   $4);              }
+         | ID NUMERIC '/' NUMERIC '{'       '}' ';'        { build_sensor($1, $2,   $4, NULL);              }
+         | ID NUMERIC '/' NUMERIC '{' Specs '}' ';'        { build_sensor($1, $2,   $4,   $6);              }
          ;
 
-Specs    : Spec                                       { $$ = list_from(1, $1);                           }
-         | Specs Spec                                 { list_insert($1, $2); $$ = $1;                    }
+Specs    : Spec                                            { $$ = list_from(1, $1);                         }
+         | Specs Spec                                      { list_insert($1, $2); $$ = $1;                  }
          ;
 
-Spec     : ID '<' NUMERIC TRIGGER Actuator            { $$ = specify_trigger($1,  true, $3, $5);         }
-         | ID '>' NUMERIC TRIGGER Actuator            { $$ = specify_trigger($1, false, $3, $5);         }
-         | Tag ';'                                    { $$ = $1;                                         }
+Spec     : IF '(' ID '<' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($3,  true, $5,   $7, $9); }
+         | IF '(' ID '<' NUMERIC             ')' Actuator  { $$ = specify_trigger($3,  true, $5, NULL, $7); }
+         | IF '(' ID '>' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($3, false, $5,   $7, $9); }
+         | IF '(' ID '>' NUMERIC             ')' Actuator  { $$ = specify_trigger($3, false, $5, NULL, $7); }
+         | Tag ';'                                         { $$ = $1;                                       }
          ;
 
-Actuator : '{'         '}'         ';'                { printf("Triggers must list pins\n"); exit(3);    }
-         | '{'         '}' Options ';'                { printf("Triggers must list pins\n"); exit(3);    }
-         | '{' Charges '}'         ';'                { $$ = make_trigger($2, NULL);                     }
-         | '{' Charges '}' Options ';'                { $$ = make_trigger($2,   $4);                     }
+Actuator : '{'         '}' ';'                             { printf("Empty if body\n"); exit(3);            }
+         | '{' Charges '}' ';'                             { $$ = make_trigger($2);                         }
          ;
 
-Charges  : Charge                                     { $$ = list_from(1, $1);                           }
-         | Charges ',' Charge                         { list_insert($1, $3); $$ = $1;                    }
+Charges  : Charge                                          { $$ = list_from(1, $1);                         }
+         | Charges Charge                                  { list_insert($1, $2); $$ = $1;                  }
          ;
 
-Charge   : NUMERIC Tag                                { $$ = make_charge($1,   $2);                      }
-         | NUMERIC                                    { $$ = make_charge($1, NULL);                      }
+Charge   : SET NUMERIC Tag ';'                             { $$ = make_charge($2,   $3);                    }
+         | SET NUMERIC     ';'                             { $$ = make_charge($2, NULL);                    }
          ;
 
-Tag      : '[' ID                      ']'            { $$ = make_tag($2, NULL, NULL);                   }
-         | '[' ID ':'         ':' Args ']'            { $$ = make_tag($2, NULL,   $5);                   }
-         | '[' ID ':' Options ':' Args ']'            { $$ = make_tag($2,   $4,   $6);                   }
+Tag      : '[' ID                      ']'                 { $$ = make_tag($2, NULL, NULL);                 }
+         | '[' ID ':'         ':' Args ']'                 { $$ = make_tag($2, NULL,   $5);                 }
+         | '[' ID ':' Options ':' Args ']'                 { $$ = make_tag($2,   $4,   $6);                 }
          ;
 
-Args     : Args ',' NUMERIC                           { list_insert($1, $3); $$ = $1;                    }
-         | NUMERIC                                    { $$ = list_from(1, $1);                           }
+Args     : Args ',' NUMERIC                                { list_insert($1, $3); $$ = $1;                  }
+         | NUMERIC                                         { $$ = list_from(1, $1);                         }
          ;
 
-Options  : ID                                         { $$ = list_from(1, $1);                           }
-         | Options ',' ID                             { list_insert($1, $3); $$ = $1;                    }
+Options  : ID                                              { $$ = list_from(1, $1);                         }
+         | Options ',' ID                                  { list_insert($1, $3); $$ = $1;                  }
          ;
 
 %%
@@ -223,7 +223,7 @@ Charge * make_charge(Numeric * wire, Specification * tag) {
     return charge;
 }
 
-Trigger * make_trigger(List * charges, List * options) {
+Trigger * make_trigger(List * charges) {
     // creates a trigger, which becomes a specification later
     
     Trigger * trigger = calloc(1, sizeof(*trigger));
@@ -233,24 +233,12 @@ Trigger * make_trigger(List * charges, List * options) {
     trigger -> reverses = false;    // --------
     
     trigger -> charges = charges;
-    
-    if (!options) return trigger;
-    
-    for (iterate(options, char *, option)) {
-        if      (!strcmp(option, "singular")) trigger -> singular = true;
-        else if (!strcmp(option, "forever" )) trigger -> singular = false;
-        else if (!strcmp(option, "reverses")) trigger -> reverses = true;
-        else {
-            printf("Unknown option " RED "%s\n" RESET, option);
-            exit(ERROR_EXPERIMENTER);
-        }
-    }
-    
+        
     return trigger;
 }
 
 
-Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigger * trigger) {
+Specification * specify_trigger(char * id, bool less, Numeric * threshold, List * options, Trigger * trigger) {
     /* Wraps and modifies the trigger into a specification so that sensor construction *
      * may have a linked list consisting of nodes with the same content                */
     
@@ -259,6 +247,18 @@ Specification * specify_trigger(char * id, bool less, Numeric * threshold, Trigg
     trigger -> id        = id;
     trigger -> less      = less;
     trigger -> threshold = threshold;
+    
+    if (options) {
+        for (iterate(options, char *, option)) {
+	    if      (!strcmp(option, "singular")) trigger -> singular = true;
+	    else if (!strcmp(option, "forever" )) trigger -> singular = false;
+	    else if (!strcmp(option, "reverses")) trigger -> reverses = true;
+	    else {
+	        printf("Unknown option " RED "%s\n" RESET, option);
+		exit(ERROR_EXPERIMENTER);
+	    }
+	}
+    }
     
     Specification * specification = malloc(sizeof(*specification));
     

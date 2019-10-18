@@ -4,12 +4,12 @@ ad15_vdd 1Hz {};
 ad15_sda 1Hz {};
 ad15_scl 1Hz {};
 
-ds18 1Hz { [print]; };
+ds18 2Hz { [print]; };
 
-ds32 20/3Hz {
+ds32 1Hz {
   
-  Time > 4s trigger {
-       +27 [pulse :: 350ms]
+  Time > 0.1s trigger {
+       +27
   };
   
   [calibrate : Time, poly, s : 0.0009765625, 0.0];

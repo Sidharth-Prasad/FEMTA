@@ -66,15 +66,21 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    TRIGGER = 258,
-    ID = 259,
-    NUMERIC = 260
+    IF = 258,
+    SET = 259,
+    ENTER = 260,
+    LEAVE = 261,
+    ID = 262,
+    NUMERIC = 263
   };
 #endif
 /* Tokens.  */
-#define TRIGGER 258
-#define ID 259
-#define NUMERIC 260
+#define IF 258
+#define SET 259
+#define ENTER 260
+#define LEAVE 261
+#define ID 262
+#define NUMERIC 263
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -93,7 +99,7 @@ union YYSTYPE
   Trigger       * trigger;
   Specification * specification;
 
-#line 97 "y.tab.h" /* yacc.c:1909  */
+#line 103 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

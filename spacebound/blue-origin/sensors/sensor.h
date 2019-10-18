@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "../math/units.h"
 #include "../structures/list.h"
 #include "../structures/hashmap.h"
 #include "../system/i2c.h"
@@ -68,16 +69,14 @@ typedef struct Sensor {
   };
   int bus;                  // which bus is used
   
+  float   * measures;
   List    * triggers;       // sensor triggers
   Hashmap * targets;        // that which can be triggered
-  Hashmap * calibrations;   // calibrations for each target
-  Hashmap * output_units;   // units for each trigger
+  List    * output_paths;   // conversions taken to get to final output value for logs and triggers
   
-  float auto_regressive;    
+  float auto_regressive;    // smoothing constant
   
-  sensor_free free;      // how to free sensor
-  
-  void * data;           // specialized sensor data
+  sensor_free free;         // how to free sensor
   
 } Sensor;
 
@@ -95,8 +94,7 @@ typedef struct ProtoSensor {
   
   List    * triggers;        // gpio triggers
   Hashmap * targets;         // that which can be triggered
-  Hashmap * calibrations;   // calibrations for each target
-  Hashmap * output_units;    // units for each trigger
+  List    * output_paths;    // conversions taken to get to final output value for logs and triggers
   
   float auto_regressive;     
   

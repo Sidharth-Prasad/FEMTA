@@ -35,9 +35,9 @@ Sensor * init_ds18(ProtoSensor * proto) {
   
   ds18 -> one = create_one_device
     //(ds18, proto, "/sys/bus/w1/devices/28-0115a6756cff/w1_slave", "logs/ds18.log", read_ds18);
-    //(ds18, proto, "/sys/bus/w1/devices/28-000008e222e7/w1_slave", "logs/ds18.log", read_ds18);
+    (ds18, proto, "/sys/bus/w1/devices/28-000008e222e7/w1_slave", "logs/ds18.log", read_ds18);
     //(ds18, proto, "/sys/bus/w1/devices/28-000008e3f48b/w1_slave", "logs/ds18.log", read_ds18);
-    (ds18, proto, "/sys/bus/w1/devices/28-0315a66ea4ff/w1_slave", "logs/ds18.log", read_ds18);
+    //(ds18, proto, "/sys/bus/w1/devices/28-0315a66ea4ff/w1_slave", "logs/ds18.log", read_ds18);
 
   fprintf(ds18 -> one -> log, RED "\n\nDS18B20\n Start time %s\nTemp *C\n" RESET, formatted_time);
   
