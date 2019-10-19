@@ -17,10 +17,10 @@ void init_pins() {
   schedule -> pulse_pins = list_create();
   
   for (int i = 0; i < 28; i++) {
-    pins[i].broadcom = i;
-    pins[i].hot      = -1;
-    pins[i].duty     = -1;
-    pins[i].pulses   = false;
+    pins[i].broadcom                 = i;
+    pins[i].hot                      = -1;
+    pins[i].duty                     = -1;
+    pins[i].pulses                   = false;
     pins[i].ms_until_pulse_completes = 0;
   }
   
@@ -63,13 +63,13 @@ void pin_set_cold(void * nil, char * vbroadcom) {
   pin_set(broadcom, false);
 }
 
-void fire(Charge * charge) {
+void fire(Charge * charge, bool hot) {
   // fires a charge, setting up any pulsing
   
-  pin_set(charge -> gpio, charge -> hot);
+  pin_set(charge -> gpio, hot);
   
   if (!charge -> duration) return;
   
   pins[charge -> gpio].ms_until_pulse_completes = charge -> duration;
-  pins[charge -> gpio].pulse_final_state = !charge -> hot;
+  pins[charge -> gpio].pulse_final_state = !hot;
 }

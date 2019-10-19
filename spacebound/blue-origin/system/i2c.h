@@ -55,6 +55,6 @@ uint8 i2c_read_byte(i2c_device * dev, uint8 reg);
 
 void i2c_close(i2c_device * i2c);
 
-i2c_device * create_i2c_device(Sensor * sensor, ProtoSensor * proto, i2c_reader reader);
+i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader);
 
 #endif

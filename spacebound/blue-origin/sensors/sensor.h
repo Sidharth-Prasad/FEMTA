@@ -1,6 +1,21 @@
 #ifndef HEADER_GAURD_SENSOR
 #define HEADER_GAURD_SENSOR
 
+/**
+ * @Invariant_0 A sensor shall always be called "proto" until it is initialized.
+ * Hence, all sensor initialization functions are "pass-through" since one may
+ * never refer to an initialized sensor through a pointer called "proto".
+ * Moreover, one never refers to a "ds32" until it in its "proto" form has been
+ * initialized.
+ * 
+ * @Invariant_1 If a sensor produces data, structures must exist for triggers
+ * 
+ * @Invariant_2 After parsing completes, all triggers are in the same units that
+ * output streams and log files use.
+ */
+
+
+
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -23,37 +38,35 @@ typedef void (* sensor_free)(Sensor * sensor);
 typedef struct Charge {
   
   char gpio;        // the broadcom number of the pin
-  bool hot;         // whether wire should be hot or cold
   int  duration;    // used for pulsing
   
 } Charge;
 
-typedef struct Numeric {
-  
-  union {
-    int   integer;    // the numerical value 
-    float decimal;    // -------------------
-  };
-  
-  char units[8];      // the units code
-  bool is_decimal;    // representation
-  
-} Numeric;
-
 typedef struct Trigger {
   
-  char * id;              // target (like A01)
-    
-  Numeric * threshold;    // threshold for condition
-  List    * charges;      // wires for actuation
+  char * id;                  // target (like A01)
+  float * threshold;          // threshold for condition
   
-  bool less;
-  bool fired;
-  bool singular;
-  bool reverses;
+  List * wires_low;          // wires to set low
+  List * wires_high;         // wires to set high
+  List * enter_set;          // sub-states to enter
+  List * leave_set;          // sub-states to leave
+  
+  bool less;                  // whether comparison is '<' or '>'
+  bool fired;                 // whether trigger has ever fired
+  bool singular;              // whether trigger should only ever be fired once
+  bool reverses;              // whether trigger was source for its chiral opposite
   
 } Trigger;
 
+typedef struct Output {
+  
+  float  measure;     // measurement last taken
+  List * series;      // path of conversions required to get final measurement
+  List * triggers;    // sensor triggers for this particular output stream
+  bool   enabled;     // whether output is enabled
+  
+} Output;
 
 typedef struct Sensor {
   
@@ -69,39 +82,24 @@ typedef struct Sensor {
   };
   int bus;                  // which bus is used
   
-  float   * measures;
-  List    * triggers;       // sensor triggers
+  int data_streams;         // number of output data axes
+  Output * outputs;         // everything this sensor produces
   Hashmap * targets;        // that which can be triggered
-  List    * output_paths;   // conversions taken to get to final output value for logs and triggers
   
   float auto_regressive;    // smoothing constant
   
   sensor_free free;         // how to free sensor
   
-} Sensor;
-
-typedef struct ProtoSensor {
   
-  char * code_name;          // abbreviated name
-  char * print_code;         // color to use while printing
   
   int hertz;                 // bus communication frequency in hertz
   int hertz_denominator;     // engenders fractional frequency through deferrals
-  int print_hertz;           // frequency for printing
+  
+  bool requested;            // whether sensor has actually been specified during parsing
+  
   uint8 address;             // i2c address
   
-  int bus;                   // which bus this is connected to
-  
-  List    * triggers;        // gpio triggers
-  Hashmap * targets;         // that which can be triggered
-  List    * output_paths;    // conversions taken to get to final output value for logs and triggers
-  
-  float auto_regressive;     
-  
-  bool print;                // whether sensor is printed to console
-  bool requested;            // whether sensor is requested
-  
-} ProtoSensor;
+} Sensor;
 
 typedef struct Schedule {
   
@@ -127,13 +125,11 @@ typedef struct Schedule {
 Schedule * schedule;
 
 
-List    * sensors;          // every active sensor on craft
-Hashmap * proto_sensors;    // sensors that could be specified
+List    * active_sensors;      // every active sensor on craft
+Hashmap * all_sensors;         // every sensor that could be specified
 
-int n_triggers;             // number of triggers
+int n_triggers;                // number of triggers
 
-float to_standard_units(Numeric * dest, Numeric * source);
-float convert_to(char * units, float value);
 float time_passed();    // time since experiment start
 
 void init_sensors();

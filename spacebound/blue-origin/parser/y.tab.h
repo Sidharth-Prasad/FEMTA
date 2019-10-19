@@ -70,8 +70,9 @@ extern int yydebug;
     SET = 259,
     ENTER = 260,
     LEAVE = 261,
-    ID = 262,
-    NUMERIC = 263
+    STATE = 262,
+    ID = 263,
+    NUMERIC = 264
   };
 #endif
 /* Tokens.  */
@@ -79,8 +80,9 @@ extern int yydebug;
 #define SET 259
 #define ENTER 260
 #define LEAVE 261
-#define ID 262
-#define NUMERIC 263
+#define STATE 262
+#define ID 263
+#define NUMERIC 264
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -99,7 +101,7 @@ union YYSTYPE
   Trigger       * trigger;
   Specification * specification;
 
-#line 103 "y.tab.h" /* yacc.c:1909  */
+#line 105 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

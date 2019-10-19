@@ -23,6 +23,8 @@ if        { return IF;        }
 set       { return SET;       }
 enter     { return ENTER;     }
 leave     { return LEAVE;     }
+state     { return STATE;     }
+after     { return AFTER;     }
 
 (-|\+)?{digit}+{letter}+ {
   // note, units may never exceed 7 characters
@@ -71,11 +73,16 @@ leave     { return LEAVE;     }
   return ID;
 }
 
-[/=\{\}\+\-,:;\[\]><\(\)] {
+[/=\{\}\+\-,\[\]><\(\)] {
   return yytext[0];
 }
 
-{white} {}
+[:\|] {
+  return ':';    // make ':' equal to '|'
+}
+
+{white} {}    // skip all whitespace
+[;]     {}    // skip semicolons to make them optional
 
 . {
   printf("%s\n", yytext);

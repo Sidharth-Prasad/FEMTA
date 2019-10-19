@@ -28,17 +28,30 @@ Sensor * init_ds32(ProtoSensor * proto) {
   ds32 -> name = "DS3231N";
   ds32 -> free = free_ds32;
   
-  ds32 -> i2c = create_i2c_device(ds32, proto, read_ds32);
-  
+  ds32 -> i2c = create_i2c_device(ds32, proto, read_ds32);  
   ds32 -> i2c -> log = fopen("logs/ds32.log", "a");
-  
-  setlinebuf(ds32 -> i2c -> log);    // write out every read
   
   //set_time_ds32(ds32);
   
+  setlinebuf(ds32 -> i2c -> log);    // write out every read
   fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\nHuman Time\tExperiment Duration [s]\tTemperature [C]\n" RESET);
   
-  // Establish time experiment information
+  
+  
+  ds32 -> outputs[DS32_MEASURE_TIME       ].enabled = true;    // always enabled
+  ds32 -> outputs[DS32_MEASURE_TEMPERATURE].enabled = true;    // --------------
+  
+  if (!ds32 -> outputs[DS32_MEASURE_TIME].series)
+    ds32 -> outputs[DS32_MEASURE_TIME].series = list_create
+      (1, series_element_from_calibration
+       (list_create(3, "poly", numeric_from_decimal(0.0009765625f), numeric_from_decimal(0.0f)))); 
+  
+  if (!ds32 -> outputs[DS32_MEASURE_TEMPERATURE].series)
+    ds32 -> outputs[DS32_MEASURE_TEMPERATURE].series = list_create
+      (1, series_element_from_conversion(convert_identity));
+  
+  
+  // establish time experiment information
   ds32_start_square_wave(ds32 -> i2c);
   gpioSetISRFunc(20, RISING_EDGE, 0, schedule_tick);    // start counting interrupts
   read_ds32(ds32 -> i2c);                               // get human time before other sensors are created
@@ -140,24 +153,7 @@ bool read_ds32(i2c_device * ds32_i2c) {
   
   fprintf(ds32_i2c -> log, "%.4f\t%.2f\t%s\n", experiment_duration, temperature, formatted_time);
   
-  for (iterate(ds32 -> triggers, Trigger *, trigger)) {
-    
-    if (trigger -> singular && trigger -> fired) continue;
-    
-    Numeric * requested_threshold = trigger -> threshold;
-    Numeric threshold;
-    
-    to_standard_units(&threshold, requested_threshold);
-    
-    if ( trigger -> less && experiment_duration > threshold.decimal) continue;  // condition not true
-    if (!trigger -> less && experiment_duration < threshold.decimal) continue;  // ------------------
-    
-    for (iterate(trigger -> charges, Charge *, charge))
-      fire(charge);
-    
-    trigger -> fired = true;
-  }
-  
+  sensor_process_triggers(ds32);
   return true;
 }
 
@@ -177,5 +173,5 @@ void set_time_ds32(Sensor * ds32) {
 }
 
 void free_ds32(Sensor * ds32) {
-  // Nothing special has to happpen
+  // nothing special
 }

@@ -23,7 +23,7 @@ int8 handles[0x7F];
 
 void * i2c_main();
 
-i2c_device * create_i2c_device(Sensor * sensor, ProtoSensor * proto, i2c_reader reader) {
+i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {
   // creates an i2c device, adding it to the device list
   
   i2c_device * i2c = calloc(1, sizeof(*i2c));
@@ -31,9 +31,9 @@ i2c_device * create_i2c_device(Sensor * sensor, ProtoSensor * proto, i2c_reader 
   i2c -> sensor   = sensor;
   i2c -> read     = reader;
   
-  i2c -> address           = proto -> address;
-  i2c -> hertz             = proto -> hertz;
-  i2c -> hertz_denominator = proto -> hertz_denominator;
+  i2c -> address           = sensor -> address;
+  i2c -> hertz             = sensor -> hertz;
+  i2c -> hertz_denominator = sensor -> hertz_denominator;
   
   if (i2c -> hertz)
     i2c -> interval = 1000 / (i2c -> hertz);
@@ -46,8 +46,7 @@ i2c_device * create_i2c_device(Sensor * sensor, ProtoSensor * proto, i2c_reader 
   if (handles[i2c -> address] == -1) {
     i2c -> handle = i2cOpen(1, i2c -> address, 0);
     handles[i2c -> address] = i2c -> handle;
-  }
-  else {
+  } else {
     i2c -> handle = handles[i2c -> address];
   }
   
@@ -199,10 +198,11 @@ void * i2c_main() {
       if (i2c -> count == (i2c -> interval) * (i2c -> hertz_denominator) || i2c -> reading) {
 	
 	(i2c -> read)(i2c);
-        
+	
 	i2c -> count = 0;
       }
     }    
+    
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);

@@ -38,9 +38,7 @@ void init_one();
 void start_one();
 void terminate_one();
 
-one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
-			       char * path, char * log_path, one_reader read);
-
+one_device * create_one_device(Sensor * sensor, char * path, char * log_path, one_reader read);
 void one_close(one_device * one);
 
 #endif

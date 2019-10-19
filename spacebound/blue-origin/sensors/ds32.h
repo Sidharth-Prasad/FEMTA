@@ -22,6 +22,9 @@
 
 #include "../system/i2c.h"
 
+#define DS32_MEASURE_TIME        0
+#define DS32_MEASURE_TEMPERATURE 1
+
 #define DS32_ADDRESS 0x68
 
 int initial_seconds;

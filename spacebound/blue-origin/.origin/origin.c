@@ -96,69 +96,26 @@ int main(int argc, char ** argv) {
   return EXIT_SUCCESS;
 }
 
-
 void parse_args(int argc, char ** argv) {
-
+  
   if (argc == 1) {
-    // default: run default.e
-    
-    yyin = fopen("./experiments/default.e", "r");
-    
-    if (!yyin) {
-      printf(RED "Experiment file does not exist\n" RESET);
-      exit(1);
-    }
-    
-    yyparse();  
+    printf(RED "Please supply a file to run\n" RESET);
     return;
   }
   
-  if (!strncmp(argv[1], "file", 4)) {
-    /* parse a file for specifications */
-    
-    char * filename = argv[1] + 5;
-    
-    printf("%s\n", filename);
-    
-    yyin = fopen(filename, "r");
-    
-    if (!yyin) {
-      printf(RED "Experiment file %s does not exist\n" RESET, filename);
-      exit(1);
-    }
-    
-    yyparse();
-    return;
+  /* parse a file for specifications */
+  
+  char * filename = argv[1];
+  
+  printf("Parsing experiment file %s\n", filename);
+  
+  yyin = fopen(filename, "r");
+  
+  if (!yyin) {
+    printf(RED "Experiment file %s does not exist\n" RESET, filename);
+    exit(ERROR_EXPERIMENTER);
   }
   
-  for (int i = 1; i < argc; i++) {
-    /* read command line arguments rather than file */
-    
-    char code_name[32];
-    code_name[0] = '\0';    // need to protect buffer from previous iteration
-    
-    int  hertz = 0;
-    bool print = false;
-    
-    sscanf(argv[i], "%[^*,],%d", code_name, &hertz);      
-    
-    if (!code_name[0]) {
-      sscanf(argv[i], "*%[^,],%d", code_name, &hertz);
-      print = true;
-    }
-    
-    ProtoSensor * proto = hashmap_get(proto_sensors, code_name);
-    
-    //printf("%s at %d\n", code_name, hertz);
-    
-    if (!proto) {
-      printf(RED "%s is not a sensor\n" RESET, code_name);
-      exit(1);
-    }
-    
-    proto -> requested = true;
-    proto -> print     = print;
-    
-    if (hertz) proto -> hertz = hertz;
-  }
+  yyparse();
+  return;
 }

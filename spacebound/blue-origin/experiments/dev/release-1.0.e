@@ -1,19 +1,32 @@
 /**
  * @Authors Noah
- * @Experimenters Sam, Adi, Noah
- * @Experiment_Date 10//19
  * @Compiler_Version Release 1.0
  * @Licence GPLv3
  * 
- * @Description Tests a diaphragm, determining if it holds pressure, leaks, or bursts
+ * @Description Example with all features in release 1.0
  **/
+
+main {
+  enter pad;        // rocket sitting on pad
+  leave ascent;     // rocket increasing in altitude
+  leave appogee;    // rocket at the edge of atmosphere
+  leave descent;    // rocket falling back to earth
+}
 
 ad15_gnd 5Hz {
   
-  if (A0 < 10Kpa | singular) {
+  if (A0 < 10Kpa) {
     connect broadcom 17 to ground;
     connect broadcom 18 to pi_vdd;
     connect broadcom 18 to ground after 250ms;    // we take power off so as to avoid burning the solenoid
+    leave pad;
+    enter ascent after 250ms;
+  }
+  
+  if (A1 > 10torr | reverses, singular) {
+    connect broadcom 17 to source;
+    leave appogee;
+    enter descent;
   }
   
   [calibrate | A0, poly, V, kPa |    // we expect 11.3v at 1atm | V->kPa

@@ -25,4 +25,4 @@ void pin_set_hot (void * nil, char * vbroadcom);    // selector commands
 void pin_set_cold(void * nil, char * vbroadcom);    // -----------------
 void pin_inform_pulses(char broadcom);
 void pin_pulse(char broadcom, int ms, bool hot);
-void fire(Charge * charge);
+void fire(Charge * charge, bool hot);

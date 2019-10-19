@@ -22,9 +22,7 @@
 
 void * one_main();
 
-one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
-			       char * path, char * log_path,
-			       one_reader read) {
+one_device * create_one_device(Sensor * sensor, char * path, char * log_path, one_reader read) {
   
   one_device * one = calloc(1, sizeof(*one));
   
@@ -38,8 +36,8 @@ one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
     exit(1);
   }
   
-  one -> hertz             = proto -> hertz;
-  one -> hertz_denominator = proto -> hertz_denominator;
+  one -> hertz             = sensor -> hertz;
+  one -> hertz_denominator = sensor -> hertz_denominator;
   
   if (one -> hertz)
     one -> interval = 1000 / (one -> hertz);
@@ -51,9 +49,9 @@ one_device * create_one_device(Sensor * sensor, ProtoSensor * proto,
   // give a nice message to the user
   
   printf("Started " GREEN "%s " RESET "at " YELLOW "%d", sensor -> name, one -> hertz);
-  if (proto -> hertz_denominator) printf("/%d", one -> hertz_denominator);
+  if (one -> hertz_denominator) printf("/%d", one -> hertz_denominator);
   printf("Hz " RESET "via " BLUE "%s " RESET, path);
-  if (proto -> print) printf("with " MAGENTA "printing" RESET);
+  if (sensor -> print) printf("with " MAGENTA "printing" RESET);
   printf("\nlogged in %s\n", log_path);
   
   return one;

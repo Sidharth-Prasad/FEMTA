@@ -20,9 +20,9 @@
 
 void sensor_call_free(void *);
 
-ProtoSensor * proto_sensor_create(char * code_name, int address, Hashmap * targets, int bus) {
+Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus) {
   
-  ProtoSensor * proto = calloc(1, sizeof(*proto));
+  Sensor * proto = calloc(1, sizeof(*proto));    // Uninitialized sensors are called proto (by Invariant 0)
   
   proto -> code_name = code_name;
   proto -> address   = address;
@@ -32,29 +32,13 @@ ProtoSensor * proto_sensor_create(char * code_name, int address, Hashmap * targe
   proto -> print_code  = RESET;
   proto -> print_hertz = 5;
   
-  if (targets && targets -> size)
-    proto -> output_paths = calloc(targets -> elements, sizeof(*proto -> output_paths));
-  else
-    proto -> output_paths = NULL;
+  
+  
+  // Check to see if the sensor produces data (possible by Invariant 1)
+  if (targets && targets -> elements)
+    proto -> outputs = calloc(targets -> elements, sizeof(*proto -> outputs));
   
   return proto;
-}
-
-Sensor * sensor_from_proto(ProtoSensor * proto) {
-  
-  Sensor * sensor = calloc(1, sizeof(*sensor));
-  
-  sensor -> bus             = proto -> bus;
-  sensor -> print           = proto -> print;
-  sensor -> targets         = proto -> targets;
-  sensor -> triggers        = proto -> triggers;
-  sensor -> code_name       = proto -> code_name;
-  sensor -> print_code      = proto -> print_code;
-  sensor -> print_hertz     = proto -> print_hertz;
-  sensor -> output_paths    = proto -> output_paths;
-  sensor -> auto_regressive = proto -> auto_regressive;
-  
-  return sensor;
 }
 
 void init_sensors() {
@@ -63,7 +47,7 @@ void init_sensors() {
   
   sprintf(formatted_time, "[Clock not present!]");    // overwritten by clock
   
-  proto_sensors = hashmap_create(hash_string, compare_strings, NULL, 8);
+  all_sensors = hashmap_create(hash_string, compare_strings, NULL, 8);
   
   Hashmap * adxl_tar = hashmap_create(hash_string, compare_strings, NULL, 3);
   Hashmap * ad15_tar = hashmap_create(hash_string, compare_strings, NULL, 6);
@@ -71,8 +55,8 @@ void init_sensors() {
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, 1);
   Hashmap * fram_tar = NULL;
   
-  hashmap_add(ds32_tar, "Time"       , (void *) (int) 0);
-  hashmap_add(ds32_tar, "Temperature", (void *) (int) 1);
+  hashmap_add(ds32_tar, "Time"       , (void *) (int) DS32_MEASURE_TIME       );
+  hashmap_add(ds32_tar, "Temperature", (void *) (int) DS32_MEASURE_TEMPERATURE);
   
   hashmap_add(ds18_tar, "Temperature", (void *) (int) 0);
   
@@ -88,14 +72,14 @@ void init_sensors() {
   hashmap_add(ad15_tar, "A3" , (void *) (int) 3);    // 
   
   
-  hashmap_add(proto_sensors, "adxl"    , proto_sensor_create("adxl", ADXL_ADDRESS, adxl_tar, I2C_BUS));
-  hashmap_add(proto_sensors, "ds32"    , proto_sensor_create("ds32", DS32_ADDRESS, ds32_tar, I2C_BUS));
-  hashmap_add(proto_sensors, "fram"    , proto_sensor_create("fram", FRAM_ADDRESS, fram_tar, I2C_BUS));
-  hashmap_add(proto_sensors, "ds18"    , proto_sensor_create("ds18",            0, ds18_tar, ONE_BUS));
-  hashmap_add(proto_sensors, "ad15_gnd", proto_sensor_create("ad15_gnd", AD15_GND, ad15_tar, I2C_BUS));
-  hashmap_add(proto_sensors, "ad15_vdd", proto_sensor_create("ad15_vdd", AD15_VDD, ad15_tar, I2C_BUS));
-  hashmap_add(proto_sensors, "ad15_sda", proto_sensor_create("ad15_sda", AD15_SDA, ad15_tar, I2C_BUS));
-  hashmap_add(proto_sensors, "ad15_scl", proto_sensor_create("ad15_scl", AD15_SCL, ad15_tar, I2C_BUS));
+  hashmap_add(all_sensors, "adxl"    , sensor_create("adxl", ADXL_ADDRESS, adxl_tar, I2C_BUS));
+  hashmap_add(all_sensors, "ds32"    , sensor_create("ds32", DS32_ADDRESS, ds32_tar, I2C_BUS));
+  hashmap_add(all_sensors, "fram"    , sensor_create("fram", FRAM_ADDRESS, fram_tar, I2C_BUS));
+  hashmap_add(all_sensors, "ds18"    , sensor_create("ds18",            0, ds18_tar, ONE_BUS));
+  hashmap_add(all_sensors, "ad15_gnd", sensor_create("ad15_gnd", AD15_GND, ad15_tar, I2C_BUS));
+  hashmap_add(all_sensors, "ad15_vdd", sensor_create("ad15_vdd", AD15_VDD, ad15_tar, I2C_BUS));
+  hashmap_add(all_sensors, "ad15_sda", sensor_create("ad15_sda", AD15_SDA, ad15_tar, I2C_BUS));
+  hashmap_add(all_sensors, "ad15_scl", sensor_create("ad15_scl", AD15_SCL, ad15_tar, I2C_BUS));
 }
 
 void start_sensors() {
@@ -103,7 +87,7 @@ void start_sensors() {
   int i2c_divisor = -1;
   int one_divisor = -1;
   
-  for (iterate(proto_sensors -> all, ProtoSensor *, proto)) {
+  for (iterate(all_sensors -> all, Sensor *, proto)) {
     
     if (!proto -> requested || !proto -> hertz) continue;
     
@@ -113,7 +97,7 @@ void start_sensors() {
       printf(RED "\n1000ms is not cleanly divided by %s's %dHz\n\n" RESET, proto -> code_name, proto -> hertz);
       exit(1);
     }
-
+    
     switch (proto -> bus) {
       
     case I2C_BUS:
@@ -161,40 +145,40 @@ void start_sensors() {
   schedule -> i2c_interval = i2c_divisor * 1E6;
   schedule -> one_interval = one_divisor * 1E6;
   
-  sensors = list_that_frees(sensor_call_free);
+  active_sensors = list_that_frees(sensor_call_free);
   
   
   
-  ProtoSensor * proto;
-
+  Sensor * proto;    // name of uninitialized sensor (See Invariant 0)
+  
   /* i2c sensors */
   
   // ds32
-  proto = hashmap_get(proto_sensors, "ds32");
+  proto = hashmap_get(all_sensors, "ds32");
   
   if (proto -> requested) {
     Sensor * ds32 = init_ds32(proto);
-    list_insert(sensors,                 ds32       );
+    list_insert(active_sensors,          ds32       );
     list_insert(schedule -> i2c_devices, ds32 -> i2c);    // first so we can get the time
   }
   
   
   // adxl
-  proto = hashmap_get(proto_sensors, "adxl");
+  proto = hashmap_get(all_sensors, "adxl");
 
   if (proto -> requested) {
     Sensor * adxl = init_adxl(proto);
-    list_insert(sensors,                 adxl       );
+    list_insert(active_sensors,          adxl       );
     list_insert(schedule -> i2c_devices, adxl -> i2c);
   }
   
   
   // fram
-  proto = hashmap_get(proto_sensors, "fram");
+  proto = hashmap_get(all_sensors, "fram");
   
   if (proto -> requested) {
     Sensor * fram = init_fram(proto);
-    list_insert(sensors,                 fram       );
+    list_insert(active_sensors,          fram       );
     list_insert(schedule -> i2c_devices, fram -> i2c);
   }
 
@@ -203,28 +187,28 @@ void start_sensors() {
   Sensor * ad15[4] = {
     NULL, NULL, NULL, NULL,
   };
-
-  proto = hashmap_get(proto_sensors, "ad15_gnd");
+  
+  proto = hashmap_get(all_sensors, "ad15_gnd");
   
   if (proto -> requested) {
     ad15[0] = init_ad15(proto, "Single channels",
 			list_from(4, A0, A1, A2, A3),
 			list_from(4, "10kOhm", "+3.3V", "Thermister 2", "Thermister 1"));
 
-    list_insert(sensors, ad15[0]);
+    list_insert(active_sensors, ad15[0]);
   }
-
-  proto = hashmap_get(proto_sensors, "ad15_vdd");
+  
+  proto = hashmap_get(all_sensors, "ad15_vdd");
 
   if (proto -> requested) {
     ad15[1] = init_ad15(proto, "Alcohol Pressure",
 			list_from(4, A0, A1, A2, A3),
 			list_from(4, "ground", "+5V", "Thermister 3", "Thermister 6"));
     
-    list_insert(sensors, ad15[1]);
+    list_insert(active_sensors, ad15[1]);
   }
 
-  proto = hashmap_get(proto_sensors, "ad15_sda");
+  proto = hashmap_get(all_sensors, "ad15_sda");
 
   if (proto -> requested) {
     //ad15[2] = init_ad15(proto, "Alcohol Pressure", list_from(2, A01, A23), list_from(2, "Diff 01", "Diff 23"));
@@ -232,10 +216,10 @@ void start_sensors() {
 			list_from(4, A0, A1, A2, A3),
 			list_from(4, "Thermister 5", "Thermister 4", "Thermister 7", "Thermister 8"));
     
-    list_insert(sensors, ad15[2]);
+    list_insert(active_sensors, ad15[2]);
   }
 
-  proto = hashmap_get(proto_sensors, "ad15_scl");
+  proto = hashmap_get(all_sensors, "ad15_scl");
 
   if (proto -> requested) {
     ad15[3] = init_ad15(proto, "Differentials",
@@ -243,20 +227,7 @@ void start_sensors() {
 			list_from(4, "Thermister 9", "Thermister 10", "Thermister 11", "Thermister 12"));
     list_insert(sensors, ad15[3]);
   }
-  
-  /*
-  if (ad15[0]) list_insert(schedule -> i2c_devices, ad15[0] -> i2c);   // single 0 -> 1
-  if (ad15[1]) list_insert(schedule -> i2c_devices, ad15[1] -> i2c);
-  if (ad15[2]) list_insert(schedule -> i2c_devices, ad15[2] -> i2c);
-  if (ad15[0]) list_insert(schedule -> i2c_devices, ad15[0] -> i2c);   // single 1 -> 2
-  if (ad15[3]) list_insert(schedule -> i2c_devices, ad15[3] -> i2c);
-  if (ad15[1]) list_insert(schedule -> i2c_devices, ad15[1] -> i2c);
-  if (ad15[0]) list_insert(schedule -> i2c_devices, ad15[0] -> i2c);   // single 2 -> 3
-  if (ad15[2]) list_insert(schedule -> i2c_devices, ad15[2] -> i2c);
-  if (ad15[3]) list_insert(schedule -> i2c_devices, ad15[3] -> i2c);
-  if (ad15[0]) list_insert(schedule -> i2c_devices, ad15[0] -> i2c);   // single 3 -> 0
-  */
-  
+    
   for (int channel = 0; channel < 4; channel++)
     for (int sensor_index = 0; sensor_index < 4; sensor_index++)
       if (ad15[sensor_index])
@@ -266,11 +237,11 @@ void start_sensors() {
   /* 1-wire sensors */
   
   // ds18
-  proto = hashmap_get(proto_sensors, "ds18");
+  proto = hashmap_get(all_sensors, "ds18");
   
   if (proto -> requested) {
     Sensor * ds18 = init_ds18(proto);
-    list_insert(sensors,                 ds18       );
+    list_insert(active_sensors,          ds18       );
     list_insert(schedule -> one_devices, ds18 -> one);
   }
 }
@@ -285,14 +256,27 @@ void sensor_call_free(void * vsensor) {
   
   printf(YELLOW "Removing sensor %s\n" RESET, sensor -> name);
   
+  $(sensor, free);    // give opportunity for sensor-specific freeing
+  
   if      (sensor -> bus == I2C_BUS) i2c_close(sensor -> i2c);
-  else if (sensor -> bus == ONE_BUS) one_close(sensor -> one);
-  $(sensor, free);
+  else if (sensor -> bus == ONE_BUS) one_close(sensor -> one);    
+  
+  hashmap_destroy(sensor -> targets);
+  
+  for (int stream = 0; stream < sensor -> data_streams; stream++) {
+    list_destroy(sensor -> outputs[stream].series);
+    list_destroy(sensor -> outputs[stream].triggers);
+    free(sensor -> outputs[stream]);
+  }
+  
+  free(sensor);
 }
 
 void terminate_sensors() {  
-  list_destroy(sensors);
-  sensors = NULL;
+  list_destroy(active_sensors);
+  hashmap_destroy(all_sensors);
+  active_sensors = NULL;
+  all_sensors = NULL;
 }
 
 void flip_print(void * nil, char * raw_text) {
@@ -305,4 +289,35 @@ void flip_print(void * nil, char * raw_text) {
   for (iterate(sensors, Sensor *, sensor))
     if (!strcmp(sensor -> code_name, raw_text + 2))
       sensor -> print = !sensor -> print;
+}
+
+void sensor_process_triggers(Sensor * sensor) {
+
+  for (int stream = 0; stream < sensor -> data_streams; stream++) {
+    
+    Output * output = sensor -> outputs[stream];
+    
+    if (!output -> enabled) continue;
+    
+    
+    float measure = output -> measure;
+    
+    for (iterate(output -> triggers, Trigger *, trigger)) {
+      
+      if (trigger -> singular && trigger -> fired) continue;                       // never fire singulars twice
+      
+      float threshold = trigger -> threshold;                                      // same units (by Invariant 2)
+      
+      if ( trigger -> less && measure > threshold) continue;                       // means condition is not true
+      if (!trigger -> less && measure < threshold) continue;                       // ---------------------------
+      
+      for (iterate(trigger -> wires_low , Charge *, charge)) fire(charge,  true);
+      for (iterate(trigger -> wires_high, Charge *, charge)) fire(charge, false);
+      
+      for (iterate(trigger -> enter_set, State *, state)) enter(state);
+      for (iterate(trigger -> leave_set, State *, state)) leave(state);
+      
+      trigger -> fired = true;
+    }
+  }
 }

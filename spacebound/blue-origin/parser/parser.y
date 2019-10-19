@@ -63,7 +63,7 @@ void print_config();
   Specification * specification;
 }
 
-%token IF SET ENTER LEAVE
+%token IF SET ENTER LEAVE STATE
 
 %token  <string>        ID
 %token  <numeric>       NUMERIC
@@ -98,46 +98,59 @@ Sensors  : Sensor
          | Sensors Sensor
          ;
 
-Sensor   : ID NUMERIC             '{'       '}' ';'        { build_sensor($1, $2, NULL, NULL);              }
-         | ID NUMERIC             '{' Specs '}' ';'        { build_sensor($1, $2, NULL,   $4);              }
-         | ID NUMERIC '/' NUMERIC '{'       '}' ';'        { build_sensor($1, $2,   $4, NULL);              }
-         | ID NUMERIC '/' NUMERIC '{' Specs '}' ';'        { build_sensor($1, $2,   $4,   $6);              }
+Sensor   : ID NUMERIC             '{'       '}'            { build_sensor($1, CH_INT($2),      NULL,  NULL); }
+         | ID NUMERIC             '{' Specs '}'            { build_sensor($1, CH_INT($2),      NULL,    $4); }
+         | ID NUMERIC '/' NUMERIC '{'       '}'            { build_sensor($1, CH_INT($2), CH_INT($4), NULL); }
+         | ID NUMERIC '/' NUMERIC '{' Specs '}'            { build_sensor($1, CH_INT($2), CH_INT($4),   $6); }
          ;
 
-Specs    : Spec                                            { $$ = list_from(1, $1);                         }
-         | Specs Spec                                      { list_insert($1, $2); $$ = $1;                  }
+Specs    : Spec                                            { $$ = list_from(1, $1);                          }
+         | Specs Spec                                      { list_insert($1, $2); $$ = $1;                   }
          ;
 
-Spec     : IF '(' ID '<' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($3,  true, $5,   $7, $9); }
-         | IF '(' ID '<' NUMERIC             ')' Actuator  { $$ = specify_trigger($3,  true, $5, NULL, $7); }
-         | IF '(' ID '>' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($3, false, $5,   $7, $9); }
-         | IF '(' ID '>' NUMERIC             ')' Actuator  { $$ = specify_trigger($3, false, $5, NULL, $7); }
-         | Tag ';'                                         { $$ = $1;                                       }
+Spec     : IF '(' ID '<' NUMERIC             ')' Actuator  { $$ = specify_trigger($3,  true, $5, NULL, $7);  }
+         | IF '(' ID '<' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($3,  true, $5,   $7, $9);  }
+         | IF '(' ID '>' NUMERIC             ')' Actuator  { $$ = specify_trigger($3, false, $5, NULL, $7);  }
+         | IF '(' ID '>' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($3, false, $5,   $7, $9);  }
+         | IF '(' STATE Options
+	      ':' ID '<' NUMERIC             ')' Actuator  { $$ = specify_trigger($6,  true, $8, NULL, $10); }
+         | IF '(' STATE Options
+	      ':' ID '<' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($6,  true, $8,  $10, $12); }
+         | IF '(' STATE Options
+	      ':' ID '>' NUMERIC             ')' Actuator  { $$ = specify_trigger($6, false, $8, NULL, $10); }
+         | IF '(' STATE Options
+	      ':' ID '>' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($6, false, $8,  $10, $12); }
+         | Tag                                             { $$ = $1;                                        }
          ;
 
-Actuator : '{'         '}' ';'                             { printf("Empty if body\n"); exit(3);            }
-         | '{' Charges '}' ';'                             { $$ = make_trigger($2);                         }
+Actuator : '{'         '}'                                 { printf("Empty if body\n"); exit(3);             }
+         | '{' Actions '}'                                 { $$ = make_trigger($2);                          }
          ;
 
-Charges  : Charge                                          { $$ = list_from(1, $1);                         }
-         | Charges Charge                                  { list_insert($1, $2); $$ = $1;                  }
+Actions  : Action                                          { $$ = list_from(1, $1);                          }
+         | Action AFTER NUMERIC                            { $$ = list_from(1, add_delay($1, $3));           }
+         | Actions Action                                  { list_insert($1, $2); $$ = $1;                   }
+         | Actions Action AFTER NUMERIC                    { list_insert($1, add_delay($2, $4)); $$ = $1;    }
          ;
 
-Charge   : SET NUMERIC Tag ';'                             { $$ = make_charge($2,   $3);                    }
-         | SET NUMERIC     ';'                             { $$ = make_charge($2, NULL);                    }
+Action   : CONNECT BROADCOM NUMERIC TO ID                  { $$ = make_charge(CH_INT($2), $5);               }
+         | ENTER ID                                        { $$ = make_effect($2,  true);                    }
+         | LEAVE ID                                        { $$ = make_effect($2, false);                    }
+         | LET ID '=' ID                                   { $$ = make_assignment($2, $4);                   }
          ;
 
-Tag      : '[' ID                      ']'                 { $$ = make_tag($2, NULL, NULL);                 }
-         | '[' ID ':'         ':' Args ']'                 { $$ = make_tag($2, NULL,   $5);                 }
-         | '[' ID ':' Options ':' Args ']'                 { $$ = make_tag($2,   $4,   $6);                 }
+Tag      : '[' ID                      ']'                 { $$ = make_tag($2, NULL, NULL);                  }
+         | '[' ID ':'         ':' Args ']'                 { $$ = make_tag($2, NULL,   $5);                  }
+         | '[' ID ':' Options ':'      ']'                 { $$ = make_tag($2,   $4, NULL);                  }
+         | '[' ID ':' Options ':' Args ']'                 { $$ = make_tag($2,   $4,   $6);                  }
          ;
 
-Args     : Args ',' NUMERIC                                { list_insert($1, $3); $$ = $1;                  }
-         | NUMERIC                                         { $$ = list_from(1, $1);                         }
+Args     : Args ',' NUMERIC                                { list_insert($1, $3); $$ = $1;                   }
+         | NUMERIC                                         { $$ = list_from(1, $1);                          }
          ;
 
-Options  : ID                                              { $$ = list_from(1, $1);                         }
-         | Options ',' ID                                  { list_insert($1, $3); $$ = $1;                  }
+Options  : ID                                              { $$ = list_from(1, $1);                          }
+         | Options ',' ID                                  { list_insert($1, $3); $$ = $1;                   }
          ;
 
 %%
