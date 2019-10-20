@@ -8,6 +8,7 @@
 #include "list.h"
 #include "hashmap.h"
 
+#include "../system/error.h"
 
 Hashmap * hashmap_create(hash_function hash, key_comparator key_diff, element_freer freer, int expected_size) {
   // Creates a hashmap with starting size as a function of expectations
@@ -158,8 +159,7 @@ void hashmap_remove(Hashmap * this, void * key) {
   }
   
   // No match was found in the matching table list
-  printf("Tried to remove element that does not exist\n");
-  exit(1);
+  exit_printing("Tried to remove element that does not exist\n", ERROR_PROGRAMMER);
 }
 
 void hashmap_update(Hashmap * this, void * key, void * value) {
@@ -171,11 +171,9 @@ void hashmap_update(Hashmap * this, void * key, void * value) {
   int hx = this -> hash(key, this -> size);
   
   List * list = this -> table[hx];
-
-  if (!list) {
-    printf("Tried to update an element that does not exist\n");
-    exit(1);
-  }
+  
+  if (!list)
+    exit_printing("Tried to update an element that does not exist\n", ERROR_PROGRAMMER);
   
   for (iterate(list, HashmapElement *, element)) {
     
@@ -188,8 +186,7 @@ void hashmap_update(Hashmap * this, void * key, void * value) {
   }
   
   // No match was found in the matching table list
-  printf("Tried to update an element that does not exist\n");
-  exit(1);
+  exit_printing("Tried to update an element that does not exist\n", ERROR_PROGRAMMER);
 }
 
 void hashmap_destroy(Hashmap * this) {

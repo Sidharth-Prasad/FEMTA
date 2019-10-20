@@ -24,6 +24,7 @@
 #include "../structures/hashmap.h"
 #include "../system/i2c.h"
 #include "../system/one.h"
+#include "../system/state.h"
 #include "../types/types.h"
 
 #define I2C_BUS 0x1
@@ -32,30 +33,28 @@
 typedef struct Sensor Sensor;
 typedef struct i2c_device i2c_device;
 typedef struct one_device one_device;
+typedef struct Numeric Numeric;
 
 typedef void (* sensor_free)(Sensor * sensor);
 
-typedef struct Charge {
-  
-  char gpio;        // the broadcom number of the pin
-  int  duration;    // used for pulsing
-  
-} Charge;
-
 typedef struct Trigger {
   
-  char * id;                  // target (like A01)
-  float * threshold;          // threshold for condition
+  char * id;                           // target (like A01)
+  Numeric * threshold;                 // threshold for condition
+  List * precondition;                 // states the system must be in to consider this trigger
   
-  List * wires_low;          // wires to set low
-  List * wires_high;         // wires to set high
-  List * enter_set;          // sub-states to enter
-  List * leave_set;          // sub-states to leave
+  List * wires_low;                    // wires to set low
+  List * wires_high;                   // wires to set high
+  List * enter_set;                    // sub-states to enter
+  List * leave_set;                    // sub-states to leave
   
-  bool less;                  // whether comparison is '<' or '>'
-  bool fired;                 // whether trigger has ever fired
-  bool singular;              // whether trigger should only ever be fired once
-  bool reverses;              // whether trigger was source for its chiral opposite
+  bool less;                           // whether comparison is '<' or '>'
+  bool fired;                          // whether trigger has ever fired
+  bool singular;                       // whether trigger should only ever be fired once
+  bool reverses;                       // whether trigger was source for its chiral opposite
+  
+  // parser only
+  Numeric * threshold_as_specified;    // threshold as specified in E
   
 } Trigger;
 
@@ -84,7 +83,7 @@ typedef struct Sensor {
   
   int data_streams;         // number of output data axes
   Output * outputs;         // everything this sensor produces
-  Hashmap * targets;        // that which can be triggered
+  Hashmap * targets;        // that which can be triggered (target str -> stream_index)
   
   float auto_regressive;    // smoothing constant
   

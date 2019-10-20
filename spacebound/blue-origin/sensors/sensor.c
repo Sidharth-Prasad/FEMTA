@@ -17,6 +17,7 @@
 #include "../structures/hashmap.h"
 #include "../system/class.h"
 #include "../system/color.h"
+#include "../system/state.h"
 
 void sensor_call_free(void *);
 
@@ -35,8 +36,10 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
   
   
   // Check to see if the sensor produces data (possible by Invariant 1)
-  if (targets && targets -> elements)
-    proto -> outputs = calloc(targets -> elements, sizeof(*proto -> outputs));
+  if (targets && targets -> elements) {
+    proto -> data_streams = targets -> elements;
+    proto -> outputs      = calloc(targets -> elements, sizeof(*proto -> outputs));
+  }
   
   return proto;
 }
@@ -292,7 +295,7 @@ void flip_print(void * nil, char * raw_text) {
 }
 
 void sensor_process_triggers(Sensor * sensor) {
-
+  
   for (int stream = 0; stream < sensor -> data_streams; stream++) {
     
     Output * output = sensor -> outputs[stream];
@@ -304,6 +307,15 @@ void sensor_process_triggers(Sensor * sensor) {
     
     for (iterate(output -> triggers, Trigger *, trigger)) {
       
+      bool precondition_met = true;
+      for (iterate(trigger -> precondition, char *, state)) {
+	if (!state_get(state)) {
+	  precondition_met = false;
+	  break;
+	}
+      }
+      
+      if (!precondion_met                        ) continue;                       // not in all states required
       if (trigger -> singular && trigger -> fired) continue;                       // never fire singulars twice
       
       float threshold = trigger -> threshold;                                      // same units (by Invariant 2)

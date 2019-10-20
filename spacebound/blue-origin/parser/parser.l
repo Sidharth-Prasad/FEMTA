@@ -19,12 +19,14 @@ digit  [0-9]
 \/\/.* {}                                                                    // 1 line comment
 \/\*(([^*/]|\n)|(\*+([^*/]|\n)|\/([^*/]|\n)*|\/\*([^*/]|\n)*))*\**\*\/ {}    // multi comment
 
-if        { return IF;        }
-set       { return SET;       }
-enter     { return ENTER;     }
-leave     { return LEAVE;     }
-state     { return STATE;     }
-after     { return AFTER;     }
+if        { return IF;     }
+set       { return SET;    }
+pin       { return PIN;    }
+enter     { return ENTER;  }
+leave     { return LEAVE;  }
+state     { return STATE;  }
+after     { return AFTER;  }
+define    { return DEFINE; }
 
 (-|\+)?{digit}+{letter}+ {
   // note, units may never exceed 7 characters
@@ -93,5 +95,5 @@ after     { return AFTER;     }
 
 void yyerror(char * message) {
   printf("Line %d : %s\n", yylineno, message);
-  exit(1);
+  exit(3);
 }

@@ -76,26 +76,30 @@
 #include "../system/color.h"
 #include "../system/error.h"
 #include "../system/gpio.h"
+#include "../system/state.h"
 
 
 extern FILE * yyin;
 
-int yylex();
+int  yylex();
 void yyerror(char * message);
 
-typedef struct Trigger Trigger;
 typedef struct Numeric Numeric;
+typedef struct EffectNode EffectNode;
 typedef struct Specification Specification;
+typedef struct Trigger Trigger;
 
-Charge        * make_charge(Numeric * wire, Specification * tag);
-Trigger       * make_trigger(List * charges);
-Specification * specify_trigger(char * id, bool less, Numeric * threshold, List * options, Trigger * trigger);
+EffectNode    * make_charge(Numeric * wire, bool hot);
+EffectNode    * make_transition(char * state_name, bool entering);
+EffectNode    * add_delay(EffectNode * effect, Numeric * delay);
+Trigger       * make_trigger(List * effects);
+Specification * extend_trigger(List * state_names, char * id, bool less, Numeric * threshold, List * options, Trigger * trigger);
 Specification * make_tag(char * id, List * options, List * args);
 
 void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * specifications);
 void print_config();
 
-#line 99 "y.tab.c" /* yacc.c:339  */
+#line 103 "y.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -125,26 +129,40 @@ void print_config();
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 35 "parser.y" /* yacc.c:355  */
+#line 39 "parser.y" /* yacc.c:355  */
 
   
   #include <stdbool.h>
   #include "../math/units.h"
   #include "../structures/list.h"
+  #include "../system/gpio.h"
   #include "../sensors/sensor.h"
+  
+  typedef struct EffectNode {
+    
+    bool  is_charge;    // whether effect is a charge or transition
+    float delay_ms;
+    
+    union {
+      Charge * charge;
+      
+      struct {
+	char * state_name;
+	bool   entering;
+      };
+    };
+    
+  } EffectNode;
   
   typedef struct Specification {
       
       char * id;
       List * options;
       List * args;
-      
-      bool should_destroy_options;
-      bool should_destroy_args;
-      
+    
   } Specification;
 
-#line 148 "y.tab.c" /* yacc.c:355  */
+#line 166 "y.tab.c" /* yacc.c:355  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -155,9 +173,14 @@ extern int yydebug;
     SET = 259,
     ENTER = 260,
     LEAVE = 261,
-    STATE = 262,
-    ID = 263,
-    NUMERIC = 264
+    AFTER = 262,
+    STATE = 263,
+    PIN = 264,
+    POS = 265,
+    NEG = 266,
+    DEFINE = 267,
+    ID = 268,
+    NUMERIC = 269
   };
 #endif
 /* Tokens.  */
@@ -165,16 +188,21 @@ extern int yydebug;
 #define SET 259
 #define ENTER 260
 #define LEAVE 261
-#define STATE 262
-#define ID 263
-#define NUMERIC 264
+#define AFTER 262
+#define STATE 263
+#define PIN 264
+#define POS 265
+#define NEG 266
+#define DEFINE 267
+#define ID 268
+#define NUMERIC 269
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 54 "parser.y" /* yacc.c:355  */
+#line 72 "parser.y" /* yacc.c:355  */
 
   char          * string;
   int           * integer;
@@ -182,11 +210,11 @@ union YYSTYPE
   Numeric       * numeric;
   
   List          * list;
-  Charge        * charge;
+  EffectNode    * effect;
   Trigger       * trigger;
   Specification * specification;
 
-#line 190 "y.tab.c" /* yacc.c:355  */
+#line 218 "y.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -203,7 +231,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 207 "y.tab.c" /* yacc.c:358  */
+#line 235 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -443,23 +471,23 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  6
+#define YYFINAL  7
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   93
+#define YYLAST   111
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  21
+#define YYNTOKENS  26
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  12
+#define YYNNTS  14
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  34
+#define YYNRULES  42
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  87
+#define YYNSTATES  105
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   264
+#define YYMAXUTOK   269
 
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -472,15 +500,15 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      13,    15,     2,     2,    20,     2,     2,    12,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    16,     2,
-      14,     2,    17,     2,     2,     2,     2,     2,     2,     2,
+      18,    20,     2,     2,    25,     2,     2,    17,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    21,     2,
+      19,     2,    22,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,    18,     2,    19,     2,     2,     2,     2,     2,     2,
+       2,    23,     2,    24,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    10,     2,    11,     2,     2,     2,     2,
+       2,     2,     2,    15,     2,    16,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -494,17 +522,18 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    93,    93,    94,    97,    98,   101,   102,   103,   104,
-     107,   108,   111,   112,   113,   114,   115,   117,   119,   121,
-     123,   126,   127,   130,   131,   134,   135,   138,   139,   140,
-     141,   144,   145,   148,   149
+       0,   111,   111,   112,   115,   116,   119,   120,   123,   124,
+     127,   128,   129,   130,   133,   134,   137,   138,   139,   140,
+     142,   145,   148,   151,   154,   157,   158,   161,   162,   163,
+     164,   167,   168,   169,   170,   173,   174,   175,   176,   179,
+     180,   183,   184
 };
 #endif
 
@@ -513,10 +542,11 @@ static const yytype_uint8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "IF", "SET", "ENTER", "LEAVE", "STATE",
-  "ID", "NUMERIC", "'{'", "'}'", "'/'", "'('", "'<'", "')'", "':'", "'>'",
-  "'['", "']'", "','", "$accept", "Config", "Sensors", "Sensor", "Specs",
-  "Spec", "Actuator", "Charges", "Charge", "Tag", "Args", "Options", YY_NULLPTR
+  "$end", "error", "$undefined", "IF", "SET", "ENTER", "LEAVE", "AFTER",
+  "STATE", "PIN", "POS", "NEG", "DEFINE", "ID", "NUMERIC", "'{'", "'}'",
+  "'/'", "'('", "'<'", "')'", "':'", "'>'", "'['", "']'", "','", "$accept",
+  "Config", "Defs", "Def", "Sensors", "Sensor", "Specs", "Spec",
+  "Actuator", "Effects", "Effect", "Tag", "Args", "Options", YY_NULLPTR
 };
 #endif
 
@@ -526,15 +556,15 @@ static const char *const yytname[] =
 static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     123,   125,    47,    40,    60,    41,    58,    62,    91,    93,
-      44
+     265,   266,   267,   268,   269,   123,   125,    47,    40,    60,
+      41,    58,    62,    91,    93,    44
 };
 # endif
 
-#define YYPACT_NINF -44
+#define YYPACT_NINF -54
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-44)))
+  (!!((Yystate) == (-54)))
 
 #define YYTABLE_NINF -1
 
@@ -545,15 +575,17 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      35,    -3,    15,    35,   -44,    23,   -44,   -44,    -2,    42,
-      19,   -44,    66,    -1,   -44,   -44,    65,    51,    36,   -44,
-     -44,     1,    68,    39,    22,   -44,   -44,     2,   -44,    29,
-      56,    69,    70,    34,   -44,    72,    73,    46,    48,   -44,
-      47,    18,    43,   -44,    67,    68,    67,    68,   -44,    74,
-     -44,    49,    75,    76,     3,   -44,    14,   -44,    16,   -44,
-     -44,    55,    57,    77,   -44,     7,   -44,    67,    67,    67,
-      68,    67,    68,    64,   -44,   -44,   -44,   -44,   -44,    24,
-     -44,    27,   -44,    67,    67,   -44,   -44
+       7,    60,    54,    55,   -54,    21,    43,   -54,    48,   -54,
+      67,   -54,   -54,   -54,    -6,   -54,    -1,    59,    68,   -54,
+      72,     4,   -54,   -54,    74,    -3,    39,   -54,   -54,    13,
+      75,    16,    -7,   -54,   -54,    14,   -54,   -13,    76,    77,
+      78,    34,   -54,    80,    81,    49,    51,   -54,    50,   -11,
+      42,   -54,    82,    75,    82,    75,   -54,    84,   -54,    52,
+      85,    86,    27,   -54,    22,   -54,    24,   -54,   -54,    58,
+      61,    87,    88,    89,   -54,    35,    96,    82,    82,    82,
+      75,    82,    75,    90,   -54,   -54,   -54,    98,    92,   -54,
+     -54,   -54,    32,   -54,    33,    73,    93,   -54,    82,    82,
+     -54,   -54,   -54,   -54,   -54
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -561,29 +593,31 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       3,     0,     0,     2,     4,     0,     1,     5,     0,     0,
-       0,     6,     0,     0,    10,    20,     0,     0,     0,     7,
-      11,     0,     0,     0,     0,    27,     8,     0,    33,     0,
-       0,     0,     0,     0,     9,     0,     0,     0,     0,    32,
-       0,     0,     0,    34,     0,     0,     0,     0,    28,     0,
-      29,     0,     0,     0,     0,    12,     0,    14,     0,    31,
-      30,     0,     0,     0,    21,     0,    23,     0,     0,     0,
-       0,     0,     0,    26,    22,    24,    13,    15,    16,     0,
-      18,     0,    25,     0,     0,    17,    19
+       0,     0,     0,     3,     4,     0,     0,     1,     0,     5,
+       2,     8,     7,     6,     0,     9,     0,     0,     0,    10,
+       0,     0,    14,    24,     0,     0,     0,    11,    15,     0,
+       0,     0,     0,    35,    12,     0,    41,     0,     0,     0,
+       0,     0,    13,     0,     0,     0,     0,    40,     0,     0,
+       0,    42,     0,     0,     0,     0,    36,     0,    37,     0,
+       0,     0,     0,    16,     0,    18,     0,    39,    38,     0,
+       0,     0,     0,     0,    25,     0,    27,     0,     0,     0,
+       0,     0,     0,     0,    33,    34,    26,    29,     0,    17,
+      19,    20,     0,    22,     0,     0,     0,    28,     0,     0,
+      31,    32,    30,    21,    23
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -44,   -44,   -44,    84,    71,    -5,   -43,   -44,    25,    20,
-      50,   -24
+     -54,   -54,   -54,   105,   -54,    99,    66,   -17,   -53,   -54,
+      12,   -54,    62,   -32
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     2,     3,     4,    13,    14,    55,    65,    66,    15,
-      40,    29
+      -1,     2,     3,     4,    10,    11,    21,    22,    63,    75,
+      76,    23,    48,    37
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -591,63 +625,71 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-      33,    10,    10,    57,    10,    10,     5,    63,    20,    11,
-      19,    63,    26,    34,    64,     6,    12,    12,    74,    12,
-      12,    56,    20,    58,    76,    77,    78,    39,    80,    67,
-      28,    68,    17,     8,    36,     9,    36,    50,    32,    83,
-      85,    86,    84,     1,    36,    35,    79,    36,    81,    36,
-      41,    16,    24,    30,    36,    25,    31,    52,    22,    23,
-      53,    44,    45,    46,    47,    37,    48,    49,    60,    49,
-      69,    70,    71,    72,    18,    21,    28,    54,    38,    39,
-      42,    43,    12,    59,    61,    62,    73,     7,     0,     0,
-      75,    51,    27,    82
+      41,    65,    18,    47,    28,    30,    36,    18,    43,    16,
+      31,    17,    44,    58,    40,    19,    18,    18,    28,     1,
+      27,    64,    20,    66,    89,    90,    91,    20,    93,    34,
+      42,    71,    72,    73,    12,    38,    20,    20,    39,    71,
+      72,    73,    77,    74,    78,   103,   104,    44,    92,    44,
+      94,    86,    98,    99,     7,    49,    13,    44,    44,    44,
+      32,    60,    14,    33,    61,     5,     6,     1,     8,    52,
+      53,    54,    55,    24,    56,    57,    68,    57,    79,    80,
+       8,    81,    82,   100,   101,    26,    25,    87,    36,    29,
+      45,    46,    47,    50,    51,    35,    83,    62,    67,    69,
+      70,    84,    85,    88,    95,    96,    97,   102,     9,    15,
+       0,    59
 };
 
 static const yytype_int8 yycheck[] =
 {
-      24,     3,     3,    46,     3,     3,     9,     4,    13,    11,
-      11,     4,    11,    11,    11,     0,    18,    18,    11,    18,
-      18,    45,    27,    47,    67,    68,    69,     9,    71,    15,
-       8,    15,    13,    10,    20,    12,    20,    19,    16,    15,
-      83,    84,    15,     8,    20,    16,    70,    20,    72,    20,
-      16,     9,    16,    14,    20,    19,    17,    14,     7,     8,
-      17,    15,    16,    15,    16,     9,    19,    20,    19,    20,
-      15,    16,    15,    16,     8,    10,     8,    10,     9,     9,
-       8,     8,    18,     9,     9,     9,     9,     3,    -1,    -1,
-      65,    41,    21,    73
+      32,    54,     3,    14,    21,     8,    13,     3,    21,    15,
+      13,    17,    25,    24,    21,    16,     3,     3,    35,    12,
+      16,    53,    23,    55,    77,    78,    79,    23,    81,    16,
+      16,     4,     5,     6,    13,    19,    23,    23,    22,     4,
+       5,     6,    20,    16,    20,    98,    99,    25,    80,    25,
+      82,    16,    20,    20,     0,    21,    13,    25,    25,    25,
+      21,    19,    14,    24,    22,     5,     6,    12,    13,    20,
+      21,    20,    21,    14,    24,    25,    24,    25,    20,    21,
+      13,    20,    21,    10,    11,    13,    18,    75,    13,    15,
+      14,    14,    14,    13,    13,    29,     9,    15,    14,    14,
+      14,    13,    13,     7,    14,     7,    14,    14,     3,    10,
+      -1,    49
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     8,    22,    23,    24,     9,     0,    24,    10,    12,
-       3,    11,    18,    25,    26,    30,     9,    13,     8,    11,
-      26,    10,     7,     8,    16,    19,    11,    25,     8,    32,
-      14,    17,    16,    32,    11,    16,    20,     9,     9,     9,
-      31,    16,     8,     8,    15,    16,    15,    16,    19,    20,
-      19,    31,    14,    17,    10,    27,    32,    27,    32,     9,
-      19,     9,     9,     4,    11,    28,    29,    15,    15,    15,
-      16,    15,    16,     9,    11,    29,    27,    27,    27,    32,
-      27,    32,    30,    15,    15,    27,    27
+       0,    12,    27,    28,    29,     5,     6,     0,    13,    29,
+      30,    31,    13,    13,    14,    31,    15,    17,     3,    16,
+      23,    32,    33,    37,    14,    18,    13,    16,    33,    15,
+       8,    13,    21,    24,    16,    32,    13,    39,    19,    22,
+      21,    39,    16,    21,    25,    14,    14,    14,    38,    21,
+      13,    13,    20,    21,    20,    21,    24,    25,    24,    38,
+      19,    22,    15,    34,    39,    34,    39,    14,    24,    14,
+      14,     4,     5,     6,    16,    35,    36,    20,    20,    20,
+      21,    20,    21,     9,    13,    13,    16,    36,     7,    34,
+      34,    34,    39,    34,    39,    14,     7,    14,    20,    20,
+      10,    11,    14,    34,    34
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    21,    22,    22,    23,    23,    24,    24,    24,    24,
-      25,    25,    26,    26,    26,    26,    26,    26,    26,    26,
-      26,    27,    27,    28,    28,    29,    29,    30,    30,    30,
-      30,    31,    31,    32,    32
+       0,    26,    27,    27,    28,    28,    29,    29,    30,    30,
+      31,    31,    31,    31,    32,    32,    33,    33,    33,    33,
+      33,    33,    33,    33,    33,    34,    34,    35,    35,    35,
+      35,    36,    36,    36,    36,    37,    37,    37,    37,    38,
+      38,    39,    39
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     1,     0,     1,     2,     4,     5,     6,     7,
-       1,     2,     7,     9,     7,     9,    10,    12,    10,    12,
-       1,     2,     3,     1,     2,     3,     2,     3,     6,     6,
-       7,     3,     1,     1,     3
+       0,     2,     2,     1,     1,     2,     3,     3,     1,     2,
+       4,     5,     6,     7,     1,     2,     7,     9,     7,     9,
+      10,    12,    10,    12,     1,     2,     3,     1,     3,     2,
+       4,     4,     4,     2,     2,     3,     6,     6,     7,     3,
+       1,     1,     3
 };
 
 
@@ -1324,187 +1366,223 @@ yyreduce:
   switch (yyn)
     {
         case 3:
-#line 94 "parser.y" /* yacc.c:1646  */
-    { printf("\nExperiment does not use sensors");   }
-#line 1330 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 6:
-#line 101 "parser.y" /* yacc.c:1646  */
-    { build_sensor((yyvsp[-3].string), (yyvsp[-2].numeric), NULL, NULL);               }
-#line 1336 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 7:
-#line 102 "parser.y" /* yacc.c:1646  */
-    { build_sensor((yyvsp[-4].string), (yyvsp[-3].numeric), NULL,   (yyvsp[-1].list));               }
-#line 1342 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 8:
-#line 103 "parser.y" /* yacc.c:1646  */
-    { build_sensor((yyvsp[-5].string), (yyvsp[-4].numeric),   (yyvsp[-2].numeric), NULL);               }
-#line 1348 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 9:
-#line 104 "parser.y" /* yacc.c:1646  */
-    { build_sensor((yyvsp[-6].string), (yyvsp[-5].numeric),   (yyvsp[-3].numeric),   (yyvsp[-1].list));               }
-#line 1354 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 10:
-#line 107 "parser.y" /* yacc.c:1646  */
-    { (yyval.list) = list_from(1, (yyvsp[0].specification));                          }
-#line 1360 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 11:
-#line 108 "parser.y" /* yacc.c:1646  */
-    { list_insert((yyvsp[-1].list), (yyvsp[0].specification)); (yyval.list) = (yyvsp[-1].list);                   }
-#line 1366 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 12:
-#line 111 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = specify_trigger((yyvsp[-4].string),  true, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger));  }
+#line 112 "parser.y" /* yacc.c:1646  */
+    { printf("\nExperiment does not use sensors");         }
 #line 1372 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 13:
-#line 112 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = specify_trigger((yyvsp[-6].string),  true, (yyvsp[-4].numeric),   (yyvsp[-2].list), (yyvsp[0].trigger));  }
+  case 6:
+#line 119 "parser.y" /* yacc.c:1646  */
+    { add_state((yyvsp[0].string), false);                                }
 #line 1378 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 14:
-#line 113 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = specify_trigger((yyvsp[-4].string), false, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger));  }
+  case 7:
+#line 120 "parser.y" /* yacc.c:1646  */
+    { add_state((yyvsp[0].string),  true);                                }
 #line 1384 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 15:
-#line 114 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = specify_trigger((yyvsp[-6].string), false, (yyvsp[-4].numeric),   (yyvsp[-2].list), (yyvsp[0].trigger));  }
+  case 10:
+#line 127 "parser.y" /* yacc.c:1646  */
+    { build_sensor((yyvsp[-3].string), (yyvsp[-2].numeric),      NULL,  NULL);              }
 #line 1390 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 16:
-#line 116 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = specify_trigger((yyvsp[-4].string),  true, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger)); }
+  case 11:
+#line 128 "parser.y" /* yacc.c:1646  */
+    { build_sensor((yyvsp[-4].string), (yyvsp[-3].numeric),      NULL,    (yyvsp[-1].list));              }
 #line 1396 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 17:
-#line 118 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = specify_trigger((yyvsp[-6].string),  true, (yyvsp[-4].numeric),  (yyvsp[-2].list), (yyvsp[0].trigger)); }
+  case 12:
+#line 129 "parser.y" /* yacc.c:1646  */
+    { build_sensor((yyvsp[-5].string), (yyvsp[-4].numeric), (yyvsp[-2].numeric), NULL);                      }
 #line 1402 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 18:
-#line 120 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = specify_trigger((yyvsp[-4].string), false, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger)); }
+  case 13:
+#line 130 "parser.y" /* yacc.c:1646  */
+    { build_sensor((yyvsp[-6].string), (yyvsp[-5].numeric), (yyvsp[-3].numeric),   (yyvsp[-1].list));                      }
 #line 1408 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 19:
-#line 122 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = specify_trigger((yyvsp[-6].string), false, (yyvsp[-4].numeric),  (yyvsp[-2].list), (yyvsp[0].trigger)); }
+  case 14:
+#line 133 "parser.y" /* yacc.c:1646  */
+    { (yyval.list) = list_from(1, (yyvsp[0].specification));                               }
 #line 1414 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 20:
-#line 123 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = (yyvsp[0].specification);                                        }
+  case 15:
+#line 134 "parser.y" /* yacc.c:1646  */
+    { list_insert((yyvsp[-1].list), (yyvsp[0].specification)); (yyval.list) = (yyvsp[-1].list);                        }
 #line 1420 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 21:
-#line 126 "parser.y" /* yacc.c:1646  */
-    { printf("Empty if body\n"); exit(3);             }
+  case 16:
+#line 137 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = extend_trigger(NULL, (yyvsp[-4].string),  true, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger));  }
 #line 1426 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 22:
-#line 127 "parser.y" /* yacc.c:1646  */
-    { (yyval.trigger) = make_trigger((yyvsp[-1].list));                          }
+  case 17:
+#line 138 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = extend_trigger(NULL, (yyvsp[-6].string),  true, (yyvsp[-4].numeric),   (yyvsp[-2].list), (yyvsp[0].trigger));  }
 #line 1432 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 23:
-#line 130 "parser.y" /* yacc.c:1646  */
-    { (yyval.list) = list_from(1, (yyvsp[0].charge));                          }
+  case 18:
+#line 139 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = extend_trigger(NULL, (yyvsp[-4].string), false, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger));  }
 #line 1438 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 24:
-#line 131 "parser.y" /* yacc.c:1646  */
-    { list_insert((yyvsp[-1].list), (yyvsp[0].charge)); (yyval.list) = (yyvsp[-1].list);                   }
+  case 19:
+#line 140 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = extend_trigger(NULL, (yyvsp[-6].string), false, (yyvsp[-4].numeric),   (yyvsp[-2].list), (yyvsp[0].trigger));  }
 #line 1444 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 25:
-#line 134 "parser.y" /* yacc.c:1646  */
-    { (yyval.charge) = make_charge((yyvsp[-1].numeric),   (yyvsp[0].specification));                     }
+  case 20:
+#line 143 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = extend_trigger(  (yyvsp[-6].list), (yyvsp[-4].string),  true, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger)); }
 #line 1450 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 26:
-#line 135 "parser.y" /* yacc.c:1646  */
-    { (yyval.charge) = make_charge((yyvsp[0].numeric), NULL);                     }
+  case 21:
+#line 146 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = extend_trigger(  (yyvsp[-8].list), (yyvsp[-6].string),  true, (yyvsp[-4].numeric),  (yyvsp[-2].list), (yyvsp[0].trigger)); }
 #line 1456 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 27:
-#line 138 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = make_tag((yyvsp[-1].string), NULL, NULL);                  }
+  case 22:
+#line 149 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = extend_trigger(  (yyvsp[-6].list), (yyvsp[-4].string), false, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger)); }
 #line 1462 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 28:
-#line 139 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = make_tag((yyvsp[-4].string), NULL,   (yyvsp[-1].list));                  }
+  case 23:
+#line 152 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = extend_trigger(  (yyvsp[-8].list), (yyvsp[-6].string), false, (yyvsp[-4].numeric),  (yyvsp[-2].list), (yyvsp[0].trigger)); }
 #line 1468 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 29:
-#line 140 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = make_tag((yyvsp[-4].string),   (yyvsp[-2].list), NULL);                  }
+  case 24:
+#line 154 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = (yyvsp[0].specification);                                             }
 #line 1474 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 30:
-#line 141 "parser.y" /* yacc.c:1646  */
-    { (yyval.specification) = make_tag((yyvsp[-5].string),   (yyvsp[-3].list),   (yyvsp[-1].list));                  }
+  case 25:
+#line 157 "parser.y" /* yacc.c:1646  */
+    { yyerror("Empty if body");                            }
 #line 1480 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 31:
-#line 144 "parser.y" /* yacc.c:1646  */
-    { list_insert((yyvsp[-2].list), (yyvsp[0].numeric)); (yyval.list) = (yyvsp[-2].list);                   }
+  case 26:
+#line 158 "parser.y" /* yacc.c:1646  */
+    { (yyval.trigger) = make_trigger((yyvsp[-1].list));                               }
 #line 1486 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 32:
-#line 145 "parser.y" /* yacc.c:1646  */
-    { (yyval.list) = list_from(1, (yyvsp[0].numeric));                          }
+  case 27:
+#line 161 "parser.y" /* yacc.c:1646  */
+    { (yyval.list) = list_from(1, (yyvsp[0].effect));                               }
 #line 1492 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 33:
-#line 148 "parser.y" /* yacc.c:1646  */
-    { (yyval.list) = list_from(1, (yyvsp[0].string));                          }
+  case 28:
+#line 162 "parser.y" /* yacc.c:1646  */
+    { (yyval.list) = list_from(1, add_delay((yyvsp[-2].effect), (yyvsp[0].numeric)));                }
 #line 1498 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 34:
-#line 149 "parser.y" /* yacc.c:1646  */
-    { list_insert((yyvsp[-2].list), (yyvsp[0].string)); (yyval.list) = (yyvsp[-2].list);                   }
+  case 29:
+#line 163 "parser.y" /* yacc.c:1646  */
+    { list_insert((yyvsp[-1].list), (yyvsp[0].effect)); (yyval.list) = (yyvsp[-1].list);                        }
 #line 1504 "y.tab.c" /* yacc.c:1646  */
     break;
 
+  case 30:
+#line 164 "parser.y" /* yacc.c:1646  */
+    { list_insert((yyvsp[-3].list), add_delay((yyvsp[-2].effect), (yyvsp[0].numeric))); (yyval.list) = (yyvsp[-3].list);         }
+#line 1510 "y.tab.c" /* yacc.c:1646  */
+    break;
 
-#line 1508 "y.tab.c" /* yacc.c:1646  */
+  case 31:
+#line 167 "parser.y" /* yacc.c:1646  */
+    { (yyval.effect) = make_charge((yyvsp[-1].numeric),  true);                         }
+#line 1516 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 32:
+#line 168 "parser.y" /* yacc.c:1646  */
+    { (yyval.effect) = make_charge((yyvsp[-1].numeric), false);                         }
+#line 1522 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 33:
+#line 169 "parser.y" /* yacc.c:1646  */
+    { (yyval.effect) = make_transition((yyvsp[0].string),  true);                     }
+#line 1528 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 34:
+#line 170 "parser.y" /* yacc.c:1646  */
+    { (yyval.effect) = make_transition((yyvsp[0].string), false);                     }
+#line 1534 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 35:
+#line 173 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = make_tag((yyvsp[-1].string), NULL, NULL);                       }
+#line 1540 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 36:
+#line 174 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = make_tag((yyvsp[-4].string), NULL,   (yyvsp[-1].list));                       }
+#line 1546 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 37:
+#line 175 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = make_tag((yyvsp[-4].string),   (yyvsp[-2].list), NULL);                       }
+#line 1552 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 38:
+#line 176 "parser.y" /* yacc.c:1646  */
+    { (yyval.specification) = make_tag((yyvsp[-5].string),   (yyvsp[-3].list),   (yyvsp[-1].list));                       }
+#line 1558 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 39:
+#line 179 "parser.y" /* yacc.c:1646  */
+    { list_insert((yyvsp[-2].list), (yyvsp[0].numeric)); (yyval.list) = (yyvsp[-2].list);                        }
+#line 1564 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 40:
+#line 180 "parser.y" /* yacc.c:1646  */
+    { (yyval.list) = list_from(1, (yyvsp[0].numeric));                               }
+#line 1570 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 41:
+#line 183 "parser.y" /* yacc.c:1646  */
+    { (yyval.list) = list_from(1, (yyvsp[0].string));                               }
+#line 1576 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 42:
+#line 184 "parser.y" /* yacc.c:1646  */
+    { list_insert((yyvsp[-2].list), (yyvsp[0].string)); (yyval.list) = (yyvsp[-2].list);                        }
+#line 1582 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+
+#line 1586 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1732,7 +1810,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 152 "parser.y" /* yacc.c:1906  */
+#line 187 "parser.y" /* yacc.c:1906  */
 
 
 static void represent_as_decimal(Numeric * numeric) {
@@ -1760,100 +1838,130 @@ static void represent_as_integer(Numeric * numeric) {
 static void specification_destroy(void * vspecification) {
     
     Specification * specification = vspecification;
-    
-    /*if (specification -> options && specification -> should_destroy_options)
-        list_destroy(specification -> options);
-    
-    if (specification -> args && specification -> should_destroy_args)
-    list_destroy(specification -> args);*/
-    
+        
     free(specification -> id);
     free(specification);
 }
 
-Charge * make_charge(Numeric * wire, Specification * tag) {
-    /* note, pin 0 not allowed.                      *
-     * but it's important for future bug potential.  */
+EffectNode * make_charge(Numeric * wire, bool hot) {
     
-    if (strcmp(wire -> units, "i")) {
-        printf(RED "Charge wires must be integers" RESET);
-	exit(ERROR_EXPERIMENTER);        
+    if (!unit_is_of_type(wire, "Integer"))
+	yyerror("Wires must be integers");
+    
+    if (!between(0, wire -> integer, 27)) {
+        printf(RED "Broadcom " CYAN "%d " RED "does not exist\n" RESET, wire -> integer);
+	yyerror("Nonexistant broadcom specified");
     }
     
     Charge * charge = calloc(1, sizeof(*charge));
     
-    charge -> gpio = abs(wire -> integer);
-    charge -> hot  = (wire -> integer > 0);
+    charge -> gpio = wire -> integer;
+    charge -> hot  = hot;
     
-    if (!between(0, charge -> gpio, 27)) {
-        printf(RED "Broadcom %d does not exist\n" RESET, charge -> gpio);
-	exit(ERROR_EXPERIMENTER);
-    }
+    EffectNode * effect = calloc(1, sizeof(*effect));
     
-    if (tag) {
-        if (strcmp(tag -> id, "pulse")) {
-            printf(RED "Unknown tag %s for charge\n" RESET, tag -> id);
-            exit(ERROR_EXPERIMENTER);
-        }
-        
-        if (tag -> args -> size != 1) {
-            printf(RED "Exactly 1 argument shoud be used for 'pulse' tag\n" RESET);
-            exit(ERROR_EXPERIMENTER);
-        }
-	
-	Numeric * pulse_duration = tag -> args -> head -> value;
-	
-	represent_as_integer(pulse_duration);                 // convert to ms
-	pulse_duration -> integer *= 1000;                    // -------------
-	to_standard_units(pulse_duration, pulse_duration);    // -------------
-	
-	charge -> duration = pulse_duration -> integer;
-	pin_inform_pulses(charge -> gpio);
-        
-        specification_destroy(tag);    // no longer needed
-    }
+    effect -> charge = charge;
     
-    return charge;
+    return effect;
 }
 
-Trigger * make_trigger(List * charges) {
+EffectNode * make_transition(char * state_name, bool entering) {
+  
+  if (!state_exists(state_name)) {
+    printf(RED "Unknown state name: " CYAN "%s\n" RESET, state_name);
+    yyerror("State not found");
+  }
+  
+  EffectNode * effect  = calloc(1, sizeof(*effect));
+  
+  effect -> is_charge  = false;
+  effect -> state_name = state_name;
+  effect -> entering   = entering;
+  
+  return effect;
+}
+
+EffectNode * add_delay(EffectNode * effect, Numeric * delay) {
+  
+  represent_as_decimal(delay);
+  
+  if (delay -> decimal <= 0) {
+    printf(RED "Delay %f not allowed: value is non-positive" RESET, delay -> decimal);
+    yyerror("Improper delay specified");
+  }
+  
+  if (!unit_is_of_type(delay, "Time")) {
+    printf("%s is not a unit of time", delay -> units);
+    yyerror("Improper delay specified");
+  }
+  
+  effect -> delay_ms = (get_universal_conversion(delay -> units, "ms"))(delay -> decimal);  
+  return effect;
+}
+
+Trigger * make_trigger(List * effects) {
     // creates a trigger, which becomes a specification later
     
     Trigger * trigger = calloc(1, sizeof(*trigger));
     
     trigger -> fired    = false;
-    trigger -> singular = true;     // defaults
+    trigger -> singular =  true;    // defaults
     trigger -> reverses = false;    // --------
     
-    trigger -> charges = charges;
-        
+    for (iterate(effects, EffectNode *, effect))  
+      if (effect -> is_charge)
+	if (effect -> charge -> hot) list_insert(trigger -> wires_high, effect -> charge    );
+	else                         list_insert(trigger -> wires_low , effect -> charge    );
+      else
+	if (effect -> entering     ) list_insert(trigger -> enter_set , effect -> state_name);
+	else                         list_insert(trigger -> leave_set , effect -> state_name);
+    
+    list_destroy(effects);
     return trigger;
 }
 
 
-Specification * specify_trigger(char * id, bool less, Numeric * threshold, List * options, Trigger * trigger) {
+Specification * extend_trigger(
+			       List    * state_names,    // what conjunction precondition this trigger
+			       char    * id,             // the output stream name (like A0)
+			       bool      less,           // the comparison direction with the threshold
+			       Numeric * threshold,      // the threshold beyond which actuation occurs
+			       List    * options,        // the specific type of trigger
+			       Trigger * trigger         // the trigger to be extended
+			       ) {
     /* Wraps and modifies the trigger into a specification so that sensor construction *
      * may have a linked list consisting of nodes with the same content                */
     
+    for (iterate(state_names, char *, state_name)) {
+      if (!state_exists(state_name)) {
+	printf(RED "Unknown state name " CYAN "%s\n" RESET, state_name);
+	yyerror("Invalid state list for trigger");
+      }
+    }
+    
+    trigger -> precondition = state_names;
+    
+    
     represent_as_decimal(threshold);
     
-    trigger -> id        = id;
-    trigger -> less      = less;
-    trigger -> threshold = threshold;
+    trigger -> id   = id;
+    trigger -> less = less;
+    
+    trigger -> threshold_as_specified = threshold;    // this gets converted later
     
     if (options) {
         for (iterate(options, char *, option)) {
-	    if      (!strcmp(option, "singular")) trigger -> singular = true;
+	    if      (!strcmp(option, "singular")) trigger -> singular =  true;
 	    else if (!strcmp(option, "forever" )) trigger -> singular = false;
-	    else if (!strcmp(option, "reverses")) trigger -> reverses = true;
+	    else if (!strcmp(option, "reverses")) trigger -> reverses =  true;
 	    else {
-	        printf("Unknown option " RED "%s\n" RESET, option);
-		exit(ERROR_EXPERIMENTER);
+	        printf(RED "Unknown option " CYAN "%s\n" RESET, option);
+		yyerror("Unknown option specified");
 	    }
 	}
     }
     
-    Specification * specification = malloc(sizeof(*specification));
+    Specification * specification = calloc(1, sizeof(*specification));
     
     specification -> id      = strdup("trigger");
     specification -> options = list_from(1, trigger);
@@ -1863,82 +1971,79 @@ Specification * specify_trigger(char * id, bool less, Numeric * threshold, List 
 
 Specification * make_tag(char * id, List * options, List * args) {
   
-    Specification * tag = malloc(sizeof(*tag));
+    Specification * tag = calloc(1, sizeof(*tag));
     
     tag -> id      = id;
     tag -> options = options;
     tag -> args    = args;
+        
     
-    
-    // [ print, color : 5hz ] - no color or freq required
-    // [ smooth : ] -
-    // [ calibrate target : 1.0, 3.4, ... ]
-    
-    
-    
-    /* Perform error checking on this tag now */
+    /* Perform preliminary error checking on this tag now */
     
     if (!strcmp(id, "print")) {
       
         if (options) {
 	  
-            char * color      = (char *) options -> head -> value;
-            char * color_code = get_color_by_name(color);
-            
-            if (!color_code) {
+	    if (options -> size > 1) yyerror("Printing permits at most 1 option (the console color)");
+	    
+            char * color = list_get(options, 0);
+	    
+            if (!get_color_by_name(color)) {
                 printf(RED "Color name %s not recognized\n" RESET, color);
-                exit(ERROR_EXPERIMENTER);
+		yyerror("Invalid color name specified");
             }
         }
+	
+	if (args) {
+	  
+            Numeric * numeric = list_get(args, 0);
+	  
+	    if (args -> size > 1               ) yyerror("Printing permits at most 1 argument (the frequency)");
+	    if (!strcmp(numeric -> units, "Hz")) yyerror("Frequencies must be in Hz"                          );
+	    if (numeric -> is_decimal          ) yyerror("Frequencies must be integers or rational numbers"   );
+	}
     }
     
-    else if (!strcmp(id, "pulse")) {
-        
-        if (options)
-            exit_printing("Pulsing does not support options at this time\n", ERROR_EXPERIMENTER);
-	
-        if (!args || args -> size != 1)
-            exit_printing("Pulsing requires exactly 1 argument\n", ERROR_EXPERIMENTER);
+    else if (!strcmp(id, "pulse")) {        
+        if (options)                    yyerror("Pulsing does not support options at this time");
+        if (!args || args -> size != 1) yyerror("Pulsing requires exactly 1 argument"          );
     }
     
     else if (!strcmp(id, "smooth")) {
       
-        if (options)
-            exit_printing("Smoothing does not support options at this time\n", ERROR_EXPERIMENTER);
+        if (options) yyerror("Smoothing does not support options at this time");
 	
         if (args) {
 	    Numeric * numeric = (Numeric *) list_get(args, 0);
             float value = numeric -> decimal;
 	    
-            if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f) {
-                printf(RED "Autoregressive smoothing requires a # in [0.0, 1.0]\n" RESET);
-                exit(ERROR_EXPERIMENTER);
-            }
+            if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f)
+	      yyerror("Autoregressive smoothing requires a decimal # in [0.0, 1.0]");
         }
     }
     
     else if (!strcmp(id, "calibrate")) {
       
-        if (!args   ) exit_printing("Calibration curves require at least one constant\n", ERROR_EXPERIMENTER);
-        if (!options) exit_printing("Calibration requires a target\n", ERROR_EXPERIMENTER);
-	if (options -> size < 2) exit_printing("Calibration requires a unit\n", ERROR_EXPERIMENTER);
+        if (!args   )            yyerror("Calibration curves require at least one constant");
+        if (!options)            yyerror("Calibration requires a target");
+	if (options -> size < 2) yyerror("Calibration requires a unit");
 	
         char * curve = (char *) list_get(options, 1);
         
         if      (!strcmp(curve, "poly"));
         else if (!strcmp(curve, "hart")) {
             if (args -> size != 3)
-	        exit_printing("The Steinhart and Hart Equation requires 3 constants\n", ERROR_EXPERIMENTER);
+	        yyerror("The Steinhart and Hart Equation requires exactly 3 constants");
         }
         else {
             printf(RED "Unknown calibration curve " CYAN "%s\n" RESET, curve);
-            exit(ERROR_EXPERIMENTER);
+            yyerror("Malformed calibration");
         }
     }
     
     else {
         printf(RED "Invalid tag id " CYAN "%s\n" RESET, id);
-        exit(ERROR_EXPERIMENTER);
+	yyerror("Malformed tag");
     }
     
     return tag;
@@ -1946,16 +2051,16 @@ Specification * make_tag(char * id, List * options, List * args) {
 
 void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * specifications) {
   
-  ProtoSensor * proto = hashmap_get(proto_sensors, id);
+  Sensor * proto = hashmap_get(all_sensors, id);
   
   if (!proto) {
-    printf(RED "%s is not a sensor\n" RESET, id);
-    exit(ERROR_EXPERIMENTER);
+    printf(CYAN "%s " RED "is not a sensor\n" RESET, id);
+    yyerror("Unknown sensor name");
   }
   
   if ((               strcmp(frequency   -> units, "Hz") && strcmp(frequency   -> units, "i")) ||
       (denominator && strcmp(denominator -> units, "Hz") && strcmp(denominator -> units, "i")))
-    exit_printing("Sensor frequency uses bad units", ERROR_EXPERIMENTER);
+    yyerror("Sensor frequencies must be integers or rational numbers of Hz");
   
   proto -> hertz = frequency -> integer;    // base Hz for scheduling
   
@@ -1963,27 +2068,50 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   else             proto -> hertz_denominator = 0;
   
   proto -> requested = true;
-
-  proto -> triggers = list_create();
+  
+  for (int stream = 0; stream < proto -> data_streams; stream++)
+    proto -> outputs[stream].triggers = list_create();
   
   if (!specifications) return;
+  
+  
+  List * all_calibrations = list_create();
   
   for (iterate(specifications, Specification *, specification)) {
     
       List * options = specification -> options;
       List * args    = specification -> args;
-    
+      
       if (!strcmp(specification -> id, "trigger")) {
-	  list_insert(proto -> triggers, list_get(options, 0));
+	
+	  // can't yet do conversion, reversals, etc,
+	  // so we do the rest in the next for loop
+	  
+	  Trigger * trigger = list_get(options, 0);    // we encapsulate the trigger within the options list
+
+	  // check trigger targets
+	  if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
+	      printf(RED "Trigger target " CYAN "%s " RED "unknown\n" RESET, trigger -> id);
+	      yyerror("Malformed trigger");
+	  }
+	  
+	  int stream = (int) hashmap_get(proto -> targets, trigger -> id);
+	  
+	  list_insert(proto -> outputs[stream].triggers, trigger);
+	  list_destroy(options);
       }
       
       else if (!strcmp(specification -> id, "print")) {
 	  
-          if (options)
-	    proto -> print_code = get_color_by_name(list_get(options, 0));
+  	  if (options) {
+	      proto -> print_code = get_color_by_name(list_get(options, 0));
+	      list_destroy(options);
+	  }
 	  
-	  if (args)
-	    proto -> print_hertz = ((Numeric *) list_get(args, 0)) -> decimal;
+	  if (args) {
+	    proto -> print_hertz = ((Numeric *) list_get(args, 0)) -> integer;
+	    list_destroy(args);
+	  }
 	  
 	  proto -> print = true;
       }
@@ -1996,50 +2124,45 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
           
           if (proto -> auto_regressive) {
               printf(RED "Duplicate autoregressive constant for %s\n" RESET, id);
-              exit(ERROR_EXPERIMENTER);
+	      yyerror("Duplicate autoregressive constant");
           }
           
           proto -> auto_regressive = auto_regressive;
+	  list_destroy(args);
       }
       
       else if (!strcmp(specification -> id, "calibrate")) {
-          
+	  
+	  /* as with the triggers, we can't do everything here (like forming each output series)
+	   * so we'll place each calibration (which are themselves lists) into an UNORDERED list
+	   * for each target using the calibrations hashmap. Later, we'll actually convert these
+	   * unordered lists into proper serieses. */
+	  
           char * target = list_get(options, 0);
 	  char * curve  = list_get(options, 1);
 	  char * unit   = list_get(options, 2);
 	  
           if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
-              printf(RED "Calibration target %s for %s is not known\n" RESET, target, id);
-              exit(ERROR_EXPERIMENTER);
-          }
-	  
-          if (hashmap_exists(proto -> calibrations, target)) {
-              printf(RED "Duplicate target calibration for %s of %s found\n" RESET, target, id);
-              exit(ERROR_EXPERIMENTER);
+              printf(RED "Calibration target " CYAN "%s " RED " for %s is not known\n" RESET, target, id);
+	      yyerror("Malformed calibration");
           }
 	  
 	  // force all calibration constants to be decimals
 	  for (iterate(specification -> args, Numeric *, constant))
-	    represent_as_decimal(constant);
+	      represent_as_decimal(constant);
 	  
-	  // make first node the calibration type
-	  list_insert_first(specification -> args, curve);
 	  
-	  hashmap_add(proto -> calibrations, target, args);
-	  hashmap_add(proto -> output_units, target, unit);
+	  Calibration * calibration = calloc(1, sizeof(*calibration));
+	  
+	  calibration -> curve     = curve;
+	  calibration -> constants = specification -> args;
+	  calibration -> target    = target;
       }
   }
   
   
-  
   for (iterate(proto -> triggers, Trigger *, trigger)) {
-      
-      // check trigger targets
-      if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
-          printf(RED "Trigger target %s unknown\n" RESET, trigger -> id);
-          exit(ERROR_EXPERIMENTER);
-      }
-      
+            
       // duplicate reversing triggers
       
       if (trigger -> reverses) {
@@ -2070,8 +2193,10 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
       }
   }
   
-  specifications -> free = specification_destroy;
-  list_destroy(specifications);
+  list_destroy(all_triggers);
+  
+  specifications -> free = specification_destroy;    // Note: up to us to destroy lists earlier
+  list_destroy(specifications);                      // ---------------------------------------
   
   n_triggers += proto -> triggers -> size;
 }

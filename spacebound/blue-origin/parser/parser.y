@@ -12,20 +12,24 @@
 #include "../system/color.h"
 #include "../system/error.h"
 #include "../system/gpio.h"
+#include "../system/state.h"
 
 
 extern FILE * yyin;
 
-int yylex();
+int  yylex();
 void yyerror(char * message);
 
-typedef struct Trigger Trigger;
 typedef struct Numeric Numeric;
+typedef struct EffectNode EffectNode;
 typedef struct Specification Specification;
+typedef struct Trigger Trigger;
 
-Charge        * make_charge(Numeric * wire, Specification * tag);
-Trigger       * make_trigger(List * charges);
-Specification * specify_trigger(char * id, bool less, Numeric * threshold, List * options, Trigger * trigger);
+EffectNode    * make_charge(Numeric * wire, bool hot);
+EffectNode    * make_transition(char * state_name, bool entering);
+EffectNode    * add_delay(EffectNode * effect, Numeric * delay);
+Trigger       * make_trigger(List * effects);
+Specification * extend_trigger(List * state_names, char * id, bool less, Numeric * threshold, List * options, Trigger * trigger);
 Specification * make_tag(char * id, List * options, List * args);
 
 void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * specifications);
@@ -37,17 +41,31 @@ void print_config();
   #include <stdbool.h>
   #include "../math/units.h"
   #include "../structures/list.h"
+  #include "../system/gpio.h"
   #include "../sensors/sensor.h"
+  
+  typedef struct EffectNode {
+    
+    bool  is_charge;    // whether effect is a charge or transition
+    float delay_ms;
+    
+    union {
+      Charge * charge;
+      
+      struct {
+	char * state_name;
+	bool   entering;
+      };
+    };
+    
+  } EffectNode;
   
   typedef struct Specification {
       
       char * id;
       List * options;
       List * args;
-      
-      bool should_destroy_options;
-      bool should_destroy_args;
-      
+    
   } Specification;
 }
 
@@ -58,19 +76,19 @@ void print_config();
   Numeric       * numeric;
   
   List          * list;
-  Charge        * charge;
+  EffectNode    * effect;
   Trigger       * trigger;
   Specification * specification;
 }
 
-%token IF SET ENTER LEAVE STATE
+%token IF SET ENTER LEAVE AFTER STATE PIN POS NEG DEFINE
 
 %token  <string>        ID
 %token  <numeric>       NUMERIC
                         
-%type   <list>          Specs Charges Args Options
-%type   <charge>        Charge
+%type   <list>          Specs Args Options Effects
 %type   <trigger>       Actuator
+%type   <effect>        Effect
 %type   <specification> Spec Tag
                         
 %start Config
@@ -90,67 +108,80 @@ void print_config();
 
 %%
 
-Config   : Sensors
-         |                                                 { printf("\nExperiment does not use sensors");   }
+Config   : Defs Sensors
+         | Defs                                            { printf("\nExperiment does not use sensors");         }
+         ;
+
+Defs     : Def
+         | Defs Def
+         ;
+
+Def      : DEFINE LEAVE ID                                 { add_state($3, false);                                }
+         | DEFINE ENTER ID                                 { add_state($3,  true);                                }
          ;
 
 Sensors  : Sensor                
          | Sensors Sensor
          ;
 
-Sensor   : ID NUMERIC             '{'       '}'            { build_sensor($1, CH_INT($2),      NULL,  NULL); }
-         | ID NUMERIC             '{' Specs '}'            { build_sensor($1, CH_INT($2),      NULL,    $4); }
-         | ID NUMERIC '/' NUMERIC '{'       '}'            { build_sensor($1, CH_INT($2), CH_INT($4), NULL); }
-         | ID NUMERIC '/' NUMERIC '{' Specs '}'            { build_sensor($1, CH_INT($2), CH_INT($4),   $6); }
+Sensor   : ID NUMERIC             '{'       '}'            { build_sensor($1, $2,      NULL,  NULL);              }
+         | ID NUMERIC             '{' Specs '}'            { build_sensor($1, $2,      NULL,    $4);              }
+         | ID NUMERIC '/' NUMERIC '{'       '}'            { build_sensor($1, $2, $4, NULL);                      }
+         | ID NUMERIC '/' NUMERIC '{' Specs '}'            { build_sensor($1, $2, $4,   $6);                      }
          ;
 
-Specs    : Spec                                            { $$ = list_from(1, $1);                          }
-         | Specs Spec                                      { list_insert($1, $2); $$ = $1;                   }
+Specs    : Spec                                            { $$ = list_from(1, $1);                               }
+         | Specs Spec                                      { list_insert($1, $2); $$ = $1;                        }
          ;
 
-Spec     : IF '(' ID '<' NUMERIC             ')' Actuator  { $$ = specify_trigger($3,  true, $5, NULL, $7);  }
-         | IF '(' ID '<' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($3,  true, $5,   $7, $9);  }
-         | IF '(' ID '>' NUMERIC             ')' Actuator  { $$ = specify_trigger($3, false, $5, NULL, $7);  }
-         | IF '(' ID '>' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($3, false, $5,   $7, $9);  }
-         | IF '(' STATE Options
-	      ':' ID '<' NUMERIC             ')' Actuator  { $$ = specify_trigger($6,  true, $8, NULL, $10); }
-         | IF '(' STATE Options
-	      ':' ID '<' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($6,  true, $8,  $10, $12); }
-         | IF '(' STATE Options
-	      ':' ID '>' NUMERIC             ')' Actuator  { $$ = specify_trigger($6, false, $8, NULL, $10); }
-         | IF '(' STATE Options
-	      ':' ID '>' NUMERIC ':' Options ')' Actuator  { $$ = specify_trigger($6, false, $8,  $10, $12); }
-         | Tag                                             { $$ = $1;                                        }
+Spec     : IF '(' ID '<' NUMERIC             ')' Actuator  { $$ = extend_trigger(NULL, $3,  true, $5, NULL, $7);  }
+         | IF '(' ID '<' NUMERIC ':' Options ')' Actuator  { $$ = extend_trigger(NULL, $3,  true, $5,   $7, $9);  }
+         | IF '(' ID '>' NUMERIC             ')' Actuator  { $$ = extend_trigger(NULL, $3, false, $5, NULL, $7);  }
+         | IF '(' ID '>' NUMERIC ':' Options ')' Actuator  { $$ = extend_trigger(NULL, $3, false, $5,   $7, $9);  }
+
+         | IF '(' STATE Options ':' ID '<' NUMERIC             ')' Actuator
+    	      { $$ = extend_trigger(  $4, $6,  true, $8, NULL, $10); }
+
+         | IF '(' STATE Options ':' ID '<' NUMERIC ':' Options ')' Actuator
+	      { $$ = extend_trigger(  $4, $6,  true, $8,  $10, $12); }
+
+         | IF '(' STATE Options ':' ID '>' NUMERIC             ')' Actuator
+	      { $$ = extend_trigger(  $4, $6, false, $8, NULL, $10); }
+
+         | IF '(' STATE Options ':' ID '>' NUMERIC ':' Options ')' Actuator
+	      { $$ = extend_trigger(  $4, $6, false, $8,  $10, $12); }
+
+         | Tag                                             { $$ = $1;                                             }
          ;
 
-Actuator : '{'         '}'                                 { printf("Empty if body\n"); exit(3);             }
-         | '{' Actions '}'                                 { $$ = make_trigger($2);                          }
+Actuator : '{'         '}'                                 { yyerror("Empty if body");                            }
+         | '{' Effects '}'                                 { $$ = make_trigger($2);                               }
          ;
 
-Actions  : Action                                          { $$ = list_from(1, $1);                          }
-         | Action AFTER NUMERIC                            { $$ = list_from(1, add_delay($1, $3));           }
-         | Actions Action                                  { list_insert($1, $2); $$ = $1;                   }
-         | Actions Action AFTER NUMERIC                    { list_insert($1, add_delay($2, $4)); $$ = $1;    }
+Effects  : Effect                                          { $$ = list_from(1, $1);                               }
+         | Effect AFTER NUMERIC                            { $$ = list_from(1, add_delay($1, $3));                }
+         | Effects Effect                                  { list_insert($1, $2); $$ = $1;                        }
+         | Effects Effect AFTER NUMERIC                    { list_insert($1, add_delay($2, $4)); $$ = $1;         }
          ;
 
-Action   : CONNECT BROADCOM NUMERIC TO ID                  { $$ = make_charge(CH_INT($2), $5);               }
-         | ENTER ID                                        { $$ = make_effect($2,  true);                    }
-         | LEAVE ID                                        { $$ = make_effect($2, false);                    }
-         | LET ID '=' ID                                   { $$ = make_assignment($2, $4);                   }
+Effect   : SET PIN NUMERIC POS                             { $$ = make_charge($3,  true);                         }
+         | SET PIN NUMERIC NEG                             { $$ = make_charge($3, false);                         }
+         | ENTER ID                                        { $$ = make_transition($2,  true);                     }
+         | LEAVE ID                                        { $$ = make_transition($2, false);                     }
          ;
 
-Tag      : '[' ID                      ']'                 { $$ = make_tag($2, NULL, NULL);                  }
-         | '[' ID ':'         ':' Args ']'                 { $$ = make_tag($2, NULL,   $5);                  }
-         | '[' ID ':' Options ':'      ']'                 { $$ = make_tag($2,   $4, NULL);                  }
-         | '[' ID ':' Options ':' Args ']'                 { $$ = make_tag($2,   $4,   $6);                  }
+Tag      : '[' ID                      ']'                 { $$ = make_tag($2, NULL, NULL);                       }
+         | '[' ID ':'         ':' Args ']'                 { $$ = make_tag($2, NULL,   $5);                       }
+         | '[' ID ':' Options ':'      ']'                 { $$ = make_tag($2,   $4, NULL);                       }
+         | '[' ID ':' Options ':' Args ']'                 { $$ = make_tag($2,   $4,   $6);                       }
          ;
 
-Args     : Args ',' NUMERIC                                { list_insert($1, $3); $$ = $1;                   }
-         | NUMERIC                                         { $$ = list_from(1, $1);                          }
+Args     : Args ',' NUMERIC                                { list_insert($1, $3); $$ = $1;                        }
+         | NUMERIC                                         { $$ = list_from(1, $1);                               }
          ;
 
-Options  : ID                                              { $$ = list_from(1, $1);                          }
-         | Options ',' ID                                  { list_insert($1, $3); $$ = $1;                   }
+Options  : ID                                              { $$ = list_from(1, $1);                               }
+         | Options ',' ID                                  { list_insert($1, $3); $$ = $1;                        }
          ;
 
 %%
@@ -180,100 +211,130 @@ static void represent_as_integer(Numeric * numeric) {
 static void specification_destroy(void * vspecification) {
     
     Specification * specification = vspecification;
-    
-    /*if (specification -> options && specification -> should_destroy_options)
-        list_destroy(specification -> options);
-    
-    if (specification -> args && specification -> should_destroy_args)
-    list_destroy(specification -> args);*/
-    
+        
     free(specification -> id);
     free(specification);
 }
 
-Charge * make_charge(Numeric * wire, Specification * tag) {
-    /* note, pin 0 not allowed.                      *
-     * but it's important for future bug potential.  */
+EffectNode * make_charge(Numeric * wire, bool hot) {
     
-    if (strcmp(wire -> units, "i")) {
-        printf(RED "Charge wires must be integers" RESET);
-	exit(ERROR_EXPERIMENTER);        
+    if (!unit_is_of_type(wire, "Integer"))
+	yyerror("Wires must be integers");
+    
+    if (!between(0, wire -> integer, 27)) {
+        printf(RED "Broadcom " CYAN "%d " RED "does not exist\n" RESET, wire -> integer);
+	yyerror("Nonexistant broadcom specified");
     }
     
     Charge * charge = calloc(1, sizeof(*charge));
     
-    charge -> gpio = abs(wire -> integer);
-    charge -> hot  = (wire -> integer > 0);
+    charge -> gpio = wire -> integer;
+    charge -> hot  = hot;
     
-    if (!between(0, charge -> gpio, 27)) {
-        printf(RED "Broadcom %d does not exist\n" RESET, charge -> gpio);
-	exit(ERROR_EXPERIMENTER);
-    }
+    EffectNode * effect = calloc(1, sizeof(*effect));
     
-    if (tag) {
-        if (strcmp(tag -> id, "pulse")) {
-            printf(RED "Unknown tag %s for charge\n" RESET, tag -> id);
-            exit(ERROR_EXPERIMENTER);
-        }
-        
-        if (tag -> args -> size != 1) {
-            printf(RED "Exactly 1 argument shoud be used for 'pulse' tag\n" RESET);
-            exit(ERROR_EXPERIMENTER);
-        }
-	
-	Numeric * pulse_duration = tag -> args -> head -> value;
-	
-	represent_as_integer(pulse_duration);                 // convert to ms
-	pulse_duration -> integer *= 1000;                    // -------------
-	to_standard_units(pulse_duration, pulse_duration);    // -------------
-	
-	charge -> duration = pulse_duration -> integer;
-	pin_inform_pulses(charge -> gpio);
-        
-        specification_destroy(tag);    // no longer needed
-    }
+    effect -> charge = charge;
     
-    return charge;
+    return effect;
 }
 
-Trigger * make_trigger(List * charges) {
+EffectNode * make_transition(char * state_name, bool entering) {
+  
+  if (!state_exists(state_name)) {
+    printf(RED "Unknown state name: " CYAN "%s\n" RESET, state_name);
+    yyerror("State not found");
+  }
+  
+  EffectNode * effect  = calloc(1, sizeof(*effect));
+  
+  effect -> is_charge  = false;
+  effect -> state_name = state_name;
+  effect -> entering   = entering;
+  
+  return effect;
+}
+
+EffectNode * add_delay(EffectNode * effect, Numeric * delay) {
+  
+  represent_as_decimal(delay);
+  
+  if (delay -> decimal <= 0) {
+    printf(RED "Delay %f not allowed: value is non-positive" RESET, delay -> decimal);
+    yyerror("Improper delay specified");
+  }
+  
+  if (!unit_is_of_type(delay, "Time")) {
+    printf("%s is not a unit of time", delay -> units);
+    yyerror("Improper delay specified");
+  }
+  
+  effect -> delay_ms = (get_universal_conversion(delay -> units, "ms"))(delay -> decimal);  
+  return effect;
+}
+
+Trigger * make_trigger(List * effects) {
     // creates a trigger, which becomes a specification later
     
     Trigger * trigger = calloc(1, sizeof(*trigger));
     
     trigger -> fired    = false;
-    trigger -> singular = true;     // defaults
+    trigger -> singular =  true;    // defaults
     trigger -> reverses = false;    // --------
     
-    trigger -> charges = charges;
-        
+    for (iterate(effects, EffectNode *, effect))  
+      if (effect -> is_charge)
+	if (effect -> charge -> hot) list_insert(trigger -> wires_high, effect -> charge    );
+	else                         list_insert(trigger -> wires_low , effect -> charge    );
+      else
+	if (effect -> entering     ) list_insert(trigger -> enter_set , effect -> state_name);
+	else                         list_insert(trigger -> leave_set , effect -> state_name);
+    
+    list_destroy(effects);
     return trigger;
 }
 
 
-Specification * specify_trigger(char * id, bool less, Numeric * threshold, List * options, Trigger * trigger) {
+Specification * extend_trigger(
+			       List    * state_names,    // what conjunction precondition this trigger
+			       char    * id,             // the output stream name (like A0)
+			       bool      less,           // the comparison direction with the threshold
+			       Numeric * threshold,      // the threshold beyond which actuation occurs
+			       List    * options,        // the specific type of trigger
+			       Trigger * trigger         // the trigger to be extended
+			       ) {
     /* Wraps and modifies the trigger into a specification so that sensor construction *
      * may have a linked list consisting of nodes with the same content                */
     
+    for (iterate(state_names, char *, state_name)) {
+      if (!state_exists(state_name)) {
+	printf(RED "Unknown state name " CYAN "%s\n" RESET, state_name);
+	yyerror("Invalid state list for trigger");
+      }
+    }
+    
+    trigger -> precondition = state_names;
+    
+    
     represent_as_decimal(threshold);
     
-    trigger -> id        = id;
-    trigger -> less      = less;
-    trigger -> threshold = threshold;
+    trigger -> id   = id;
+    trigger -> less = less;
+    
+    trigger -> threshold_as_specified = threshold;    // this gets converted later
     
     if (options) {
         for (iterate(options, char *, option)) {
-	    if      (!strcmp(option, "singular")) trigger -> singular = true;
+	    if      (!strcmp(option, "singular")) trigger -> singular =  true;
 	    else if (!strcmp(option, "forever" )) trigger -> singular = false;
-	    else if (!strcmp(option, "reverses")) trigger -> reverses = true;
+	    else if (!strcmp(option, "reverses")) trigger -> reverses =  true;
 	    else {
-	        printf("Unknown option " RED "%s\n" RESET, option);
-		exit(ERROR_EXPERIMENTER);
+	        printf(RED "Unknown option " CYAN "%s\n" RESET, option);
+		yyerror("Unknown option specified");
 	    }
 	}
     }
     
-    Specification * specification = malloc(sizeof(*specification));
+    Specification * specification = calloc(1, sizeof(*specification));
     
     specification -> id      = strdup("trigger");
     specification -> options = list_from(1, trigger);
@@ -283,82 +344,96 @@ Specification * specify_trigger(char * id, bool less, Numeric * threshold, List 
 
 Specification * make_tag(char * id, List * options, List * args) {
   
-    Specification * tag = malloc(sizeof(*tag));
+    Specification * tag = calloc(1, sizeof(*tag));
     
     tag -> id      = id;
     tag -> options = options;
     tag -> args    = args;
+        
     
-    
-    // [ print, color : 5hz ] - no color or freq required
-    // [ smooth : ] -
-    // [ calibrate target : 1.0, 3.4, ... ]
-    
-    
-    
-    /* Perform error checking on this tag now */
+    /* Perform preliminary error checking on this tag now */
     
     if (!strcmp(id, "print")) {
       
         if (options) {
 	  
-            char * color      = (char *) options -> head -> value;
-            char * color_code = get_color_by_name(color);
-            
-            if (!color_code) {
+	    if (options -> size > 1) yyerror("Printing permits at most 1 option (the console color)");
+	    
+            char * color = list_get(options, 0);
+	    
+            if (!get_color_by_name(color)) {
                 printf(RED "Color name %s not recognized\n" RESET, color);
-                exit(ERROR_EXPERIMENTER);
+		yyerror("Invalid color name specified");
             }
         }
+	
+	if (args) {
+	  
+            Numeric * numeric = list_get(args, 0);
+	  
+	    if (args -> size > 1               ) yyerror("Printing permits at most 1 argument (the frequency)");
+	    if (!strcmp(numeric -> units, "Hz")) yyerror("Frequencies must be in Hz"                          );
+	    if (numeric -> is_decimal          ) yyerror("Frequencies must be integers or rational numbers"   );
+	}
     }
     
-    else if (!strcmp(id, "pulse")) {
-        
-        if (options)
-            exit_printing("Pulsing does not support options at this time\n", ERROR_EXPERIMENTER);
-	
-        if (!args || args -> size != 1)
-            exit_printing("Pulsing requires exactly 1 argument\n", ERROR_EXPERIMENTER);
+    else if (!strcmp(id, "pulse")) {        
+        if (options)                    yyerror("Pulsing does not support options at this time");
+        if (!args || args -> size != 1) yyerror("Pulsing requires exactly 1 argument"          );
     }
     
     else if (!strcmp(id, "smooth")) {
       
-        if (options)
-            exit_printing("Smoothing does not support options at this time\n", ERROR_EXPERIMENTER);
+        if (options) yyerror("Smoothing does not support options at this time");
 	
         if (args) {
 	    Numeric * numeric = (Numeric *) list_get(args, 0);
             float value = numeric -> decimal;
 	    
-            if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f) {
-                printf(RED "Autoregressive smoothing requires a # in [0.0, 1.0]\n" RESET);
-                exit(ERROR_EXPERIMENTER);
-            }
+            if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f)
+	      yyerror("Autoregressive smoothing requires a decimal # in [0.0, 1.0]");
         }
     }
     
     else if (!strcmp(id, "calibrate")) {
       
-        if (!args   ) exit_printing("Calibration curves require at least one constant\n", ERROR_EXPERIMENTER);
-        if (!options) exit_printing("Calibration requires a target\n", ERROR_EXPERIMENTER);
-	if (options -> size < 2) exit_printing("Calibration requires a unit\n", ERROR_EXPERIMENTER);
+        if (!args   )            yyerror("Calibration curves require at least one constant");
+        if (!options)            yyerror("Calibration requires a target");
+	if (options -> size < 2) yyerror("Calibration requires a unit");
 	
         char * curve = (char *) list_get(options, 1);
         
         if      (!strcmp(curve, "poly"));
         else if (!strcmp(curve, "hart")) {
             if (args -> size != 3)
-	        exit_printing("The Steinhart and Hart Equation requires 3 constants\n", ERROR_EXPERIMENTER);
+	        yyerror("The Steinhart and Hart Equation requires exactly 3 constants");
         }
         else {
             printf(RED "Unknown calibration curve " CYAN "%s\n" RESET, curve);
-            exit(ERROR_EXPERIMENTER);
+            yyerror("Malformed calibration");
         }
+    }
+    
+    else if (!strcmp(id, "conversions")) {
+      
+      if (args                               ) yyerror("A conversion series should never have arguments"         );
+      if (!options || options -> size < 3    ) yyerror("A conversion series must include a target, then 2+ units");
+      if (strcmp(list_get(options, 1), "raw")) yyerror("A conversion series always starts with 'raw'"            );
+      
+      for (iterate(options, char *, unit_name)) {
+	
+	if ((int) unit_name_index < 1) continue;    // first is target, so skip (see list.h)
+	
+	if (!unit_is_supported(unit_name)) {
+	  printf(RED "Unknown unit name " CYAN "%s\n" RESET, unit_name);
+	  yyerror("Unsupported unit provided");
+	}
+      }
     }
     
     else {
         printf(RED "Invalid tag id " CYAN "%s\n" RESET, id);
-        exit(ERROR_EXPERIMENTER);
+	yyerror("Malformed tag");
     }
     
     return tag;
@@ -366,16 +441,16 @@ Specification * make_tag(char * id, List * options, List * args) {
 
 void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * specifications) {
   
-  ProtoSensor * proto = hashmap_get(proto_sensors, id);
+  Sensor * proto = hashmap_get(all_sensors, id);
   
   if (!proto) {
-    printf(RED "%s is not a sensor\n" RESET, id);
-    exit(ERROR_EXPERIMENTER);
+    printf(CYAN "%s " RED "is not a sensor\n" RESET, id);
+    yyerror("Unknown sensor name");
   }
   
   if ((               strcmp(frequency   -> units, "Hz") && strcmp(frequency   -> units, "i")) ||
       (denominator && strcmp(denominator -> units, "Hz") && strcmp(denominator -> units, "i")))
-    exit_printing("Sensor frequency uses bad units", ERROR_EXPERIMENTER);
+    yyerror("Sensor frequencies must be integers or rational numbers of Hz");
   
   proto -> hertz = frequency -> integer;    // base Hz for scheduling
   
@@ -383,27 +458,50 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   else             proto -> hertz_denominator = 0;
   
   proto -> requested = true;
-
-  proto -> triggers = list_create();
+  
+  for (int stream = 0; stream < proto -> data_streams; stream++)
+    proto -> outputs[stream].triggers = list_create();
   
   if (!specifications) return;
+  
+  
+  List * all_calibrations = list_create();
   
   for (iterate(specifications, Specification *, specification)) {
     
       List * options = specification -> options;
       List * args    = specification -> args;
-    
+      
       if (!strcmp(specification -> id, "trigger")) {
-	  list_insert(proto -> triggers, list_get(options, 0));
+	
+	  /* can't yet do conversion, reversals, etc,
+	   * so we do the rest in a later for loop */
+	  
+	  Trigger * trigger = list_get(options, 0);    // we encapsulate the trigger within the options list
+	  
+	  // check trigger targets
+	  if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
+	      printf(RED "Trigger target " CYAN "%s " RED "unknown\n" RESET, trigger -> id);
+	      yyerror("Malformed trigger");
+	  }
+	  
+	  int stream = (int) hashmap_get(proto -> targets, trigger -> id);
+	  
+	  list_insert(proto -> outputs[stream].triggers, trigger);
+	  list_destroy(options);
       }
       
       else if (!strcmp(specification -> id, "print")) {
 	  
-          if (options)
-	    proto -> print_code = get_color_by_name(list_get(options, 0));
+  	  if (options) {
+	      proto -> print_code = get_color_by_name(list_get(options, 0));
+	      list_destroy(options);
+	  }
 	  
-	  if (args)
-	    proto -> print_hertz = ((Numeric *) list_get(args, 0)) -> decimal;
+	  if (args) {
+	    proto -> print_hertz = ((Numeric *) list_get(args, 0)) -> integer;
+	    list_destroy(args);
+	  }
 	  
 	  proto -> print = true;
       }
@@ -416,50 +514,67 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
           
           if (proto -> auto_regressive) {
               printf(RED "Duplicate autoregressive constant for %s\n" RESET, id);
-              exit(ERROR_EXPERIMENTER);
+	      yyerror("Duplicate autoregressive constant");
           }
           
           proto -> auto_regressive = auto_regressive;
+	  list_destroy(args);
       }
       
       else if (!strcmp(specification -> id, "calibrate")) {
-          
+	  
+	  /* as with the triggers, we can't do everything here (like forming each output series)
+	   * so we'll place each calibration (which are themselves lists) into an UNORDERED list
+	   * for each target using the calibrations hashmap. Later, we'll actually convert these
+	   * unordered lists into proper serieses. */
+	  
           char * target = list_get(options, 0);
 	  char * curve  = list_get(options, 1);
 	  char * unit   = list_get(options, 2);
 	  
           if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
-              printf(RED "Calibration target %s for %s is not known\n" RESET, target, id);
-              exit(ERROR_EXPERIMENTER);
-          }
-	  
-          if (hashmap_exists(proto -> calibrations, target)) {
-              printf(RED "Duplicate target calibration for %s of %s found\n" RESET, target, id);
-              exit(ERROR_EXPERIMENTER);
+              printf(RED "Calibration target " CYAN "%s " RED "for %s is not known\n" RESET, target, id);
+	      yyerror("Malformed calibration");
           }
 	  
 	  // force all calibration constants to be decimals
 	  for (iterate(specification -> args, Numeric *, constant))
-	    represent_as_decimal(constant);
+	      represent_as_decimal(constant);
 	  
-	  // make first node the calibration type
-	  list_insert_first(specification -> args, curve);
 	  
-	  hashmap_add(proto -> calibrations, target, args);
-	  hashmap_add(proto -> output_units, target, unit);
+	  Calibration * calibration = calloc(1, sizeof(*calibration));
+	  
+	  calibration -> curve     = curve;
+	  calibration -> constants = specification -> args;
+	  calibration -> target    = target;
+	  
+	  list_insert(all_calibrations, calibration);
+      }
+      
+      else if (!strcmp(specification -> id, "conversions") {
+	  
+	  char * target = list_get(options, 0);
+	  
+	  if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
+              printf(RED "Conversion series target " CYAN "%s " RED "for %s is not known\n" RESET, target, id);
+	      yyerror("Malformed conversion series");
+          }
+	  
+	  // START HERERE
       }
   }
+    
   
-  
+  for (iterate(all_calibrations, Calibration *, calibrations)) {
+    
+      
+  }
+
+  list_destroy(all_calibrations);
+  all_calibrations = NULL;
   
   for (iterate(proto -> triggers, Trigger *, trigger)) {
-      
-      // check trigger targets
-      if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
-          printf(RED "Trigger target %s unknown\n" RESET, trigger -> id);
-          exit(ERROR_EXPERIMENTER);
-      }
-      
+            
       // duplicate reversing triggers
       
       if (trigger -> reverses) {
@@ -490,8 +605,8 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
       }
   }
   
-  specifications -> free = specification_destroy;
-  list_destroy(specifications);
+  specifications -> free = specification_destroy;    // Note: up to us to destroy lists earlier
+  list_destroy(specifications);                      // ---------------------------------------
   
   n_triggers += proto -> triggers -> size;
 }

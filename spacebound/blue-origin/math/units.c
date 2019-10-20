@@ -15,6 +15,8 @@
 #include "../system/error.h"
 
 Hashmap * conversions;
+Hashmap * unit_types;
+List    * all_units;
 
 #define take(FROM, TO) convert##_##FROM##_##TO
 #define arrow(FROM, TO) #FROM "->" #TO
@@ -39,10 +41,14 @@ float take(torr,  kPa) (float x) { return x / 7.50062f;                         
 float take(   V,   mV) (float x) { return x / 1000.0f;                           }
 float take(  mV,    V) (float x) { return x * 1000.0f;                           }
 
+// utilities
+float convert_identity (float x)  { return x;                                    }
+
 
 void init_units() {
   
   conversions = hashmap_create(hash_string, compare_strings, NULL, 16);
+  unit_types  = hashmap_create(hash_string, compare_strings, NULL, 16);
   
   hashmap_add(conversions, arrow(   C,    K), take(   C,    K));
   hashmap_add(conversions, arrow(   K,    C), take(   K,    C));
@@ -58,10 +64,42 @@ void init_units() {
   hashmap_add(conversions, arrow(torr,  kPa), take(torr,  kPa));
   hashmap_add(conversions, arrow(   V,   mV), take(   V,   mV));
   hashmap_add(conversions, arrow(  mV,    V), take(  mV,    V));
+  
+  hashmap_add(unit_types,    "C", "Temperature");
+  hashmap_add(unit_types,    "K", "Temperature");
+  hashmap_add(unit_types,    "F", "Temperature");
+  hashmap_add(unit_types,  "atm",    "Pressure");
+  hashmap_add(unit_types,  "kPa",    "Pressure");
+  hashmap_add(unit_types, "torr",    "Pressure");
+  hashmap_add(unit_types,    "V",     "Voltage");
+  hashmap_add(unit_types,   "mV",     "Voltage");
+  hashmap_add(unit_types,    "i",     "Integer");
+  hashmap_add(unit_types,    "f",     "Decimal");
+  
+  all_units = list_from(9, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV");
 }
 
 void drop_units() {
   hashmap_destroy(conversions);
+  hashmap_destroy(unit_types);
+  list_destroy(all_units);
+}
+
+bool unit_is_supported(char * unit_name) {
+  
+  for (iterate(all_units, char *, unit))
+    if (!strcmp(unit, unit_name))
+      return true;
+  
+  return false;
+}
+
+bool unit_is_of_type(Numeric * numeric, char * type) {
+  
+  char * unit_name = numeric -> units;
+  char * unit_type = hashmap_get(unit_types, unit_name);
+  
+  return !strcmp(unit_type, type);
 }
 
 void print_units_supported() {
@@ -109,6 +147,9 @@ Conversion get_universal_conversion(char * from, char * to) {
   /* yields the conversion from one unit to the other, assuming the conversion
    * is the same across all domains. In other words, specific conversions related to
    * calibrations on sensors won't be returned; only generic ones like Celcius to Fahrenheit */
+  
+  if (!strcmp(from, to))
+    return convert_identity;
   
   char lookup[16];
   sprintf(lookup, "%s->%s", from, to);

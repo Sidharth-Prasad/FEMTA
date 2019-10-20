@@ -40,26 +40,40 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 35 "parser.y" /* yacc.c:1909  */
+#line 39 "parser.y" /* yacc.c:1909  */
 
   
   #include <stdbool.h>
   #include "../math/units.h"
   #include "../structures/list.h"
+  #include "../system/gpio.h"
   #include "../sensors/sensor.h"
+  
+  typedef struct EffectNode {
+    
+    bool  is_charge;    // whether effect is a charge or transition
+    float delay_ms;
+    
+    union {
+      Charge * charge;
+      
+      struct {
+	char * state_name;
+	bool   entering;
+      };
+    };
+    
+  } EffectNode;
   
   typedef struct Specification {
       
       char * id;
       List * options;
       List * args;
-      
-      bool should_destroy_options;
-      bool should_destroy_args;
-      
+    
   } Specification;
 
-#line 63 "y.tab.h" /* yacc.c:1909  */
+#line 77 "y.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -70,9 +84,14 @@ extern int yydebug;
     SET = 259,
     ENTER = 260,
     LEAVE = 261,
-    STATE = 262,
-    ID = 263,
-    NUMERIC = 264
+    AFTER = 262,
+    STATE = 263,
+    PIN = 264,
+    POS = 265,
+    NEG = 266,
+    DEFINE = 267,
+    ID = 268,
+    NUMERIC = 269
   };
 #endif
 /* Tokens.  */
@@ -80,16 +99,21 @@ extern int yydebug;
 #define SET 259
 #define ENTER 260
 #define LEAVE 261
-#define STATE 262
-#define ID 263
-#define NUMERIC 264
+#define AFTER 262
+#define STATE 263
+#define PIN 264
+#define POS 265
+#define NEG 266
+#define DEFINE 267
+#define ID 268
+#define NUMERIC 269
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 54 "parser.y" /* yacc.c:1909  */
+#line 72 "parser.y" /* yacc.c:1909  */
 
   char          * string;
   int           * integer;
@@ -97,11 +121,11 @@ union YYSTYPE
   Numeric       * numeric;
   
   List          * list;
-  Charge        * charge;
+  EffectNode    * effect;
   Trigger       * trigger;
   Specification * specification;
 
-#line 105 "y.tab.h" /* yacc.c:1909  */
+#line 129 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

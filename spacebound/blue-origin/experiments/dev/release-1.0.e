@@ -6,19 +6,19 @@
  * @Description Example with all features in release 1.0
  **/
 
-main {
-  enter pad;        // rocket sitting on pad
-  leave ascent;     // rocket increasing in altitude
-  leave appogee;    // rocket at the edge of atmosphere
-  leave descent;    // rocket falling back to earth
-}
+
+define enter pad;        // rocket sitting on pad
+define leave ascent;     // rocket increasing in altitude
+define leave appogee;    // rocket at the edge of atmosphere
+define leave descent;    // rocket falling back to earth
+
 
 ad15_gnd 5Hz {
   
   if (A0 < 10Kpa) {
-    connect broadcom 17 to ground;
-    connect broadcom 18 to pi_vdd;
-    connect broadcom 18 to ground after 250ms;    // we take power off so as to avoid burning the solenoid
+    set broadcom 17 neg;
+    set broadcom 27 pos;
+    set broadcom 27 pos after 250ms;    // we take power off so as to avoid burning the solenoid
     leave pad;
     enter ascent after 250ms;
   }

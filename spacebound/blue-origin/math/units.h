@@ -20,13 +20,21 @@ typedef struct Numeric {
   
 } Numeric;
 
+typedef struct Calibration {
+
+  char * curve;        // the type of curve used to compute values
+  List * constants;    // the constants defining the curve
+  char * target;       // data stream calibration acts on
+  
+} Calibration;
+
 typedef struct SeriesElement {
   
   bool universal;
   
   union {
-    List * calibration;       // if sensor specific
-    Conversion conversion;    // if universal conversion (Ex: Celcius to Fahrenheit)
+    Calibration * calibration;   // if sensor specific
+    Conversion    conversion;    // if universal conversion (Ex: Celcius to Fahrenheit)
   };
   
 } SeriesElement;
@@ -34,6 +42,8 @@ typedef struct SeriesElement {
 void init_units();
 void drop_units();
 void print_units_supported();
+bool unit_is_supported(char * unit_name);
+bool unit_is_of_type(Numeric * numeric, char * type_name);
 
 Numeric * numeric_from_decimal(float decimal);
 Numeric * numeric_from_integer(float integer);
@@ -41,11 +51,11 @@ Numeric * numeric_from_integer(float integer);
 Conversion get_universal_conversion(char * from, char * to);
 
 SeriesElement * series_element_from_conversion(Conversion conversion);
-SeriesElement * series_element_from_calibration(List * calibration);
+SeriesElement * series_element_from_calibration(Calibration * calibration);
 
 float series_compute(List * series, float x);
 void  series_destroy(List * series);
 
-float convert_identity();
+float convert_identity(float x);
 
 #endif
