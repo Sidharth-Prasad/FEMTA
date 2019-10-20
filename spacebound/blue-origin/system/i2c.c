@@ -50,6 +50,12 @@ i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {
     i2c -> handle = handles[i2c -> address];
   }
   
+  // print a nice message for the user
+  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
+	 sensor -> name, sensor -> hertz, i2c -> address);
+  if (sensor -> print) printf("with " MAGENTA "printing\n" RESET);
+  else                 printf("\n");
+  
   return i2c;
 }
 

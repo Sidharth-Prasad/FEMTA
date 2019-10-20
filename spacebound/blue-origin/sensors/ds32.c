@@ -2,10 +2,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <pigpio.h>
 
 #include "ds32.h"
+#include "sensor.h"
 
 #include "../.origin/origin.h"
 #include "../math/units.h"
@@ -21,54 +23,60 @@ void schedule_tick(int gpio, int level, uint32_t tick) {
   schedule -> interrupts++;
 }
 
-Sensor * init_ds32(ProtoSensor * proto) {
-  
-  Sensor * ds32 = sensor_from_proto(proto);
+Sensor * init_ds32(Sensor * ds32) {
   
   ds32 -> name = "DS3231N";
   ds32 -> free = free_ds32;
   
-  ds32 -> i2c = create_i2c_device(ds32, proto, read_ds32);  
+  ds32 -> i2c = create_i2c_device(ds32, read_ds32);
+  printf("logged in logs/ds32.log\n");
+  printf("A real time clock\n\n");
+  
   ds32 -> i2c -> log = fopen("logs/ds32.log", "a");
   
   //set_time_ds32(ds32);
   
   setlinebuf(ds32 -> i2c -> log);    // write out every read
-  fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\nHuman Time\tExperiment Duration [s]\tTemperature [C]\n" RESET);
+
   
+  // set up output data streams
   
+  Output * time_output = &ds32 -> outputs[DS32_MEASURE_TIME];
+  Output * temp_output = &ds32 -> outputs[DS32_MEASURE_TEMPERATURE];
   
-  ds32 -> outputs[DS32_MEASURE_TIME       ].enabled = true;    // always enabled
-  ds32 -> outputs[DS32_MEASURE_TEMPERATURE].enabled = true;    // --------------
+  time_output -> enabled = true;    // always enabled
+  temp_output -> enabled = true;    // --------------
   
-  if (!ds32 -> outputs[DS32_MEASURE_TIME].series)
-    ds32 -> outputs[DS32_MEASURE_TIME].series = list_create
-      (1, series_element_from_calibration
-       (list_create(3, "poly", numeric_from_decimal(0.0009765625f), numeric_from_decimal(0.0f)))); 
+  if (!ds32 -> outputs[DS32_MEASURE_TIME].series) {
+    
+    Calibration * calibration = calloc(1, sizeof(*calibration));
+    
+    calibration -> curve     = strdup("poly");
+    calibration -> unit_from = strdup( "raw");
+    calibration -> unit_to   = strdup(   "s");
+    calibration -> target    = strdup("Time");
+    calibration -> constants = list_from(2, numeric_from_decimal(0.0009765625f), numeric_from_decimal(0.0f));
+    
+    time_output -> series = list_from(1, series_element_from_calibration(calibration));
+    time_output -> unit   = strdup("s");
+  }
   
-  if (!ds32 -> outputs[DS32_MEASURE_TEMPERATURE].series)
-    ds32 -> outputs[DS32_MEASURE_TEMPERATURE].series = list_create
-      (1, series_element_from_conversion(convert_identity));
+  if (!ds32 -> outputs[DS32_MEASURE_TEMPERATURE].series) {
+    temp_output -> series = list_from(1, series_element_from_conversion(convert_identity));
+    temp_output -> unit   = strdup("C");
+  }
+  
+  fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\nHuman Time\tExperiment Duration [%s]\tTemperature [%s]\n" RESET,
+	  time_output -> unit, temp_output -> unit);
   
   
   // establish time experiment information
+  
   ds32_start_square_wave(ds32 -> i2c);
   gpioSetISRFunc(20, RISING_EDGE, 0, schedule_tick);    // start counting interrupts
   read_ds32(ds32 -> i2c);                               // get human time before other sensors are created
   
-  List * time_calibration = hashmap_get(ds32 -> calibrations, "Time");
-  schedule -> interrupt_interval = compute_curve(1.0f, time_calibration);
-  
-  
-  // Print a nice message to the user
-  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
-	 ds32 -> name, proto -> hertz, proto -> address);
-  
-  if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
-  else                printf("\n");
-  
-  printf("logged in logs/ds32.log\n");
-  printf("A real time clock\n\n");
+  schedule -> interrupt_interval = series_compute(time_output -> series, 1.0f);
   
   return ds32;
 }
@@ -93,9 +101,9 @@ bool ds32_start_square_wave(i2c_device * ds32_i2c) {
     return false;
   }
   
-  uint8 reg = i2c_read_byte(ds32_i2c, 0x0E);
+  /*uint8 reg = i2c_read_byte(ds32_i2c, 0x0E);
   
-  printf("DEBUG: %u\n", reg);
+    printf("DEBUG: %u\n", reg);*/
   
   return true;
 }
@@ -137,21 +145,27 @@ bool read_ds32(i2c_device * ds32_i2c) {
 	  meridian);
   
   float temperature = 1.0f * read_raws[7] + (read_raws[8] >> 6) * 0.25f;
+
+  float n_interrupts = (float) schedule -> interrupts;
   
   
-  experiment_duration = (float) schedule -> interrupts;
+  // collected raw values, now to assign output streams
   
-  char * curve = hashmap_get(ds32 -> output_units, "Time");
-  List * calibration = hashmap_get(ds32 -> calibrations, "Time");
+  Output * time_output = &ds32 -> outputs[DS32_MEASURE_TIME];
+  Output * temp_output = &ds32 -> outputs[DS32_MEASURE_TEMPERATURE];
   
-  if (calibration)
-    experiment_duration = compute_curve(experiment_duration, calibration);
+  time_output -> measure = series_compute(time_output -> series, n_interrupts);
+  temp_output -> measure = series_compute(temp_output -> series, temperature );
+  
+  experiment_duration = time_output -> measure;
   
   if (ds32 -> print)
-    printf("%s%s      %.4fs\t%.2fC\t%s\n" RESET,
-	   ds32 -> print_code, ds32 -> code_name, experiment_duration, temperature, formatted_time);
+    printf("%s%s      %.4f%s\t%.2f%s\t%s\n" RESET,
+	   ds32 -> print_code, ds32 -> code_name,
+	   time_output -> measure, time_output -> unit,
+	   temp_output -> measure, temp_output -> unit, formatted_time);
   
-  fprintf(ds32_i2c -> log, "%.4f\t%.2f\t%s\n", experiment_duration, temperature, formatted_time);
+  fprintf(ds32_i2c -> log, "%.4f\t%.2f\t%s\n", time_output -> measure, temp_output -> measure, formatted_time);
   
   sensor_process_triggers(ds32);
   return true;

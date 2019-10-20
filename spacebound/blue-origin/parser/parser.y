@@ -25,7 +25,7 @@ typedef struct EffectNode EffectNode;
 typedef struct Specification Specification;
 typedef struct Trigger Trigger;
 
-EffectNode    * make_charge(Numeric * wire, bool hot);
+ EffectNode    * make_charge(Numeric * wire, bool hot);
 EffectNode    * make_transition(char * state_name, bool entering);
 EffectNode    * add_delay(EffectNode * effect, Numeric * delay);
 Trigger       * make_trigger(List * effects);
@@ -50,7 +50,10 @@ void print_config();
     float delay_ms;
     
     union {
-      Charge * charge;
+      struct {
+	Charge * charge;
+	bool     hot;
+      };
       
       struct {
 	char * state_name;
@@ -186,6 +189,20 @@ Options  : ID                                              { $$ = list_from(1, $
 
 %%
 
+static void check_unit(char * unit_name) {
+    if (!unit_is_supported(unit_name)) {
+      printf(RED "Unknown unit " CYAN "%s\n" RESET, unit_name);
+      yyerror("Unknown unit");
+    }
+}
+
+static void check_target(Sensor * proto, char * target) {
+    if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
+        printf(RED "Target " CYAN "%s " RED "for %s is not known\n" RESET, target, proto -> code_name);
+	yyerror("Unknown target");
+    }
+}
+
 static void represent_as_decimal(Numeric * numeric) {
     
     if (numeric -> is_decimal) return;
@@ -229,11 +246,11 @@ EffectNode * make_charge(Numeric * wire, bool hot) {
     Charge * charge = calloc(1, sizeof(*charge));
     
     charge -> gpio = wire -> integer;
-    charge -> hot  = hot;
     
     EffectNode * effect = calloc(1, sizeof(*effect));
     
     effect -> charge = charge;
+    effect -> hot    = hot;
     
     return effect;
 }
@@ -281,13 +298,18 @@ Trigger * make_trigger(List * effects) {
     trigger -> singular =  true;    // defaults
     trigger -> reverses = false;    // --------
     
+    trigger -> wires_low  = list_create();
+    trigger -> wires_high = list_create();
+    trigger -> enter_set  = list_create();
+    trigger -> leave_set  = list_create();
+    
     for (iterate(effects, EffectNode *, effect))  
       if (effect -> is_charge)
-	if (effect -> charge -> hot) list_insert(trigger -> wires_high, effect -> charge    );
-	else                         list_insert(trigger -> wires_low , effect -> charge    );
+	if (effect -> hot     ) list_insert(trigger -> wires_high, effect -> charge    );
+	else                    list_insert(trigger -> wires_low , effect -> charge    );
       else
-	if (effect -> entering     ) list_insert(trigger -> enter_set , effect -> state_name);
-	else                         list_insert(trigger -> leave_set , effect -> state_name);
+	if (effect -> entering) list_insert(trigger -> enter_set , effect -> state_name);
+	else                    list_insert(trigger -> leave_set , effect -> state_name);
     
     list_destroy(effects);
     return trigger;
@@ -378,16 +400,16 @@ Specification * make_tag(char * id, List * options, List * args) {
     }
     
     else if (!strcmp(id, "pulse")) {        
-        if (options)                    yyerror("Pulsing does not support options at this time");
-        if (!args || args -> size != 1) yyerror("Pulsing requires exactly 1 argument"          );
+        if (options)                    yyerror("Pulsing does not support options at this time"  );
+        if (!args || args -> size != 1) yyerror("Pulsing requires exactly 1 argument (the delay)");
     }
     
     else if (!strcmp(id, "smooth")) {
       
-        if (options) yyerror("Smoothing does not support options at this time");
+        if (!options || options -> size != 1) yyerror("Smoothing requires exactly 1 argument (the target)");
 	
         if (args) {
-	    Numeric * numeric = (Numeric *) list_get(args, 0);
+	    Numeric * numeric = list_get(args, 0);
             float value = numeric -> decimal;
 	    
             if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f)
@@ -399,7 +421,7 @@ Specification * make_tag(char * id, List * options, List * args) {
       
         if (!args   )            yyerror("Calibration curves require at least one constant");
         if (!options)            yyerror("Calibration requires a target");
-	if (options -> size < 2) yyerror("Calibration requires a unit");
+	if (options -> size < 4) yyerror("Calibration requires a unit 'from' dfollowed by a unit 'to'");
 	
         char * curve = (char *) list_get(options, 1);
         
@@ -412,23 +434,26 @@ Specification * make_tag(char * id, List * options, List * args) {
             printf(RED "Unknown calibration curve " CYAN "%s\n" RESET, curve);
             yyerror("Malformed calibration");
         }
+	
+	char * unit_from = list_get(options, 2);
+	char * unit_to   = list_get(options, 3);
+	
+	check_unit(unit_from);
+	check_unit(unit_to);
     }
     
     else if (!strcmp(id, "conversions")) {
       
-      if (args                               ) yyerror("A conversion series should never have arguments"         );
-      if (!options || options -> size < 3    ) yyerror("A conversion series must include a target, then 2+ units");
-      if (strcmp(list_get(options, 1), "raw")) yyerror("A conversion series always starts with 'raw'"            );
+        if (args                               ) yyerror("A conversion series should never have arguments"         );
+	if (!options || options -> size < 3    ) yyerror("A conversion series must include a target, then 2+ units");
+	if (strcmp(list_get(options, 1), "raw")) yyerror("A conversion series always starts with 'raw'"            );
       
-      for (iterate(options, char *, unit_name)) {
+	for (iterate(options, char *, unit_name)) {
 	
-	if ((int) unit_name_index < 1) continue;    // first is target, so skip (see list.h)
-	
-	if (!unit_is_supported(unit_name)) {
-	  printf(RED "Unknown unit name " CYAN "%s\n" RESET, unit_name);
-	  yyerror("Unsupported unit provided");
+	    if ((int) unit_name_index < 1) continue;    // first is target, so skip (see list.h)
+	    
+	    check_unit(unit_name);
 	}
-      }
     }
     
     else {
@@ -444,13 +469,13 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   Sensor * proto = hashmap_get(all_sensors, id);
   
   if (!proto) {
-    printf(CYAN "%s " RED "is not a sensor\n" RESET, id);
-    yyerror("Unknown sensor name");
+      printf(CYAN "%s " RED "is not a sensor\n" RESET, id);
+      yyerror("Unknown sensor name");
   }
   
   if ((               strcmp(frequency   -> units, "Hz") && strcmp(frequency   -> units, "i")) ||
       (denominator && strcmp(denominator -> units, "Hz") && strcmp(denominator -> units, "i")))
-    yyerror("Sensor frequencies must be integers or rational numbers of Hz");
+      yyerror("Sensor frequencies must be integers or rational numbers of Hz");
   
   proto -> hertz = frequency -> integer;    // base Hz for scheduling
   
@@ -460,7 +485,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   proto -> requested = true;
   
   for (int stream = 0; stream < proto -> data_streams; stream++)
-    proto -> outputs[stream].triggers = list_create();
+      proto -> outputs[stream].triggers = list_create();
   
   if (!specifications) return;
   
@@ -479,11 +504,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  
 	  Trigger * trigger = list_get(options, 0);    // we encapsulate the trigger within the options list
 	  
-	  // check trigger targets
-	  if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
-	      printf(RED "Trigger target " CYAN "%s " RED "unknown\n" RESET, trigger -> id);
-	      yyerror("Malformed trigger");
-	  }
+	  check_target(proto, trigger -> id);
 	  
 	  int stream = (int) hashmap_get(proto -> targets, trigger -> id);
 	  
@@ -507,17 +528,23 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
       }
       
       else if (!strcmp(specification -> id, "smooth")) {
-	  
+	
           Numeric * numeric = list_get(args, 0);
+	  char    * target  = list_get(options, 0);
 	  
-          float auto_regressive = numeric -> decimal;
-          
-          if (proto -> auto_regressive) {
-              printf(RED "Duplicate autoregressive constant for %s\n" RESET, id);
-	      yyerror("Duplicate autoregressive constant");
-          }
-          
-          proto -> auto_regressive = auto_regressive;
+          float regressive = numeric -> decimal;
+	  
+	  check_target(proto, target);
+	  
+	  int stream = (int) hashmap_get(proto -> targets, target);
+	  
+	  if (proto -> outputs[stream].regressive != 0.0f) {
+	    printf(RED "Found second autoregressive constant for %s\n" RESET, id);
+	    yyerror("More than one autoregressive constant");
+	  }
+	  
+          proto -> outputs[stream].regressive = regressive;
+	  list_destroy(options);
 	  list_destroy(args);
       }
       
@@ -528,14 +555,12 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	   * for each target using the calibrations hashmap. Later, we'll actually convert these
 	   * unordered lists into proper serieses. */
 	  
-          char * target = list_get(options, 0);
-	  char * curve  = list_get(options, 1);
-	  char * unit   = list_get(options, 2);
+          char * target    = list_get(options, 0);
+	  char * curve     = list_get(options, 1);
+	  char * unit_from = list_get(options, 2);
+	  char * unit_to   = list_get(options, 3);
 	  
-          if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
-              printf(RED "Calibration target " CYAN "%s " RED "for %s is not known\n" RESET, target, id);
-	      yyerror("Malformed calibration");
-          }
+	  check_target(proto, target);
 	  
 	  // force all calibration constants to be decimals
 	  for (iterate(specification -> args, Numeric *, constant))
@@ -546,39 +571,103 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  
 	  calibration -> curve     = curve;
 	  calibration -> constants = specification -> args;
+	  calibration -> unit_from = unit_from;
+	  calibration -> unit_to   = unit_to;
 	  calibration -> target    = target;
 	  
 	  list_insert(all_calibrations, calibration);
+	  list_destroy(args);
       }
       
-      else if (!strcmp(specification -> id, "conversions") {
+      else if (!strcmp(specification -> id, "conversions")) {
 	  
 	  char * target = list_get(options, 0);
+
+	  check_target(proto, target);
 	  
-	  if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
-              printf(RED "Conversion series target " CYAN "%s " RED "for %s is not known\n" RESET, target, id);
-	      yyerror("Malformed conversion series");
-          }
+	  int stream = (int) hashmap_get(proto -> targets, target);
 	  
-	  // START HERERE
+	  if (proto -> outputs[stream].series) {
+	    printf(RED "Found second conversion series for %s's " CYAN "%s\n", id, target);
+	    yyerror("More than one conversion series for target exists");
+	  }
+	  
+	  /* Temporarily store the options list. This gets replaced
+	   * with the actual series when iterating over the calibrations */
+	  list_remove(options, options -> head);        // remove the target so only unit names exist
+	  proto -> outputs[stream].series = options;
       }
   }
-    
   
-  for (iterate(all_calibrations, Calibration *, calibrations)) {
+  
+  for (int stream = 0; stream < proto -> data_streams; stream++) {
     
+      List * unit_names = proto -> outputs[stream].series;    // get the temporarily stored unit names
       
+      // make sure in the event no series was specified that there's no calibrations
+      if (!unit_names) {
+	  for (iterate(all_calibrations, Calibration *, calibration)) {
+	      if (stream == (int) hashmap_get(proto -> targets, calibration -> target)) {
+		  printf("Found calibration without conversions series for %s\n", calibration -> target);
+		  yyerror("Calibration without proper conversion series context");
+	      }
+	  }
+	  continue;    // no unit names means no conversion series
+      }
+      
+      List * series = list_create();
+      
+      char * last_name = list_get(unit_names, 0);
+      
+      for (iterate(unit_names, char *, name)) {
+      
+          if (!strcmp(last_name, name)) continue;    // nothing need be done when same
+	  
+	  // see if sensor has specified a calibration for this unit
+	  
+	  SeriesElement * element = NULL;
+	  
+	  for (iterate(all_calibrations, Calibration *, calibration)) {
+	      if (!strcmp(last_name, calibration -> unit_from)) continue;
+	      if (!strcmp(     name, calibration -> unit_to  )) continue;
+	      
+	      element = series_element_from_calibration(calibration);
+	  }
+	  
+	  if (!element)    // does error checking
+	      element = series_element_from_conversion(get_universal_conversion(last_name, name));
+	
+	  list_insert(series, element);
+	  last_name = name;
+      }
+      
+      proto -> outputs[stream].unit   = last_name;
+      proto -> outputs[stream].series = series;
+      list_destroy(unit_names);
   }
-
+  
   list_destroy(all_calibrations);
   all_calibrations = NULL;
   
-  for (iterate(proto -> triggers, Trigger *, trigger)) {
-            
-      // duplicate reversing triggers
+  
+  for (int stream = 0; stream < proto -> data_streams; stream++) {
       
-      if (trigger -> reverses) {
+      char * final_unit = proto -> outputs[stream].unit;
+      List * triggers   = proto -> outputs[stream].triggers;
+      
+      // perform conversions
+      for (iterate(triggers, Trigger *, trigger)) {
 	
+	  Numeric * before = trigger -> threshold_as_specified;
+	  
+	  trigger -> threshold = (get_universal_conversion(final_unit, before -> units))(before -> decimal);
+      }
+      
+      // duplicate reversing triggers
+      for (iterate(triggers, Trigger *, trigger)) {
+	
+	  if (!trigger -> reverses) continue;
+	  
 	  Trigger * opposite = calloc(1, sizeof(*opposite));
 	  
 	  opposite -> id       =  strdup(trigger -> id);
@@ -586,29 +675,24 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  opposite -> fired    =  trigger -> fired;
 	  opposite -> singular =  trigger -> singular;
 	  opposite -> reverses =  false;
-	  	  
-	  opposite -> threshold = trigger -> threshold;
-	  opposite -> charges   = list_create();
 	  
-	  for (iterate(trigger -> charges, Charge *, charge)) {
-	      
-              Charge * anti_charge = malloc(sizeof(*charge));
-	      
-	      anti_charge -> gpio     =  charge -> gpio;
-	      anti_charge -> hot      = !charge -> hot;
-	      anti_charge -> duration =  charge -> duration;
-	      
-	      list_insert(opposite -> charges, anti_charge);
-	  }
+	  opposite -> threshold              = trigger -> threshold;
+	  opposite -> threshold_as_specified = trigger -> threshold_as_specified;
+	  opposite -> precondition           = trigger -> precondition;
+	  opposite -> enter_set              = trigger -> enter_set;
+	  opposite -> leave_set              = trigger -> leave_set;
 	  
-	  list_insert(proto -> triggers, opposite);
+	  opposite -> wires_low  = trigger -> wires_high;    // note the reversal!
+	  opposite -> wires_high = trigger -> wires_low;     // ------------------
+	  
+	  list_insert(triggers, opposite);
       }
+
+      n_triggers += triggers -> size;
   }
   
   specifications -> free = specification_destroy;    // Note: up to us to destroy lists earlier
   list_destroy(specifications);                      // ---------------------------------------
-  
-  n_triggers += proto -> triggers -> size;
 }
 
 void print_config() {
@@ -620,44 +704,45 @@ void print_config() {
   
   printf("\n\n" GRAY "%d" RESET " Triggers\n\n", n_triggers);
   
-  for (iterate(proto_sensors -> all, ProtoSensor *, proto)) {
+  for (iterate(all_sensors -> all, Sensor *, proto)) {
     
     if (!proto -> requested       ) continue;
-    if (!proto -> triggers -> size) continue;
+    
+    int total_triggers = 0;
+    for (int stream = 0; stream < proto -> data_streams; stream++)
+      total_triggers += proto -> outputs[stream].triggers -> size;
+      
+    if (!total_triggers) continue;
     
     printf(GREEN "%s\n" RESET, proto -> code_name);
     
-    for (iterate(proto -> triggers, Trigger *, trigger)) {
+    for (int stream = 0; stream < proto -> data_streams; stream++) {
+
+      char * final_unit = proto -> outputs[stream].unit;
       
-      Numeric * numeric = trigger -> threshold;
-      
-      Numeric standard;
-      to_standard_units(&standard, numeric);
-      
-      printf(CYAN "    %s" RESET, trigger -> id);
-      
-      if (trigger -> less)
-	printf(GRAY " <" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
-	       numeric -> decimal, numeric -> units, standard.decimal, standard.units);
-      else
-	printf(GRAY " >" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
-	       numeric -> decimal, numeric -> units, standard.decimal, standard.units);
-      
-      
-      printf(" { " RESET);
-      
-      for (iterate(trigger -> charges, Charge *, charge)) {
-        
-	if (charge -> hot) printf(YELLOW "+" RESET);
-	else               printf(YELLOW "-" RESET);
+      for (iterate(proto -> outputs[stream].triggers, Trigger *, trigger)) {
+
+	Numeric * before = trigger -> threshold_as_specified;
+	char   direction = (trigger -> less) ? '<' : '>';
 	
-	printf("%d ", charge -> gpio);
+	printf(CYAN "    %s" GRAY " %c" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
+	       trigger -> id, direction, before -> decimal, before -> units, trigger -> threshold, final_unit);
+	
+	printf("\n        wires {");
+	
+	for (iterate(trigger -> wires_low, Charge *, charge)) printf(YELLOW "-" RESET "%d ", charge -> gpio);
+	for (iterate(trigger -> wires_low, Charge *, charge)) printf(YELLOW "+" RESET "%d ", charge -> gpio);
+	
+	if (!trigger -> singular) printf(GRAY "}" YELLOW " *\n" GRAY);
+	else                      printf(GRAY "}\n");
+	
+	printf("\n        enter {" RESET);
+	for (iterate(trigger -> enter_set, char *, name)) printf("%s", name);
+	printf("}\n        leave {" RESET);
+	for (iterate(trigger -> leave_set, char *, name)) printf("%s", name);
+	printf("}\n");
       }
-      
-      if (!trigger -> singular) printf(GRAY "}" YELLOW " *\n" RESET);
-      else                      printf(GRAY "}\n");
     }
-    
     printf("\n");
   }
 }

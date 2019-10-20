@@ -17,14 +17,15 @@ const float adxl_bias_z = -0.0861;
 void free_adxl(Sensor * adxl);
 bool read_adxl(i2c_device * adxl_i2c);
 
-Sensor * init_adxl(ProtoSensor * proto) {
-  
-  Sensor * adxl = sensor_from_proto(proto);
+Sensor * init_adxl(Sensor * adxl) {
+  // proto was passed in, but we shall forever call it 'adxl' (by Sensor Invariant 0)
   
   adxl -> name = "ADXL345";
   adxl -> free = free_adxl;
   
-  adxl -> i2c = create_i2c_device(adxl, proto, read_adxl);
+  adxl -> i2c = create_i2c_device(adxl, read_adxl);
+  printf("logged in logs/adxl.log\n");
+  printf("An accelerometer\n\n");
   
   adxl -> i2c -> log = fopen("logs/adxl.log", "a");
   
@@ -40,17 +41,7 @@ Sensor * init_adxl(ProtoSensor * proto) {
   
   // tell adxl to enter measurement mode (page 26)
   i2c_write_byte(adxl -> i2c, 0x2D, 0b00001000);    // bit 3 indicates measure mode
-  
-  
-  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
-	 adxl -> name, proto -> hertz, ADXL_ADDRESS);
-
-  if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
-  else                printf("\n");
-  
-  printf("logged in logs/adxl.log\n");
-  printf("An accelerometer\n\n");
-  
+    
   return adxl;
 }
 
@@ -63,26 +54,17 @@ bool read_adxl(i2c_device * adxl_i2c) {
   int16 xAccel = (accel_raws[1] << 8) | accel_raws[0];
   int16 yAccel = (accel_raws[3] << 8) | accel_raws[2];
   int16 zAccel = (accel_raws[5] << 8) | accel_raws[4];
-
-  /*int xAccel = (accel_raws[0] << 8) | accel_raws[1];
-  int yAccel = (accel_raws[2] << 8) | accel_raws[3];
-  int zAccel = (accel_raws[4] << 8) | accel_raws[5];*/
-
   
-  //printf("%d, %d, %d\n", xAccel, yAccel, zAccel);
-  //printf("Zenith %f g\n", zAccel * 3.9 / 1000.0);
-  /*printf("d:%f %f %f\n",
-	 xAccel * 3.9 / 1000.0,
-	 yAccel * 3.9 / 1000.0,
-	 zAccel * 3.9 / 1000.0);*/
-
-  //printf("d:%f %f %f\n",
+  /*float 
+  
+  fprintf(ad15_i2c -> log, "%lf\t%.3f\t%.3f\t%.3f\n", experiment_duration, );
   
   fprintf(adxl_i2c -> log, "%.3f\t%.3f\t%.3f\n",
 	  xAccel * 0.004 - adxl_bias_x,
 	  yAccel * 0.004 - adxl_bias_y,
 	  zAccel * 0.004 - adxl_bias_z);
   
+  sensor_process_triggers(adxl); */
   return true;
 }
 

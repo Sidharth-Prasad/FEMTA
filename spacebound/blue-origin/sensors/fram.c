@@ -15,30 +15,20 @@ bool read_fram(i2c_device * fram_i2c);
 
 uint16 fram_head;
 
-
-Sensor * init_fram(ProtoSensor * proto) {
-  
-  Sensor * fram = sensor_from_proto(proto);
+Sensor * init_fram(Sensor * fram) {
   
   fram -> name = "FRAM";
   fram -> free = free_fram;
   
-  fram -> i2c = create_i2c_device(fram, proto, read_fram);
+  fram -> i2c = create_i2c_device(fram, read_fram);
+  printf("logged in logs/fram.log\n");
+  printf("A storage medium\n\n");
   
   fram -> i2c -> log = fopen("logs/fram.log", "a");
   
   setlinebuf(fram -> i2c -> log);    // write out every read
   
   fprintf(fram -> i2c -> log, GRAY "\n\nFRAM\nStart time %s\n" RESET, formatted_time);
-  
-  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
-	 fram -> name, proto -> hertz, FRAM_ADDRESS);
-  
-  if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
-  else                printf("\n");
-  
-  printf("logged in logs/fram.log\n");
-  printf("A storage medium\n\n");
   
   return fram;
 }

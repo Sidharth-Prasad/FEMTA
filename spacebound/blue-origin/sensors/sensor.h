@@ -40,7 +40,7 @@ typedef void (* sensor_free)(Sensor * sensor);
 typedef struct Trigger {
   
   char * id;                           // target (like A01)
-  Numeric * threshold;                 // threshold for condition
+  float  threshold;                    // threshold for condition
   List * precondition;                 // states the system must be in to consider this trigger
   
   List * wires_low;                    // wires to set low
@@ -60,10 +60,13 @@ typedef struct Trigger {
 
 typedef struct Output {
   
-  float  measure;     // measurement last taken
-  List * series;      // path of conversions required to get final measurement
-  List * triggers;    // sensor triggers for this particular output stream
-  bool   enabled;     // whether output is enabled
+  float  measure;         // measurement last taken
+  float  smoothed;        // measurement after smoothing
+  List * series;          // path of conversions required to get final measurement
+  List * triggers;        // sensor triggers for this particular output stream
+  char * unit;            // final unit for logging and triggers
+  float  regressive;      // smoothing constant
+  bool   enabled;         // whether output is enabled
   
 } Output;
 
@@ -85,8 +88,6 @@ typedef struct Sensor {
   Output * outputs;         // everything this sensor produces
   Hashmap * targets;        // that which can be triggered (target str -> stream_index)
   
-  float auto_regressive;    // smoothing constant
-  
   sensor_free free;         // how to free sensor
   
   
@@ -97,6 +98,8 @@ typedef struct Sensor {
   bool requested;            // whether sensor has actually been specified during parsing
   
   uint8 address;             // i2c address
+
+  void * data;               // sensor-specific data
   
 } Sensor;
 
@@ -134,7 +137,7 @@ float time_passed();    // time since experiment start
 void init_sensors();
 void start_sensors();
 void terminate_sensors();
-Sensor * sensor_from_proto(ProtoSensor *);
+void sensor_process_triggers(Sensor * sensor);
 
 void flip_print(void * nil, char * raw_text);
 

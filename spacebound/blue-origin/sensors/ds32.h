@@ -31,7 +31,7 @@ int initial_seconds;
 char formatted_time[32];
 long experiment_start_time;
 
-Sensor * init_ds32(ProtoSensor * proto);
+Sensor * init_ds32(Sensor * proto);
 
 void set_time_ds32(Sensor * ds32);
 

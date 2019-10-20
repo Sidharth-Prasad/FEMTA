@@ -5,7 +5,6 @@
 typedef struct Charge {
   
   char gpio;        // the broadcom number of the pin
-  bool hot;         // whether pin should go hot
   int  duration;    // used for pulsing
   
 } Charge;

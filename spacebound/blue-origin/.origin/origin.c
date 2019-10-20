@@ -40,6 +40,7 @@ int main(int argc, char ** argv) {
   init_color();      // init colorized printing to the console
   init_units();      // init unit conversion structures
   init_pins();       // set up gpio data structure
+  init_states();
   init_one();        // set up the 1-wire data structures
   init_i2c();        // set up the i2c data structures
   init_sensors();    // set up sensor info and actions
@@ -47,7 +48,7 @@ int main(int argc, char ** argv) {
   parse_args(argc, argv);
   print_config();
   
-  gpioTerminate(); exit(0);
+  gpioTerminate(); exit(0);    // TEMP
   
   start_sensors();
   start_one();       // start reading the 1-wire bus
@@ -90,6 +91,7 @@ int main(int argc, char ** argv) {
   // terminate pigpio library
   gpioTerminate();
   
+  drop_states();
   drop_units();
   terminate_color();
   

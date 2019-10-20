@@ -2,12 +2,15 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <pigpio.h>
 
 #include "ad15.h"
 #include "ds32.h"
+#include "sensor.h"
 
 #include "../.origin/origin.h"
+#include "../math/units.h"
 #include "../system/color.h"
 #include "../system/gpio.h"
 #include "../system/i2c.h"
@@ -66,18 +69,18 @@ void free_ad15(Sensor * ad15);
 bool read_ad15(i2c_device * ad15_i2c);
 void configure_ad15(Sensor * ad15);
 
-Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names) {
-  
-  Sensor * ad15 = sensor_from_proto(proto);
+Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
   
   ad15 -> name = "ADS1115";
   ad15 -> free = free_ad15;
   
-  ad15 -> i2c = create_i2c_device(ad15, proto, read_ad15);
+  ad15 -> i2c = create_i2c_device(ad15, read_ad15);
   
   char file_name[32];
   
-  sprintf(file_name, "logs/ad15-%x.log", proto -> address);
+  sprintf(file_name, "logs/ad15-%x.log", ad15 -> address);
+  printf("logged in %s\n", file_name);
+  printf("An analog to digital converter\n\n");
   
   FILE * log = fopen(file_name, "a");
   
@@ -86,15 +89,41 @@ Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names
   fprintf(log, RED "\n\n");
   fprintf(log, "ADS115 - %s\n", title);
   fprintf(log, "Start time %s\n", formatted_time);
-  fprintf(log, "Time [s]\t");
   
+  fprintf(log, "Time \t");
   for (iterate(names, char *, column_name))
     fprintf(log, "%s\t", column_name);
-  
   fprintf(log, "\n" RESET);
   
-  // set up the configuration  (page 19)
+  fprintf(log, "Time [s]\t");
+  for (int stream = 0; stream < 4; stream++) {
+    
+    Output * output = &ad15 -> outputs[stream];
+    
+    output -> enabled = true;
 
+    if (!output -> series) {
+      
+      Calibration * calibration = calloc(1, sizeof(*calibration));
+      
+      calibration -> curve     = strdup("poly");
+      calibration -> unit_from = strdup( "raw");
+      calibration -> unit_to   = strdup(  "mV");
+      calibration -> target    = NULL;
+      calibration -> constants =
+	list_from(2, numeric_from_decimal(0.0001874287), numeric_from_decimal(-0.0009012627));
+      
+      output -> series = list_from(1, series_element_from_calibration(calibration));
+      output -> unit   = strdup("mV");
+    }
+    
+    fprintf(log, "A%c [%s]\t", '0' + stream, output -> unit);
+  }
+  fprintf(log, "\n" RESET);
+  
+  
+  // set up the configuration  (datasheet page 19)
+  
   AD15_Config * sensor_config = malloc(sizeof(AD15_Config));
   
   sensor_config -> COMP_QUE  = AD15_QUE_DISABLE;
@@ -123,18 +152,6 @@ Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names
   sensor_config -> high_byte = (first_mode << 4) | (sensor_config -> high_byte & 0b10001111);
   
   configure_ad15(ad15);
-  
-  
-  // console update
-  
-  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
-	 ad15 -> name, proto -> hertz, proto -> address);
-  
-  if (proto -> print) printf("with " MAGENTA "printing\n" RESET);
-  else                printf("\n");
-  
-  printf("logged among logs/ad15*.log\n");
-  printf("An analog to digital converter\n\n");
   
   return ad15;
 }
@@ -167,6 +184,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   ad15_i2c -> reading = true;    // this sensor does partial reads
   
+  
   // perform the sensor read
   
   uint8 ad15_raws[2];
@@ -175,67 +193,47 @@ bool read_ad15(i2c_device * ad15_i2c) {
   
   uint16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
   
-  float measure = counts;
-  List * calibration = NULL;
   
-  // act on potential triggers
   
-  for (iterate(ad15 -> triggers, Trigger *, trigger)) {
-    
-    if (trigger -> singular && trigger -> fired) continue;                    // singular triggers never reload
-    
-    int cycle = (int) hashmap_get(ad15 -> targets, trigger -> id);
-    if (config -> mode_cycle != cycle) continue;                              // wrong target
-    
-    if ( trigger -> less && counts > trigger -> threshold -> integer) continue;  // condition not true
-    if (!trigger -> less && counts < trigger -> threshold -> integer) continue;  // ------------------
-    
-    for (iterate(trigger -> charges, Charge *, charge)) {
-      pin_set(charge -> gpio, charge -> hot);
-      
-    }
-    
-    trigger -> fired = true;
-  }
-    
   // log and print
+  Output * output = &ad15 -> outputs[config -> mode_cycle];
 
-  double volts = 6.114 * (double) ((int16) counts) / 32768.0;
+  output -> measure = series_compute(output -> series, (float) counts);
+  
   
   if (config -> current_mode == config -> modes -> head) {
     // must be on first node
     
     if (should_print)
-      printf("%s%s  %lfs\t", ad15 -> print_code, ad15 -> code_name, experiment_duration);
-    
-    fprintf(ad15_i2c -> log, "%lf\t", experiment_duration);
+      printf("%s%s  %lfs\t", ad15 -> print_code, ad15 -> code_name, time_passed());
+    fprintf(ad15_i2c -> log, "%lf\t", time_passed());
   }
-
-  fprintf(ad15_i2c -> log, "%lf\t", volts);
+  
+  fprintf(ad15_i2c -> log, "%lf\t", output -> measure);
   
   if (should_print) {
-    if (volts >= 0.0) printf(" ");
-    printf("%.9lfv\t", volts);
+    if (output -> measure >= 0.0) printf(" ");
+    printf("%.9lf%s\t", output -> measure, output -> unit);
   }
   
   if (config -> current_mode == config -> modes -> head -> prev) {
     // must be on last mode
     
     if (should_print) printf("\n" RESET);
-    
     fprintf(ad15_i2c -> log, "\n");
     
     ad15_i2c -> reading = false;
     ad15_i2c -> total_reads++;
+    
+    sensor_process_triggers(ad15);    // every stream has been populated
   }
   
-  //  printf("HERE: %d\n", ad15_i2c -> reading);
   
   // change mode before leaving.
   // this is done to give the sensor time to actually flip values
   
   config -> current_mode = config -> current_mode -> next;
-  config -> mode_cycle = (config -> mode_cycle + 1) % config -> modes -> size;
+  config -> mode_cycle = (config -> mode_cycle + 1) % (config -> modes -> size);
   
   uint8 next_mode = (uint8) (int) config -> current_mode -> value;
   

@@ -17,6 +17,7 @@
 #include "../structures/hashmap.h"
 #include "../system/class.h"
 #include "../system/color.h"
+#include "../system/gpio.h"
 #include "../system/state.h"
 
 void sensor_call_free(void *);
@@ -69,10 +70,10 @@ void init_sensors() {
   
   hashmap_add(ad15_tar, "A01", (void *) (int) 0);    // if this doesn't make sense to you,
   hashmap_add(ad15_tar, "A23", (void *) (int) 1);    // really think it through cause it's 
-  hashmap_add(ad15_tar, "A0" , (void *) (int) 0);    // critical to the ad15's interface
-  hashmap_add(ad15_tar, "A1" , (void *) (int) 1);    // 
-  hashmap_add(ad15_tar, "A2" , (void *) (int) 2);    // 
-  hashmap_add(ad15_tar, "A3" , (void *) (int) 3);    // 
+  hashmap_add(ad15_tar, "A0" , (void *) (int) AD15_MEASURE_A0);    // critical to the ad15's interface
+  hashmap_add(ad15_tar, "A1" , (void *) (int) AD15_MEASURE_A1);    // 
+  hashmap_add(ad15_tar, "A2" , (void *) (int) AD15_MEASURE_A2);    // 
+  hashmap_add(ad15_tar, "A3" , (void *) (int) AD15_MEASURE_A3);    // 
   
   
   hashmap_add(all_sensors, "adxl"    , sensor_create("adxl", ADXL_ADDRESS, adxl_tar, I2C_BUS));
@@ -228,7 +229,7 @@ void start_sensors() {
     ad15[3] = init_ad15(proto, "Differentials",
 			list_from(4, A0, A1, A2, A3),
 			list_from(4, "Thermister 9", "Thermister 10", "Thermister 11", "Thermister 12"));
-    list_insert(sensors, ad15[3]);
+    list_insert(active_sensors, ad15[3]);
   }
     
   for (int channel = 0; channel < 4; channel++)
@@ -243,7 +244,10 @@ void start_sensors() {
   proto = hashmap_get(all_sensors, "ds18");
   
   if (proto -> requested) {
-    Sensor * ds18 = init_ds18(proto);
+    Sensor * ds18 = init_ds18(proto, "/sys/bus/w1/devices/28-000008e222e7/w1_slave");
+    //Sensor * ds18 = init_ds18(proto, "/sys/bus/w1/devices/28-0115a6756cff/w1_slave");
+    //Sensor * ds18 = init_ds18(proto, "/sys/bus/w1/devices/28-000008e3f48b/w1_slave");
+    //Sensor * ds18 = init_ds18(proto, "/sys/bus/w1/devices/28-0315a66ea4ff/w1_slave");
     list_insert(active_sensors,          ds18       );
     list_insert(schedule -> one_devices, ds18 -> one);
   }
@@ -269,9 +273,10 @@ void sensor_call_free(void * vsensor) {
   for (int stream = 0; stream < sensor -> data_streams; stream++) {
     list_destroy(sensor -> outputs[stream].series);
     list_destroy(sensor -> outputs[stream].triggers);
-    free(sensor -> outputs[stream]);
+    free(sensor -> outputs[stream].unit);
   }
   
+  free(sensor -> outputs);
   free(sensor);
 }
 
@@ -289,7 +294,7 @@ void flip_print(void * nil, char * raw_text) {
   
   raw_text[strlen(raw_text) - 1] = '\0';
   
-  for (iterate(sensors, Sensor *, sensor))
+  for (iterate(active_sensors, Sensor *, sensor))
     if (!strcmp(sensor -> code_name, raw_text + 2))
       sensor -> print = !sensor -> print;
 }
@@ -298,7 +303,7 @@ void sensor_process_triggers(Sensor * sensor) {
   
   for (int stream = 0; stream < sensor -> data_streams; stream++) {
     
-    Output * output = sensor -> outputs[stream];
+    Output * output = &sensor -> outputs[stream];
     
     if (!output -> enabled) continue;
     
@@ -315,7 +320,7 @@ void sensor_process_triggers(Sensor * sensor) {
 	}
       }
       
-      if (!precondion_met                        ) continue;                       // not in all states required
+      if (!precondition_met                      ) continue;                       // not in all states required
       if (trigger -> singular && trigger -> fired) continue;                       // never fire singulars twice
       
       float threshold = trigger -> threshold;                                      // same units (by Invariant 2)
@@ -326,8 +331,8 @@ void sensor_process_triggers(Sensor * sensor) {
       for (iterate(trigger -> wires_low , Charge *, charge)) fire(charge,  true);
       for (iterate(trigger -> wires_high, Charge *, charge)) fire(charge, false);
       
-      for (iterate(trigger -> enter_set, State *, state)) enter(state);
-      for (iterate(trigger -> leave_set, State *, state)) leave(state);
+      for (iterate(trigger -> enter_set, char *, state)) enter(state);
+      for (iterate(trigger -> leave_set, char *, state)) leave(state);
       
       trigger -> fired = true;
     }

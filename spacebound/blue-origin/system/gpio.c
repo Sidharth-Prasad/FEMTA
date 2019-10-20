@@ -42,8 +42,7 @@ void pin_set(char broadcom, bool hot) {
   printf(YELLOW "DEBUG: %d set %d\n" RESET, broadcom, hot);
   if (pins[broadcom].hot != hot) {
     pins[broadcom].hot = hot;
-    gpioWrite(broadcom, (int) hot);
-    
+    gpioWrite(broadcom, (int) hot);    
   }
 }
 

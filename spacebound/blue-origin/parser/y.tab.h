@@ -55,7 +55,10 @@ extern int yydebug;
     float delay_ms;
     
     union {
-      Charge * charge;
+      struct {
+	Charge * charge;
+	bool     hot;
+      };
       
       struct {
 	char * state_name;
@@ -73,7 +76,7 @@ extern int yydebug;
     
   } Specification;
 
-#line 77 "y.tab.h" /* yacc.c:1909  */
+#line 80 "y.tab.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -113,7 +116,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 72 "parser.y" /* yacc.c:1909  */
+#line 75 "parser.y" /* yacc.c:1909  */
 
   char          * string;
   int           * integer;
@@ -125,7 +128,7 @@ union YYSTYPE
   Trigger       * trigger;
   Specification * specification;
 
-#line 129 "y.tab.h" /* yacc.c:1909  */
+#line 132 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

@@ -21,8 +21,9 @@
 
 #include "../system/one.h"
 
-Sensor * init_ds18(ProtoSensor * proto);
+#define DS18_MEASURE_TEMPERATURE 0
 
+Sensor * init_ds18(Sensor * proto, char * path);
 
 #endif
 

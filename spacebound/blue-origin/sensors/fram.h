@@ -23,6 +23,6 @@
 
 #define FRAM_ADDRESS 0x50
 
-Sensor * init_fram();
+Sensor * init_fram(Sensor * proto);
 
 #endif

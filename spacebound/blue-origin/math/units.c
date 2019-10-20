@@ -121,22 +121,43 @@ void print_units_supported() {
      );
 }
 
+Numeric * numeric_from_decimal(float decimal) {
+  
+  Numeric * numeric = calloc(1, sizeof(*numeric));
+  
+  numeric -> decimal    = decimal;
+  numeric -> is_decimal = true;
+  numeric -> units[0]   = 'f';        // generic decimal unit
+  
+  return numeric;
+}
 
-PathElement * path_element_from_conversion(Conversion conversion) {
+Numeric * numeric_from_integer(float integer) {
   
-  PathElement * element = malloc(sizeof(*element));
+  Numeric * numeric = calloc(1, sizeof(*numeric));
+    
+  numeric -> integer    = integer;
+  numeric -> is_decimal = false;
+  numeric -> units[0]   = 'i';        // generic integer unit
   
-  element -> universal = true;
+  return numeric;
+}
+
+SeriesElement * series_element_from_conversion(Conversion conversion) {
+  
+  SeriesElement * element = calloc(1, sizeof(*element));
+  
+  element -> universal  = true;
   element -> conversion = conversion;
   
   return element;
 }
 
-PathElement * path_element_from_calibration(List * calibration) {
+SeriesElement * series_element_from_calibration(Calibration * calibration) {
   
-  PathElement * element = malloc(sizeof(*element));
+  SeriesElement * element = calloc(1, sizeof(*element));
   
-  element -> universal = false;
+  element -> universal   = false;
   element -> calibration = calibration;
   
   return element;
@@ -166,9 +187,10 @@ Conversion get_universal_conversion(char * from, char * to) {
   return conversion;
 }
 
-static float compute_curve(float x, List * calibration) {
+static float compute_curve(float x, Calibration * calibration) {
   
-  char * curve = list_get(calibration, 0);
+  char * curve     = calibration -> curve;
+  List * constants = calibration -> constants;
   
   // a calibration consists of a curve name followed by constants
   
@@ -176,13 +198,13 @@ static float compute_curve(float x, List * calibration) {
     
     // Evaluate the polynomial via Horner's Method
     
-    Numeric * first = list_get(calibration, 1);
+    Numeric * first = list_get(constants, 0);
     
     float result = first -> decimal;
     
-    for (iterate(calibration, Numeric *, coefficient)) {
+    for (iterate(constants, Numeric *, coefficient)) {
       
-      if ((int) coefficient_index < 2) continue;    // skip first 2 nodes
+      if ((int) coefficient_index < 1) continue;    // skip first node (see list.h)
       
       result = result * x + coefficient -> decimal;
     }
@@ -191,26 +213,25 @@ static float compute_curve(float x, List * calibration) {
   }
   
   else if (!strcmp(curve, "hart")) {
-    float A = ((Numeric *) list_get(calibration, 1)) -> decimal;
-    float B = ((Numeric *) list_get(calibration, 2)) -> decimal;
-    float C = ((Numeric *) list_get(calibration, 3)) -> decimal;
+    float A = ((Numeric *) list_get(constants, 0)) -> decimal;
+    float B = ((Numeric *) list_get(constants, 1)) -> decimal;
+    float C = ((Numeric *) list_get(constants, 2)) -> decimal;
     
-    float log_x = log(x);
+    float log_x = log(x);    // need to compute Iset
     
     return 1.0f / (A + B * log_x + C * cube(log_x));
   }
   
   printf(RED "Tried to evaluate unknown curve " CYAN "%s\n" RESET);
   exit(ERROR_PROGRAMMER);
-  return 0;
 }
 
-float path_compute(List * path, float x) {
+float series_compute(List * series, float x) {
   // compute a series of conversions to get a final value.
   // the series may include universal conversions as well as sensor-specific ones.
   
-  for (iterate(path, PathElement *, step))
-    if (step -> universal) x = (step -> convert)(x);
+  for (iterate(series, SeriesElement *, step))
+    if (step -> universal) x = (step -> conversion)(x);
     else                   x = compute_curve(x, step -> calibration);
   
   return x;

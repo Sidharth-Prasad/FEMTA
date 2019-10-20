@@ -23,6 +23,11 @@
 #include "../types/types.h"
 #include "../structures/list.h"
 
+#define AD15_MEASURE_A0 0
+#define AD15_MEASURE_A1 1
+#define AD15_MEASURE_A2 2
+#define AD15_MEASURE_A3 3
+
 #define A01 0b000
 #define A23 0b011
 #define A0  0b100
@@ -35,7 +40,7 @@
 #define AD15_SDA 0x4A
 #define AD15_SCL 0x4B
 
-Sensor * init_ad15(ProtoSensor * proto, char * title, List * modes, List * names);
+Sensor * init_ad15(Sensor * proto, char * title, List * modes, List * names);
 
 typedef struct AD15_Config {
   // read pages 18-19 of datasheet for more informaiton;
@@ -61,7 +66,7 @@ typedef struct AD15_Config {
       uchar OS  : 1;          // sleep state
     };
   };
-
+  
   List * modes;               // list of modes used to change config as needed
   ListNode * current_mode;    // the most recent mode configured configured
   int mode_cycle;             // where in the read cycle the current mode is

@@ -89,7 +89,7 @@ typedef struct EffectNode EffectNode;
 typedef struct Specification Specification;
 typedef struct Trigger Trigger;
 
-EffectNode    * make_charge(Numeric * wire, bool hot);
+ EffectNode    * make_charge(Numeric * wire, bool hot);
 EffectNode    * make_transition(char * state_name, bool entering);
 EffectNode    * add_delay(EffectNode * effect, Numeric * delay);
 Trigger       * make_trigger(List * effects);
@@ -144,7 +144,10 @@ extern int yydebug;
     float delay_ms;
     
     union {
-      Charge * charge;
+      struct {
+	Charge * charge;
+	bool     hot;
+      };
       
       struct {
 	char * state_name;
@@ -162,7 +165,7 @@ extern int yydebug;
     
   } Specification;
 
-#line 166 "y.tab.c" /* yacc.c:355  */
+#line 169 "y.tab.c" /* yacc.c:355  */
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -202,7 +205,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 72 "parser.y" /* yacc.c:355  */
+#line 75 "parser.y" /* yacc.c:355  */
 
   char          * string;
   int           * integer;
@@ -214,7 +217,7 @@ union YYSTYPE
   Trigger       * trigger;
   Specification * specification;
 
-#line 218 "y.tab.c" /* yacc.c:355  */
+#line 221 "y.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -231,7 +234,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 235 "y.tab.c" /* yacc.c:358  */
+#line 238 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -529,11 +532,11 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   111,   111,   112,   115,   116,   119,   120,   123,   124,
-     127,   128,   129,   130,   133,   134,   137,   138,   139,   140,
-     142,   145,   148,   151,   154,   157,   158,   161,   162,   163,
-     164,   167,   168,   169,   170,   173,   174,   175,   176,   179,
-     180,   183,   184
+       0,   114,   114,   115,   118,   119,   122,   123,   126,   127,
+     130,   131,   132,   133,   136,   137,   140,   141,   142,   143,
+     145,   148,   151,   154,   157,   160,   161,   164,   165,   166,
+     167,   170,   171,   172,   173,   176,   177,   178,   179,   182,
+     183,   186,   187
 };
 #endif
 
@@ -1366,223 +1369,223 @@ yyreduce:
   switch (yyn)
     {
         case 3:
-#line 112 "parser.y" /* yacc.c:1646  */
+#line 115 "parser.y" /* yacc.c:1646  */
     { printf("\nExperiment does not use sensors");         }
-#line 1372 "y.tab.c" /* yacc.c:1646  */
+#line 1375 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 119 "parser.y" /* yacc.c:1646  */
+#line 122 "parser.y" /* yacc.c:1646  */
     { add_state((yyvsp[0].string), false);                                }
-#line 1378 "y.tab.c" /* yacc.c:1646  */
+#line 1381 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 120 "parser.y" /* yacc.c:1646  */
+#line 123 "parser.y" /* yacc.c:1646  */
     { add_state((yyvsp[0].string),  true);                                }
-#line 1384 "y.tab.c" /* yacc.c:1646  */
+#line 1387 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 127 "parser.y" /* yacc.c:1646  */
+#line 130 "parser.y" /* yacc.c:1646  */
     { build_sensor((yyvsp[-3].string), (yyvsp[-2].numeric),      NULL,  NULL);              }
-#line 1390 "y.tab.c" /* yacc.c:1646  */
+#line 1393 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 128 "parser.y" /* yacc.c:1646  */
+#line 131 "parser.y" /* yacc.c:1646  */
     { build_sensor((yyvsp[-4].string), (yyvsp[-3].numeric),      NULL,    (yyvsp[-1].list));              }
-#line 1396 "y.tab.c" /* yacc.c:1646  */
+#line 1399 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 129 "parser.y" /* yacc.c:1646  */
+#line 132 "parser.y" /* yacc.c:1646  */
     { build_sensor((yyvsp[-5].string), (yyvsp[-4].numeric), (yyvsp[-2].numeric), NULL);                      }
-#line 1402 "y.tab.c" /* yacc.c:1646  */
+#line 1405 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 130 "parser.y" /* yacc.c:1646  */
+#line 133 "parser.y" /* yacc.c:1646  */
     { build_sensor((yyvsp[-6].string), (yyvsp[-5].numeric), (yyvsp[-3].numeric),   (yyvsp[-1].list));                      }
-#line 1408 "y.tab.c" /* yacc.c:1646  */
+#line 1411 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 133 "parser.y" /* yacc.c:1646  */
+#line 136 "parser.y" /* yacc.c:1646  */
     { (yyval.list) = list_from(1, (yyvsp[0].specification));                               }
-#line 1414 "y.tab.c" /* yacc.c:1646  */
+#line 1417 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 134 "parser.y" /* yacc.c:1646  */
+#line 137 "parser.y" /* yacc.c:1646  */
     { list_insert((yyvsp[-1].list), (yyvsp[0].specification)); (yyval.list) = (yyvsp[-1].list);                        }
-#line 1420 "y.tab.c" /* yacc.c:1646  */
+#line 1423 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 137 "parser.y" /* yacc.c:1646  */
+#line 140 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = extend_trigger(NULL, (yyvsp[-4].string),  true, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger));  }
-#line 1426 "y.tab.c" /* yacc.c:1646  */
+#line 1429 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 138 "parser.y" /* yacc.c:1646  */
+#line 141 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = extend_trigger(NULL, (yyvsp[-6].string),  true, (yyvsp[-4].numeric),   (yyvsp[-2].list), (yyvsp[0].trigger));  }
-#line 1432 "y.tab.c" /* yacc.c:1646  */
+#line 1435 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 139 "parser.y" /* yacc.c:1646  */
+#line 142 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = extend_trigger(NULL, (yyvsp[-4].string), false, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger));  }
-#line 1438 "y.tab.c" /* yacc.c:1646  */
+#line 1441 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 140 "parser.y" /* yacc.c:1646  */
+#line 143 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = extend_trigger(NULL, (yyvsp[-6].string), false, (yyvsp[-4].numeric),   (yyvsp[-2].list), (yyvsp[0].trigger));  }
-#line 1444 "y.tab.c" /* yacc.c:1646  */
+#line 1447 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 143 "parser.y" /* yacc.c:1646  */
+#line 146 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = extend_trigger(  (yyvsp[-6].list), (yyvsp[-4].string),  true, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger)); }
-#line 1450 "y.tab.c" /* yacc.c:1646  */
+#line 1453 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 146 "parser.y" /* yacc.c:1646  */
+#line 149 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = extend_trigger(  (yyvsp[-8].list), (yyvsp[-6].string),  true, (yyvsp[-4].numeric),  (yyvsp[-2].list), (yyvsp[0].trigger)); }
-#line 1456 "y.tab.c" /* yacc.c:1646  */
+#line 1459 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 149 "parser.y" /* yacc.c:1646  */
+#line 152 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = extend_trigger(  (yyvsp[-6].list), (yyvsp[-4].string), false, (yyvsp[-2].numeric), NULL, (yyvsp[0].trigger)); }
-#line 1462 "y.tab.c" /* yacc.c:1646  */
+#line 1465 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 152 "parser.y" /* yacc.c:1646  */
+#line 155 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = extend_trigger(  (yyvsp[-8].list), (yyvsp[-6].string), false, (yyvsp[-4].numeric),  (yyvsp[-2].list), (yyvsp[0].trigger)); }
-#line 1468 "y.tab.c" /* yacc.c:1646  */
+#line 1471 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 154 "parser.y" /* yacc.c:1646  */
+#line 157 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = (yyvsp[0].specification);                                             }
-#line 1474 "y.tab.c" /* yacc.c:1646  */
+#line 1477 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 157 "parser.y" /* yacc.c:1646  */
+#line 160 "parser.y" /* yacc.c:1646  */
     { yyerror("Empty if body");                            }
-#line 1480 "y.tab.c" /* yacc.c:1646  */
+#line 1483 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 158 "parser.y" /* yacc.c:1646  */
+#line 161 "parser.y" /* yacc.c:1646  */
     { (yyval.trigger) = make_trigger((yyvsp[-1].list));                               }
-#line 1486 "y.tab.c" /* yacc.c:1646  */
+#line 1489 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 161 "parser.y" /* yacc.c:1646  */
+#line 164 "parser.y" /* yacc.c:1646  */
     { (yyval.list) = list_from(1, (yyvsp[0].effect));                               }
-#line 1492 "y.tab.c" /* yacc.c:1646  */
+#line 1495 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 162 "parser.y" /* yacc.c:1646  */
+#line 165 "parser.y" /* yacc.c:1646  */
     { (yyval.list) = list_from(1, add_delay((yyvsp[-2].effect), (yyvsp[0].numeric)));                }
-#line 1498 "y.tab.c" /* yacc.c:1646  */
+#line 1501 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 163 "parser.y" /* yacc.c:1646  */
+#line 166 "parser.y" /* yacc.c:1646  */
     { list_insert((yyvsp[-1].list), (yyvsp[0].effect)); (yyval.list) = (yyvsp[-1].list);                        }
-#line 1504 "y.tab.c" /* yacc.c:1646  */
+#line 1507 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 164 "parser.y" /* yacc.c:1646  */
+#line 167 "parser.y" /* yacc.c:1646  */
     { list_insert((yyvsp[-3].list), add_delay((yyvsp[-2].effect), (yyvsp[0].numeric))); (yyval.list) = (yyvsp[-3].list);         }
-#line 1510 "y.tab.c" /* yacc.c:1646  */
+#line 1513 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 167 "parser.y" /* yacc.c:1646  */
+#line 170 "parser.y" /* yacc.c:1646  */
     { (yyval.effect) = make_charge((yyvsp[-1].numeric),  true);                         }
-#line 1516 "y.tab.c" /* yacc.c:1646  */
+#line 1519 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 168 "parser.y" /* yacc.c:1646  */
+#line 171 "parser.y" /* yacc.c:1646  */
     { (yyval.effect) = make_charge((yyvsp[-1].numeric), false);                         }
-#line 1522 "y.tab.c" /* yacc.c:1646  */
+#line 1525 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 169 "parser.y" /* yacc.c:1646  */
+#line 172 "parser.y" /* yacc.c:1646  */
     { (yyval.effect) = make_transition((yyvsp[0].string),  true);                     }
-#line 1528 "y.tab.c" /* yacc.c:1646  */
+#line 1531 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 170 "parser.y" /* yacc.c:1646  */
+#line 173 "parser.y" /* yacc.c:1646  */
     { (yyval.effect) = make_transition((yyvsp[0].string), false);                     }
-#line 1534 "y.tab.c" /* yacc.c:1646  */
+#line 1537 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 173 "parser.y" /* yacc.c:1646  */
+#line 176 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = make_tag((yyvsp[-1].string), NULL, NULL);                       }
-#line 1540 "y.tab.c" /* yacc.c:1646  */
+#line 1543 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 174 "parser.y" /* yacc.c:1646  */
+#line 177 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = make_tag((yyvsp[-4].string), NULL,   (yyvsp[-1].list));                       }
-#line 1546 "y.tab.c" /* yacc.c:1646  */
+#line 1549 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 175 "parser.y" /* yacc.c:1646  */
+#line 178 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = make_tag((yyvsp[-4].string),   (yyvsp[-2].list), NULL);                       }
-#line 1552 "y.tab.c" /* yacc.c:1646  */
+#line 1555 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 176 "parser.y" /* yacc.c:1646  */
+#line 179 "parser.y" /* yacc.c:1646  */
     { (yyval.specification) = make_tag((yyvsp[-5].string),   (yyvsp[-3].list),   (yyvsp[-1].list));                       }
-#line 1558 "y.tab.c" /* yacc.c:1646  */
+#line 1561 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 179 "parser.y" /* yacc.c:1646  */
+#line 182 "parser.y" /* yacc.c:1646  */
     { list_insert((yyvsp[-2].list), (yyvsp[0].numeric)); (yyval.list) = (yyvsp[-2].list);                        }
-#line 1564 "y.tab.c" /* yacc.c:1646  */
+#line 1567 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 180 "parser.y" /* yacc.c:1646  */
+#line 183 "parser.y" /* yacc.c:1646  */
     { (yyval.list) = list_from(1, (yyvsp[0].numeric));                               }
-#line 1570 "y.tab.c" /* yacc.c:1646  */
+#line 1573 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 183 "parser.y" /* yacc.c:1646  */
+#line 186 "parser.y" /* yacc.c:1646  */
     { (yyval.list) = list_from(1, (yyvsp[0].string));                               }
-#line 1576 "y.tab.c" /* yacc.c:1646  */
+#line 1579 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 184 "parser.y" /* yacc.c:1646  */
+#line 187 "parser.y" /* yacc.c:1646  */
     { list_insert((yyvsp[-2].list), (yyvsp[0].string)); (yyval.list) = (yyvsp[-2].list);                        }
-#line 1582 "y.tab.c" /* yacc.c:1646  */
+#line 1585 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1586 "y.tab.c" /* yacc.c:1646  */
+#line 1589 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1810,8 +1813,22 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 187 "parser.y" /* yacc.c:1906  */
+#line 190 "parser.y" /* yacc.c:1906  */
 
+
+static void check_unit(char * unit_name) {
+    if (!unit_is_supported(unit_name)) {
+      printf(RED "Unknown unit " CYAN "%s\n" RESET, unit_name);
+      yyerror("Unknown unit");
+    }
+}
+
+static void check_target(Sensor * proto, char * target) {
+    if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
+        printf(RED "Target " CYAN "%s " RED "for %s is not known\n" RESET, target, proto -> code_name);
+	yyerror("Unknown target");
+    }
+}
 
 static void represent_as_decimal(Numeric * numeric) {
     
@@ -1856,11 +1873,11 @@ EffectNode * make_charge(Numeric * wire, bool hot) {
     Charge * charge = calloc(1, sizeof(*charge));
     
     charge -> gpio = wire -> integer;
-    charge -> hot  = hot;
     
     EffectNode * effect = calloc(1, sizeof(*effect));
     
     effect -> charge = charge;
+    effect -> hot    = hot;
     
     return effect;
 }
@@ -1908,13 +1925,18 @@ Trigger * make_trigger(List * effects) {
     trigger -> singular =  true;    // defaults
     trigger -> reverses = false;    // --------
     
+    trigger -> wires_low  = list_create();
+    trigger -> wires_high = list_create();
+    trigger -> enter_set  = list_create();
+    trigger -> leave_set  = list_create();
+    
     for (iterate(effects, EffectNode *, effect))  
       if (effect -> is_charge)
-	if (effect -> charge -> hot) list_insert(trigger -> wires_high, effect -> charge    );
-	else                         list_insert(trigger -> wires_low , effect -> charge    );
+	if (effect -> hot     ) list_insert(trigger -> wires_high, effect -> charge    );
+	else                    list_insert(trigger -> wires_low , effect -> charge    );
       else
-	if (effect -> entering     ) list_insert(trigger -> enter_set , effect -> state_name);
-	else                         list_insert(trigger -> leave_set , effect -> state_name);
+	if (effect -> entering) list_insert(trigger -> enter_set , effect -> state_name);
+	else                    list_insert(trigger -> leave_set , effect -> state_name);
     
     list_destroy(effects);
     return trigger;
@@ -2005,16 +2027,16 @@ Specification * make_tag(char * id, List * options, List * args) {
     }
     
     else if (!strcmp(id, "pulse")) {        
-        if (options)                    yyerror("Pulsing does not support options at this time");
-        if (!args || args -> size != 1) yyerror("Pulsing requires exactly 1 argument"          );
+        if (options)                    yyerror("Pulsing does not support options at this time"  );
+        if (!args || args -> size != 1) yyerror("Pulsing requires exactly 1 argument (the delay)");
     }
     
     else if (!strcmp(id, "smooth")) {
       
-        if (options) yyerror("Smoothing does not support options at this time");
+        if (!options || options -> size != 1) yyerror("Smoothing requires exactly 1 argument (the target)");
 	
         if (args) {
-	    Numeric * numeric = (Numeric *) list_get(args, 0);
+	    Numeric * numeric = list_get(args, 0);
             float value = numeric -> decimal;
 	    
             if (strcmp(numeric -> units, "f") || value < 0.0f || value > 1.0f)
@@ -2026,7 +2048,7 @@ Specification * make_tag(char * id, List * options, List * args) {
       
         if (!args   )            yyerror("Calibration curves require at least one constant");
         if (!options)            yyerror("Calibration requires a target");
-	if (options -> size < 2) yyerror("Calibration requires a unit");
+	if (options -> size < 4) yyerror("Calibration requires a unit 'from' dfollowed by a unit 'to'");
 	
         char * curve = (char *) list_get(options, 1);
         
@@ -2039,6 +2061,26 @@ Specification * make_tag(char * id, List * options, List * args) {
             printf(RED "Unknown calibration curve " CYAN "%s\n" RESET, curve);
             yyerror("Malformed calibration");
         }
+	
+	char * unit_from = list_get(options, 2);
+	char * unit_to   = list_get(options, 3);
+	
+	check_unit(unit_from);
+	check_unit(unit_to);
+    }
+    
+    else if (!strcmp(id, "conversions")) {
+      
+        if (args                               ) yyerror("A conversion series should never have arguments"         );
+	if (!options || options -> size < 3    ) yyerror("A conversion series must include a target, then 2+ units");
+	if (strcmp(list_get(options, 1), "raw")) yyerror("A conversion series always starts with 'raw'"            );
+      
+	for (iterate(options, char *, unit_name)) {
+	
+	    if ((int) unit_name_index < 1) continue;    // first is target, so skip (see list.h)
+	    
+	    check_unit(unit_name);
+	}
     }
     
     else {
@@ -2054,13 +2096,13 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   Sensor * proto = hashmap_get(all_sensors, id);
   
   if (!proto) {
-    printf(CYAN "%s " RED "is not a sensor\n" RESET, id);
-    yyerror("Unknown sensor name");
+      printf(CYAN "%s " RED "is not a sensor\n" RESET, id);
+      yyerror("Unknown sensor name");
   }
   
   if ((               strcmp(frequency   -> units, "Hz") && strcmp(frequency   -> units, "i")) ||
       (denominator && strcmp(denominator -> units, "Hz") && strcmp(denominator -> units, "i")))
-    yyerror("Sensor frequencies must be integers or rational numbers of Hz");
+      yyerror("Sensor frequencies must be integers or rational numbers of Hz");
   
   proto -> hertz = frequency -> integer;    // base Hz for scheduling
   
@@ -2070,7 +2112,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   proto -> requested = true;
   
   for (int stream = 0; stream < proto -> data_streams; stream++)
-    proto -> outputs[stream].triggers = list_create();
+      proto -> outputs[stream].triggers = list_create();
   
   if (!specifications) return;
   
@@ -2084,16 +2126,12 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
       
       if (!strcmp(specification -> id, "trigger")) {
 	
-	  // can't yet do conversion, reversals, etc,
-	  // so we do the rest in the next for loop
+	  /* can't yet do conversion, reversals, etc,
+	   * so we do the rest in a later for loop */
 	  
 	  Trigger * trigger = list_get(options, 0);    // we encapsulate the trigger within the options list
-
-	  // check trigger targets
-	  if (!proto -> targets || !hashmap_exists(proto -> targets, trigger -> id)) {
-	      printf(RED "Trigger target " CYAN "%s " RED "unknown\n" RESET, trigger -> id);
-	      yyerror("Malformed trigger");
-	  }
+	  
+	  check_target(proto, trigger -> id);
 	  
 	  int stream = (int) hashmap_get(proto -> targets, trigger -> id);
 	  
@@ -2117,17 +2155,23 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
       }
       
       else if (!strcmp(specification -> id, "smooth")) {
-	  
+	
           Numeric * numeric = list_get(args, 0);
+	  char    * target  = list_get(options, 0);
 	  
-          float auto_regressive = numeric -> decimal;
-          
-          if (proto -> auto_regressive) {
-              printf(RED "Duplicate autoregressive constant for %s\n" RESET, id);
-	      yyerror("Duplicate autoregressive constant");
-          }
-          
-          proto -> auto_regressive = auto_regressive;
+          float regressive = numeric -> decimal;
+	  
+	  check_target(proto, target);
+	  
+	  int stream = (int) hashmap_get(proto -> targets, target);
+	  
+	  if (proto -> outputs[stream].regressive != 0.0f) {
+	    printf(RED "Found second autoregressive constant for %s\n" RESET, id);
+	    yyerror("More than one autoregressive constant");
+	  }
+	  
+          proto -> outputs[stream].regressive = regressive;
+	  list_destroy(options);
 	  list_destroy(args);
       }
       
@@ -2138,14 +2182,12 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	   * for each target using the calibrations hashmap. Later, we'll actually convert these
 	   * unordered lists into proper serieses. */
 	  
-          char * target = list_get(options, 0);
-	  char * curve  = list_get(options, 1);
-	  char * unit   = list_get(options, 2);
+          char * target    = list_get(options, 0);
+	  char * curve     = list_get(options, 1);
+	  char * unit_from = list_get(options, 2);
+	  char * unit_to   = list_get(options, 3);
 	  
-          if (!proto -> targets || !hashmap_exists(proto -> targets, target)) {
-              printf(RED "Calibration target " CYAN "%s " RED " for %s is not known\n" RESET, target, id);
-	      yyerror("Malformed calibration");
-          }
+	  check_target(proto, target);
 	  
 	  // force all calibration constants to be decimals
 	  for (iterate(specification -> args, Numeric *, constant))
@@ -2156,17 +2198,103 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  
 	  calibration -> curve     = curve;
 	  calibration -> constants = specification -> args;
+	  calibration -> unit_from = unit_from;
+	  calibration -> unit_to   = unit_to;
 	  calibration -> target    = target;
+	  
+	  list_insert(all_calibrations, calibration);
+	  list_destroy(args);
+      }
+      
+      else if (!strcmp(specification -> id, "conversions")) {
+	  
+	  char * target = list_get(options, 0);
+
+	  check_target(proto, target);
+	  
+	  int stream = (int) hashmap_get(proto -> targets, target);
+	  
+	  if (proto -> outputs[stream].series) {
+	    printf(RED "Found second conversion series for %s's " CYAN "%s\n", id, target);
+	    yyerror("More than one conversion series for target exists");
+	  }
+	  
+	  /* Temporarily store the options list. This gets replaced
+	   * with the actual series when iterating over the calibrations */
+	  list_remove(options, options -> head);        // remove the target so only unit names exist
+	  proto -> outputs[stream].series = options;
       }
   }
   
   
-  for (iterate(proto -> triggers, Trigger *, trigger)) {
-            
-      // duplicate reversing triggers
+  for (int stream = 0; stream < proto -> data_streams; stream++) {
+    
+      List * unit_names = proto -> outputs[stream].series;    // get the temporarily stored unit names
       
-      if (trigger -> reverses) {
+      // make sure in the event no series was specified that there's no calibrations
+      if (!unit_names) {
+	  for (iterate(all_calibrations, Calibration *, calibration)) {
+	      if (stream == (int) hashmap_get(proto -> targets, calibration -> target)) {
+		  printf("Found calibration without conversions series for %s\n", calibration -> target);
+		  yyerror("Calibration without proper conversion series context");
+	      }
+	  }
+	  continue;    // no unit names means no conversion series
+      }
+      
+      List * series = list_create();
+      
+      char * last_name = list_get(unit_names, 0);
+      
+      for (iterate(unit_names, char *, name)) {
+      
+          if (!strcmp(last_name, name)) continue;    // nothing need be done when same
+	  
+	  // see if sensor has specified a calibration for this unit
+	  
+	  SeriesElement * element = NULL;
+	  
+	  for (iterate(all_calibrations, Calibration *, calibration)) {
+	      if (!strcmp(last_name, calibration -> unit_from)) continue;
+	      if (!strcmp(     name, calibration -> unit_to  )) continue;
+	      
+	      element = series_element_from_calibration(calibration);
+	  }
+	  
+	  if (!element)    // does error checking
+	      element = series_element_from_conversion(get_universal_conversion(last_name, name));
 	
+	  list_insert(series, element);
+	  last_name = name;
+      }
+      
+      proto -> outputs[stream].unit   = last_name;
+      proto -> outputs[stream].series = series;
+      list_destroy(unit_names);
+  }
+  
+  list_destroy(all_calibrations);
+  all_calibrations = NULL;
+  
+  
+  for (int stream = 0; stream < proto -> data_streams; stream++) {
+      
+      char * final_unit = proto -> outputs[stream].unit;
+      List * triggers   = proto -> outputs[stream].triggers;
+      
+      // perform conversions
+      for (iterate(triggers, Trigger *, trigger)) {
+	
+	  Numeric * before = trigger -> threshold_as_specified;
+	  
+	  trigger -> threshold = (get_universal_conversion(final_unit, before -> units))(before -> decimal);
+      }
+      
+      // duplicate reversing triggers
+      for (iterate(triggers, Trigger *, trigger)) {
+	
+	  if (!trigger -> reverses) continue;
+	  
 	  Trigger * opposite = calloc(1, sizeof(*opposite));
 	  
 	  opposite -> id       =  strdup(trigger -> id);
@@ -2174,31 +2302,24 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  opposite -> fired    =  trigger -> fired;
 	  opposite -> singular =  trigger -> singular;
 	  opposite -> reverses =  false;
-	  	  
-	  opposite -> threshold = trigger -> threshold;
-	  opposite -> charges   = list_create();
 	  
-	  for (iterate(trigger -> charges, Charge *, charge)) {
-	      
-              Charge * anti_charge = malloc(sizeof(*charge));
-	      
-	      anti_charge -> gpio     =  charge -> gpio;
-	      anti_charge -> hot      = !charge -> hot;
-	      anti_charge -> duration =  charge -> duration;
-	      
-	      list_insert(opposite -> charges, anti_charge);
-	  }
+	  opposite -> threshold              = trigger -> threshold;
+	  opposite -> threshold_as_specified = trigger -> threshold_as_specified;
+	  opposite -> precondition           = trigger -> precondition;
+	  opposite -> enter_set              = trigger -> enter_set;
+	  opposite -> leave_set              = trigger -> leave_set;
 	  
-	  list_insert(proto -> triggers, opposite);
+	  opposite -> wires_low  = trigger -> wires_high;    // note the reversal!
+	  opposite -> wires_high = trigger -> wires_low;     // ------------------
+	  
+	  list_insert(triggers, opposite);
       }
+
+      n_triggers += triggers -> size;
   }
-  
-  list_destroy(all_triggers);
   
   specifications -> free = specification_destroy;    // Note: up to us to destroy lists earlier
   list_destroy(specifications);                      // ---------------------------------------
-  
-  n_triggers += proto -> triggers -> size;
 }
 
 void print_config() {
@@ -2210,44 +2331,45 @@ void print_config() {
   
   printf("\n\n" GRAY "%d" RESET " Triggers\n\n", n_triggers);
   
-  for (iterate(proto_sensors -> all, ProtoSensor *, proto)) {
+  for (iterate(all_sensors -> all, Sensor *, proto)) {
     
     if (!proto -> requested       ) continue;
-    if (!proto -> triggers -> size) continue;
+    
+    int total_triggers = 0;
+    for (int stream = 0; stream < proto -> data_streams; stream++)
+      total_triggers += proto -> outputs[stream].triggers -> size;
+      
+    if (!total_triggers) continue;
     
     printf(GREEN "%s\n" RESET, proto -> code_name);
     
-    for (iterate(proto -> triggers, Trigger *, trigger)) {
+    for (int stream = 0; stream < proto -> data_streams; stream++) {
+
+      char * final_unit = proto -> outputs[stream].unit;
       
-      Numeric * numeric = trigger -> threshold;
-      
-      Numeric standard;
-      to_standard_units(&standard, numeric);
-      
-      printf(CYAN "    %s" RESET, trigger -> id);
-      
-      if (trigger -> less)
-	printf(GRAY " <" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
-	       numeric -> decimal, numeric -> units, standard.decimal, standard.units);
-      else
-	printf(GRAY " >" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
-	       numeric -> decimal, numeric -> units, standard.decimal, standard.units);
-      
-      
-      printf(" { " RESET);
-      
-      for (iterate(trigger -> charges, Charge *, charge)) {
-        
-	if (charge -> hot) printf(YELLOW "+" RESET);
-	else               printf(YELLOW "-" RESET);
+      for (iterate(proto -> outputs[stream].triggers, Trigger *, trigger)) {
+
+	Numeric * before = trigger -> threshold_as_specified;
+	char   direction = (trigger -> less) ? '<' : '>';
 	
-	printf("%d ", charge -> gpio);
+	printf(CYAN "    %s" GRAY " %c" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
+	       trigger -> id, direction, before -> decimal, before -> units, trigger -> threshold, final_unit);
+	
+	printf("\n        wires {");
+	
+	for (iterate(trigger -> wires_low, Charge *, charge)) printf(YELLOW "-" RESET "%d ", charge -> gpio);
+	for (iterate(trigger -> wires_low, Charge *, charge)) printf(YELLOW "+" RESET "%d ", charge -> gpio);
+	
+	if (!trigger -> singular) printf(GRAY "}" YELLOW " *\n" GRAY);
+	else                      printf(GRAY "}\n");
+	
+	printf("\n        enter {" RESET);
+	for (iterate(trigger -> enter_set, char *, name)) printf("%s", name);
+	printf("}\n        leave {" RESET);
+	for (iterate(trigger -> leave_set, char *, name)) printf("%s", name);
+	printf("}\n");
       }
-      
-      if (!trigger -> singular) printf(GRAY "}" YELLOW " *\n" RESET);
-      else                      printf(GRAY "}\n");
     }
-    
     printf("\n");
   }
 }
