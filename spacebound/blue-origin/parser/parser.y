@@ -25,13 +25,14 @@ typedef struct EffectNode EffectNode;
 typedef struct Specification Specification;
 typedef struct Trigger Trigger;
 
- EffectNode    * make_charge(Numeric * wire, bool hot);
+EffectNode    * make_charge(Numeric * wire, bool hot);
 EffectNode    * make_transition(char * state_name, bool entering);
 EffectNode    * add_delay(EffectNode * effect, Numeric * delay);
 Trigger       * make_trigger(List * effects);
 Specification * extend_trigger(List * state_names, char * id, bool less, Numeric * threshold, List * options, Trigger * trigger);
 Specification * make_tag(char * id, List * options, List * args);
 
+void check_and_add_state(char * name, bool entered);
 void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * specifications);
 void print_config();
 %}
@@ -51,13 +52,13 @@ void print_config();
     
     union {
       struct {
-	Charge * charge;
+	Charge * charge;            // charge of a wire state to another
 	bool     hot;
       };
       
       struct {
-	char * state_name;
-	bool   entering;
+	Transition * transition;    // transition from one state to another
+	bool         entering;
       };
     };
     
@@ -119,8 +120,8 @@ Defs     : Def
          | Defs Def
          ;
 
-Def      : DEFINE LEAVE ID                                 { add_state($3, false);                                }
-         | DEFINE ENTER ID                                 { add_state($3,  true);                                }
+Def      : DEFINE LEAVE ID                                 { check_and_add_state($3, false);                      }
+         | DEFINE ENTER ID                                 { check_and_add_state($3,  true);                      }
          ;
 
 Sensors  : Sensor                
@@ -233,6 +234,16 @@ static void specification_destroy(void * vspecification) {
     free(specification);
 }
 
+void check_and_add_state(char * name, bool entered) {
+  
+  if (state_exists(name)) {
+      printf(RED "State " CYAN "%s " RED "already defined\n" RESET, name);
+      yyerror("state already defined");
+  }
+  
+  add_state(name, entered);
+}
+
 EffectNode * make_charge(Numeric * wire, bool hot) {
     
     if (!unit_is_of_type(wire, "Integer"))
@@ -245,13 +256,14 @@ EffectNode * make_charge(Numeric * wire, bool hot) {
     
     Charge * charge = calloc(1, sizeof(*charge));
     
-    charge -> gpio = wire -> integer;
+    charge -> gpio = wire -> integer;    // delays are added later
     
     EffectNode * effect = calloc(1, sizeof(*effect));
-    
+
     effect -> charge = charge;
     effect -> hot    = hot;
     
+    effect -> is_charge = true;    
     return effect;
 }
 
@@ -265,7 +277,7 @@ EffectNode * make_transition(char * state_name, bool entering) {
   EffectNode * effect  = calloc(1, sizeof(*effect));
   
   effect -> is_charge  = false;
-  effect -> state_name = state_name;
+  effect -> transition = transition_create(state_name, 0);    // delays are added later
   effect -> entering   = entering;
   
   return effect;
@@ -280,12 +292,19 @@ EffectNode * add_delay(EffectNode * effect, Numeric * delay) {
     yyerror("Improper delay specified");
   }
   
-  if (!unit_is_of_type(delay, "Time")) {
+  if (!unit_is_supported(delay -> units) || !unit_is_of_type(delay, "Time")) {
     printf("%s is not a unit of time", delay -> units);
     yyerror("Improper delay specified");
   }
   
-  effect -> delay_ms = (get_universal_conversion(delay -> units, "ms"))(delay -> decimal);  
+  effect -> delay_ms = (get_universal_conversion(delay -> units, "ms"))(delay -> decimal);
+  
+  if (effect -> is_charge) effect -> charge     -> delay = (int) effect -> delay_ms;
+  else                     effect -> transition -> delay = (int) effect -> delay_ms;
+  
+  if (effect -> is_charge) pin_inform_delays(effect -> charge -> gpio);
+  else                     state_inform_delays(effect -> transition -> state);
+  
   return effect;
 }
 
@@ -308,8 +327,8 @@ Trigger * make_trigger(List * effects) {
 	if (effect -> hot     ) list_insert(trigger -> wires_high, effect -> charge    );
 	else                    list_insert(trigger -> wires_low , effect -> charge    );
       else
-	if (effect -> entering) list_insert(trigger -> enter_set , effect -> state_name);
-	else                    list_insert(trigger -> leave_set , effect -> state_name);
+	if (effect -> entering) list_insert(trigger -> enter_set , effect -> transition);
+	else                    list_insert(trigger -> leave_set , effect -> transition);
     
     list_destroy(effects);
     return trigger;
@@ -326,15 +345,21 @@ Specification * extend_trigger(
 			       ) {
     /* Wraps and modifies the trigger into a specification so that sensor construction *
      * may have a linked list consisting of nodes with the same content                */
-    
-    for (iterate(state_names, char *, state_name)) {
-      if (!state_exists(state_name)) {
-	printf(RED "Unknown state name " CYAN "%s\n" RESET, state_name);
-	yyerror("Invalid state list for trigger");
-      }
+
+    if (state_names) {
+        for (iterate(state_names, char *, state_name)) {
+	    if (!state_exists(state_name)) {
+	        printf(RED "Unknown state name " CYAN "%s\n" RESET, state_name);
+		yyerror("Invalid state list for trigger");
+	    }
+	}
+	
+	trigger -> precondition = state_names;
+    } else {
+        trigger -> precondition = list_create();
     }
     
-    trigger -> precondition = state_names;
+
     
     
     represent_as_decimal(threshold);
@@ -346,7 +371,7 @@ Specification * extend_trigger(
     
     if (options) {
         for (iterate(options, char *, option)) {
-	    if      (!strcmp(option, "singular")) trigger -> singular =  true;
+	    if      (!strcmp(option, "single"  )) trigger -> singular =  true;
 	    else if (!strcmp(option, "forever" )) trigger -> singular = false;
 	    else if (!strcmp(option, "reverses")) trigger -> reverses =  true;
 	    else {
@@ -398,12 +423,7 @@ Specification * make_tag(char * id, List * options, List * args) {
 	    if (numeric -> is_decimal          ) yyerror("Frequencies must be integers or rational numbers"   );
 	}
     }
-    
-    else if (!strcmp(id, "pulse")) {        
-        if (options)                    yyerror("Pulsing does not support options at this time"  );
-        if (!args || args -> size != 1) yyerror("Pulsing requires exactly 1 argument (the delay)");
-    }
-    
+        
     else if (!strcmp(id, "smooth")) {
       
         if (!options || options -> size != 1) yyerror("Smoothing requires exactly 1 argument (the target)");
@@ -538,7 +558,7 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  
 	  int stream = (int) hashmap_get(proto -> targets, target);
 	  
-	  if (proto -> outputs[stream].regressive != 0.0f) {
+	  if (proto -> outputs[stream].regressive != 1.0f) {
 	    printf(RED "Found second autoregressive constant for %s\n" RESET, id);
 	    yyerror("More than one autoregressive constant");
 	  }
@@ -576,7 +596,6 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  calibration -> target    = target;
 	  
 	  list_insert(all_calibrations, calibration);
-	  list_destroy(args);
       }
       
       else if (!strcmp(specification -> id, "conversions")) {
@@ -628,8 +647,8 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
 	  SeriesElement * element = NULL;
 	  
 	  for (iterate(all_calibrations, Calibration *, calibration)) {
-	      if (!strcmp(last_name, calibration -> unit_from)) continue;
-	      if (!strcmp(     name, calibration -> unit_to  )) continue;
+	      if (strcmp(last_name, calibration -> unit_from)) continue;
+	      if (strcmp(     name, calibration -> unit_to  )) continue;
 	      
 	      element = series_element_from_calibration(calibration);
 	  }
@@ -652,15 +671,18 @@ void build_sensor(char * id, Numeric * frequency, Numeric * denominator, List * 
   
   for (int stream = 0; stream < proto -> data_streams; stream++) {
       
+      if (!proto -> outputs[stream].unit)
+	  proto -> outputs[stream].unit = "raw";
+      
       char * final_unit = proto -> outputs[stream].unit;
       List * triggers   = proto -> outputs[stream].triggers;
       
       // perform conversions
       for (iterate(triggers, Trigger *, trigger)) {
-	
+	  
 	  Numeric * before = trigger -> threshold_as_specified;
 	  
-	  trigger -> threshold = (get_universal_conversion(final_unit, before -> units))(before -> decimal);
+	  trigger -> threshold = (get_universal_conversion(before -> units, final_unit))(before -> decimal);
       }
       
       // duplicate reversing triggers
@@ -701,46 +723,69 @@ void print_config() {
     printf("\n\nExperiment does not involve triggers\n\n");
     return;
   }
+
+  printf("\n\n");
   
-  printf("\n\n" GRAY "%d" RESET " Triggers\n\n", n_triggers);
+  print_all_states();
+  
+  //printf(GRAY "%d" RESET " Triggers\n\n", n_triggers);
   
   for (iterate(all_sensors -> all, Sensor *, proto)) {
     
-    if (!proto -> requested       ) continue;
+    if (!proto -> requested) continue;
     
     int total_triggers = 0;
     for (int stream = 0; stream < proto -> data_streams; stream++)
       total_triggers += proto -> outputs[stream].triggers -> size;
-      
+    
     if (!total_triggers) continue;
     
     printf(GREEN "%s\n" RESET, proto -> code_name);
     
     for (int stream = 0; stream < proto -> data_streams; stream++) {
-
+      
       char * final_unit = proto -> outputs[stream].unit;
       
       for (iterate(proto -> outputs[stream].triggers, Trigger *, trigger)) {
-
+	
 	Numeric * before = trigger -> threshold_as_specified;
 	char   direction = (trigger -> less) ? '<' : '>';
 	
 	printf(CYAN "    %s" GRAY " %c" MAGENTA " %.3f%s " GRAY "(= " MAGENTA "%.3f%s" GRAY ")",
 	       trigger -> id, direction, before -> decimal, before -> units, trigger -> threshold, final_unit);
 	
-	printf("\n        wires {");
+	if (trigger -> precondition -> size) {
+	  
+	  printf(" in { " BLUE);
+	  
+	  for (iterate(trigger -> precondition, char *, state))
+	    printf("%s ", state);
+	  
+	  printf(GRAY "}");
+	}
 	
-	for (iterate(trigger -> wires_low, Charge *, charge)) printf(YELLOW "-" RESET "%d ", charge -> gpio);
-	for (iterate(trigger -> wires_low, Charge *, charge)) printf(YELLOW "+" RESET "%d ", charge -> gpio);
+	printf("\n        wires { ");
+	
+	for (iterate(trigger -> wires_low, Charge *, charge))
+	  if (!charge -> delay) printf(YELLOW "-" RESET "%d ", charge -> gpio);
+	  else                  printf(YELLOW "-" RESET "%d(" YELLOW "%dms" RESET ") ", charge -> gpio, charge -> delay);
+
+	for (iterate(trigger -> wires_high, Charge *, charge))
+	  if (!charge -> delay) printf(YELLOW "+" RESET "%d ", charge -> gpio);
+	  else                  printf(YELLOW "+" RESET "%d(" YELLOW "%dms" RESET ") ", charge -> gpio, charge -> delay);
 	
 	if (!trigger -> singular) printf(GRAY "}" YELLOW " *\n" GRAY);
 	else                      printf(GRAY "}\n");
 	
-	printf("\n        enter {" RESET);
-	for (iterate(trigger -> enter_set, char *, name)) printf("%s", name);
-	printf("}\n        leave {" RESET);
-	for (iterate(trigger -> leave_set, char *, name)) printf("%s", name);
-	printf("}\n");
+	printf("        enter { " RESET);
+	for (iterate(trigger -> enter_set, Transition *, trans))
+	  if (!trans -> delay) printf("%s ", trans -> state);
+	  else                 printf("%s" RESET "(" YELLOW "%dms" RESET ") ", trans -> state, trans -> delay);
+	printf(GRAY "}\n        leave { " RESET);
+	for (iterate(trigger -> leave_set, Transition *, trans))
+	  if (!trans -> delay) printf("%s ", trans -> state);
+	  else                 printf("%s" RESET "(" YELLOW "%dms" RESET")", trans -> state, trans -> delay);
+	printf(GRAY "}\n" RESET);
       }
     }
     printf("\n");

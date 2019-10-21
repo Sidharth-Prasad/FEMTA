@@ -95,7 +95,7 @@ Sensor * init_ad15(Sensor * ad15, char * title, List * modes, List * names) {
     fprintf(log, "%s\t", column_name);
   fprintf(log, "\n" RESET);
   
-  fprintf(log, "Time [s]\t");
+  fprintf(log, "Time [%s]\t", time_unit);
   for (int stream = 0; stream < 4; stream++) {
     
     Output * output = &ad15 -> outputs[stream];
@@ -205,7 +205,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
     // must be on first node
     
     if (should_print)
-      printf("%s%s  %lfs\t", ad15 -> print_code, ad15 -> code_name, time_passed());
+      printf("%s%s  %lf%s\t", ad15 -> print_code, ad15 -> code_name, time_passed(), time_unit);
     fprintf(ad15_i2c -> log, "%lf\t", time_passed());
   }
   

@@ -2,6 +2,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <pigpio.h>
 
 #include "y.tab.h"
 
@@ -22,9 +23,12 @@ digit  [0-9]
 if        { return IF;     }
 set       { return SET;    }
 pin       { return PIN;    }
+pos       { return POS;    }
+neg       { return NEG;    }
 enter     { return ENTER;  }
 leave     { return LEAVE;  }
 state     { return STATE;  }
+State     { return STATE;  }
 after     { return AFTER;  }
 define    { return DEFINE; }
 
@@ -95,5 +99,6 @@ define    { return DEFINE; }
 
 void yyerror(char * message) {
   printf("Line %d : %s\n", yylineno, message);
+  gpioTerminate();
   exit(3);
 }

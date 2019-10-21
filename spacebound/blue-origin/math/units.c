@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <pigpio.h>
 
 #include "units.h"
 #include "mathematics.h"
@@ -38,8 +39,17 @@ float take( kPa, torr) (float x) { return x * 7.50062f;                         
 float take(torr,  kPa) (float x) { return x / 7.50062f;                          }
 
 // voltage
-float take(   V,   mV) (float x) { return x / 1000.0f;                           }
-float take(  mV,    V) (float x) { return x * 1000.0f;                           }
+float take(   V,   mV) (float x) { return x * 1000.0f;                           }
+float take(  mV,    V) (float x) { return x / 1000.0f;                           }
+
+// time
+float take(   s,   ms) (float x) { return x * 1000.0f;                           }
+float take(  ms,    s) (float x) { return x / 1000.0f;                           }
+float take(   s,  min) (float x) { return x / 60.0f;                             }
+float take( min,    s) (float x) { return x * 60.0f;                             }
+float take(  ms,  min) (float x) { return x / 60000.0f;                          }
+float take( min,   ms) (float x) { return x * 60000.0f;                          }
+
 
 // utilities
 float convert_identity (float x)  { return x;                                    }
@@ -64,6 +74,12 @@ void init_units() {
   hashmap_add(conversions, arrow(torr,  kPa), take(torr,  kPa));
   hashmap_add(conversions, arrow(   V,   mV), take(   V,   mV));
   hashmap_add(conversions, arrow(  mV,    V), take(  mV,    V));
+  hashmap_add(conversions, arrow(   s,   ms), take(   s,   ms));
+  hashmap_add(conversions, arrow(  ms,    s), take(  ms,    s));
+  hashmap_add(conversions, arrow(   s,  min), take(   s,  min));
+  hashmap_add(conversions, arrow( min,    s), take( min,    s));
+  hashmap_add(conversions, arrow(  ms,  min), take(  ms,  min));
+  hashmap_add(conversions, arrow( min,   ms), take( min,   ms));
   
   hashmap_add(unit_types,    "C", "Temperature");
   hashmap_add(unit_types,    "K", "Temperature");
@@ -73,10 +89,13 @@ void init_units() {
   hashmap_add(unit_types, "torr",    "Pressure");
   hashmap_add(unit_types,    "V",     "Voltage");
   hashmap_add(unit_types,   "mV",     "Voltage");
+  hashmap_add(unit_types,    "s",        "Time");
+  hashmap_add(unit_types,   "ms",        "Time");
+  hashmap_add(unit_types,  "min",        "Time");
   hashmap_add(unit_types,    "i",     "Integer");
   hashmap_add(unit_types,    "f",     "Decimal");
   
-  all_units = list_from(9, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV");
+  all_units = list_from(12, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min");
 }
 
 void drop_units() {
@@ -104,16 +123,21 @@ bool unit_is_of_type(Numeric * numeric, char * type) {
 
 void print_units_supported() {
   printf
-    ("Temperature\n"
+    ("Time\n"
+     "   s   : system second\n"
+     "  ms   : system milli-second\n"
+     " min   : system minute\n"
+     "\n"
+     "Temperature\n"
      "  C    : Celcius\n"
      "  K    : Kelvin\n"
      "  F    : Fahrenheit\n"
-     "\n\n"
+     "\n"
      "Pressure\n"
      "  atm  : Atmospheres\n"
      "  kPa  : kilo-Pascals\n"
      "  torr : Torrecelli's unit\n"
-     "\n\n"
+     "\n"
      "Voltage\n"
      "   V   : Volts\n"
      "  mV   : milli-Volts\n"
@@ -181,6 +205,7 @@ Conversion get_universal_conversion(char * from, char * to) {
     print_units_supported();
     printf("Unknown conversion %s -> %s\n", from, to);
     printf("Please use units from the table above\n");
+    gpioTerminate();
     exit(ERROR_EXPERIMENTER);
   }
   

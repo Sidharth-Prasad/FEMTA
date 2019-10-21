@@ -48,7 +48,7 @@ int main(int argc, char ** argv) {
   parse_args(argc, argv);
   print_config();
   
-  gpioTerminate(); exit(0);    // TEMP
+  //gpioTerminate(); exit(0);    // TEMP
   
   start_sensors();
   start_one();       // start reading the 1-wire bus

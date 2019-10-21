@@ -40,6 +40,9 @@ Sensor * sensor_create(char * code_name, int address, Hashmap * targets, int bus
   if (targets && targets -> elements) {
     proto -> data_streams = targets -> elements;
     proto -> outputs      = calloc(targets -> elements, sizeof(*proto -> outputs));
+    
+    for (int stream = 0; stream < proto -> data_streams; stream++)
+      proto -> outputs[stream].regressive = 1.0f;
   }
   
   return proto;
@@ -307,8 +310,10 @@ void sensor_process_triggers(Sensor * sensor) {
     
     if (!output -> enabled) continue;
     
+    // apply smoothing before considering triggers
+    output -> smoothed = (output -> regressive) * (output -> measure) + (1.0f - output -> regressive) * (output -> smoothed);
     
-    float measure = output -> measure;
+    float measure = output -> smoothed;    // by default, smoothing equals measure
     
     for (iterate(output -> triggers, Trigger *, trigger)) {
       
@@ -331,8 +336,8 @@ void sensor_process_triggers(Sensor * sensor) {
       for (iterate(trigger -> wires_low , Charge *, charge)) fire(charge,  true);
       for (iterate(trigger -> wires_high, Charge *, charge)) fire(charge, false);
       
-      for (iterate(trigger -> enter_set, char *, state)) enter(state);
-      for (iterate(trigger -> leave_set, char *, state)) leave(state);
+      for (iterate(trigger -> enter_set, Transition *, trans)) enter(trans);
+      for (iterate(trigger -> leave_set, Transition *, trans)) leave(trans);
       
       trigger -> fired = true;
     }

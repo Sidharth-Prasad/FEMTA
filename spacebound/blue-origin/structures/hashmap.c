@@ -23,7 +23,8 @@ Hashmap * hashmap_create(hash_function hash, key_comparator key_diff, element_fr
   map -> free = freer;
   
   map -> table = malloc(map -> size * sizeof(List **));
-  map -> all = list_create();
+  map -> all   = list_create();
+  map -> keys  = list_create();
   
   // Create table of linked lists
   for (int i = 0; i < map -> size; i++)
@@ -109,6 +110,7 @@ void hashmap_add(Hashmap * this, void * key, void * value) {
   
   list_insert(this -> table[hx], element);
   list_insert(this -> all, value);
+  list_insert(this -> keys, key);
   
   this -> elements++;
 }
@@ -200,6 +202,7 @@ void hashmap_destroy(Hashmap * this) {
   }
   
   list_destroy(this -> all);
+  list_destroy(this -> keys);
   
   free(this -> table);
   free(this);

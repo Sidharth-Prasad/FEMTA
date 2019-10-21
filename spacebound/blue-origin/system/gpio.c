@@ -29,7 +29,7 @@ void init_pins() {
   gpioWrite(27, 0);
 }
 
-void pin_inform_pulses(char broadcom) {
+void pin_inform_delays(char broadcom) {
   // let system know this pin pulses
   
   if (!pins[broadcom].pulses)
@@ -64,11 +64,12 @@ void pin_set_cold(void * nil, char * vbroadcom) {
 
 void fire(Charge * charge, bool hot) {
   // fires a charge, setting up any pulsing
+
+  if (!charge -> delay) {
+    pin_set(charge -> gpio, hot);
+    return;
+  }
   
-  pin_set(charge -> gpio, hot);
-  
-  if (!charge -> duration) return;
-  
-  pins[charge -> gpio].ms_until_pulse_completes = charge -> duration;
+  pins[charge -> gpio].ms_until_pulse_completes = charge -> delay;
   pins[charge -> gpio].pulse_final_state = !hot;
 }

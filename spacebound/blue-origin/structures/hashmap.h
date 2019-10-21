@@ -26,7 +26,8 @@ typedef struct Hashmap {
   
   List ** table;              // output values
   List * all;                 // all values in table (bad after remove is called)
-
+  List * keys;                // all keys in table (bad after remove is called)
+  
   element_freer free;         // means of freeing hashmap element
   hash_function hash;         // how hash table indecies are calculated
   key_comparator key_diff;    // how to tell if keys match

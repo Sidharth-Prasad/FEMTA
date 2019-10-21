@@ -36,7 +36,7 @@ compiler/%.o: %.c
 	gcc -o $@ -MMD -c $(FLAGS) $<
 
 parser: $(wildcard parser/*.y parser/*.l parser/trick.nil)
-	cd parser && yacc -d parser.y && lex parser.l && cd ..
+	cd parser && yacc -d -t -Dparse.trace parser.y && lex parser.l && cd ..
 
 clean:
 	rm -rf compiler                      # blow away compiled objects

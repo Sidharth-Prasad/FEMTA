@@ -66,7 +66,7 @@ Sensor * init_ds32(Sensor * ds32) {
     temp_output -> unit   = strdup("C");
   }
   
-  fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\nHuman Time\tExperiment Duration [%s]\tTemperature [%s]\n" RESET,
+  fprintf(ds32 -> i2c -> log, GREEN "\n\nDS3231N\nExperiment Duration [%s]\tTemperature [%s]\tHuman Time\n" RESET,
 	  time_output -> unit, temp_output -> unit);
   
   
@@ -77,6 +77,7 @@ Sensor * init_ds32(Sensor * ds32) {
   read_ds32(ds32 -> i2c);                               // get human time before other sensors are created
   
   schedule -> interrupt_interval = series_compute(time_output -> series, 1.0f);
+  time_unit = time_output -> unit;
   
   return ds32;
 }

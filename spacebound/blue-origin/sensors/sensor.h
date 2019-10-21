@@ -125,7 +125,7 @@ typedef struct Schedule {
 } Schedule;
 
 Schedule * schedule;
-
+char * time_unit;
 
 List    * active_sensors;      // every active sensor on craft
 Hashmap * all_sensors;         // every sensor that could be specified

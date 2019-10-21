@@ -183,7 +183,7 @@ void * i2c_main() {
     // pulse pins
     for (iterate(schedule -> pulse_pins, Pin *, pin)) {
       
-      //printf("PULES COUNTDOWN: %d " YELLOW "%d" RESET "\n", pin -> broadcom, pin -> ms_until_pulse_completes);
+      printf("DEBUG WIRE: %d " YELLOW "%d" RESET "\n", pin -> broadcom, pin -> ms_until_pulse_completes);
       
       if (!pin -> ms_until_pulse_completes) continue;
       
@@ -194,7 +194,24 @@ void * i2c_main() {
 	pin -> ms_until_pulse_completes = 0;
       }
     }
-    
+
+
+    // change states
+    for (iterate(state_delays -> all, StateDelay *, state_delay)) {
+
+      printf("DEBUG STATE: %s " CYAN "%d" RESET "\n", state_delay -> state, state_delay -> ms_remaining);
+      
+      if (!state_delay -> ms_remaining) continue;
+      
+      state_delay -> ms_remaining -= bus_interval_ms;
+      
+      if (state_delay -> ms_remaining <= 0) {
+	if (state_delay -> entering) enter_state(state_delay -> state);
+	else                         leave_state(state_delay -> state);
+	state_delay -> ms_remaining = 0;
+      }
+      
+    }
     
     // read sensors
     for (iterate(schedule -> i2c_devices, i2c_device *, i2c)) {

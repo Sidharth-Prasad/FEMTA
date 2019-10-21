@@ -34,13 +34,13 @@
 # define YY_YY_Y_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+# define YYDEBUG 1
 #endif
 #if YYDEBUG
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 39 "parser.y" /* yacc.c:1909  */
+#line 40 "parser.y" /* yacc.c:1909  */
 
   
   #include <stdbool.h>
@@ -56,13 +56,13 @@ extern int yydebug;
     
     union {
       struct {
-	Charge * charge;
+	Charge * charge;            // charge of a wire state to another
 	bool     hot;
       };
       
       struct {
-	char * state_name;
-	bool   entering;
+	Transition * transition;    // transition from one state to another
+	bool         entering;
       };
     };
     
@@ -116,7 +116,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 75 "parser.y" /* yacc.c:1909  */
+#line 76 "parser.y" /* yacc.c:1909  */
 
   char          * string;
   int           * integer;

@@ -4,8 +4,8 @@
 
 typedef struct Charge {
   
-  char gpio;        // the broadcom number of the pin
-  int  duration;    // used for pulsing
+  char gpio;     // the broadcom number of the pin
+  int  delay;    // used for pulsing
   
 } Charge;
 
@@ -28,6 +28,6 @@ void init_pins();
 void pin_set(char broadcom, bool hot);
 void pin_set_hot (void * nil, char * vbroadcom);    // selector commands
 void pin_set_cold(void * nil, char * vbroadcom);    // -----------------
-void pin_inform_pulses(char broadcom);
+void pin_inform_delays(char broadcom);
 void pin_pulse(char broadcom, int ms, bool hot);
 void fire(Charge * charge, bool hot);
