@@ -1,0 +1,6 @@
+#ifndef HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_TIMING
+#define HEADER_GAURD_FOR_COMPILER_UNIT_UNIFIED_TIMING
+
+void nano_sleep(long duration);
+
+#endif
