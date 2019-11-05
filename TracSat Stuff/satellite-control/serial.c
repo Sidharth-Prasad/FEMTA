@@ -525,3 +525,9 @@ void terminate_serial() {
 void null_controller(float angle, float velocity, float time) {
   return;
 }
+
+#include <stdio.h>
+int main( int argc, const char* argv[] )
+{
+	printf( "\nHello World\n\n" );
+}
