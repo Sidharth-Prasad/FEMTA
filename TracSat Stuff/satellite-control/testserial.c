@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <logger.h>
 
 
 // UM7 Configuration Registers
@@ -81,7 +82,7 @@ typedef struct UM7_packet_struct
 // parses data in rx_data w/length rx_length to find packet in data
 // if packet found structure packet is filled with packet data
 // if not enough data parse returns 1
-// if enough data but o header returns 2
+// if enough data but no header returns 2
 // if header found but insufficient data to parse whole packet then returns 3
 // if received but checksum was bad then 4
 // if good packet received, fills parse_serial and returns 0
@@ -175,13 +176,139 @@ uint8_t parse_serial_data(uint8_t* rx_data, uint8_t rx_length, UM7_packet* packe
 }
 
 //TODO:
+// How to read operation: send a data packet with "Has Data" bit cleared
+// UM7 in response will send a packet back 
+// with "Is Batch" and "Batch Length" set based on what was sent
 //Acessing desired address
 //Checking Data length
 //Pulling out packet's data array
+// What is the UM7 object?
+
+/*Questions:
+How do UM7 packets get received or where do i access them?
+is the firmware revision part necesssary?*/
+
+//Noah's code to send commands. could be how to request data?
+void send_serial_command(uint8_t command) {
+  
+  uint8_t request[7];
+  
+  request[0] = 's';
+  request[1] = 'n';
+  request[2] = 'p';
+  request[3] = 0x00;       // Command Type
+  request[4] = command;    // Is command where I send the clear "Has Bit"?
+
+  uint16_t checksum = 's' + 'n' + 'p' + 0x00 + command;
+  
+  request[5] = (uint8_t) (checksum >> 8);         // Checksum high byte
+  request[6] = (uint8_t) (checksum & 0xFF);       // Checksum low byte
+
+  nano_sleep(1000000000);   // Wait 1000 ms
+
+  
+  if (serWrite(UM7 -> serial -> handle, request, 7)) {
+    log_error("Serial write failed\n");
+  }
+  
+  nano_sleep(2000000000);   // Wait 2000 ms
+  
+  uint8_t response[256];
+  
+  schar response_length = serRead(UM7 -> serial -> handle, response, 256);
+
+  process_transmission(response, response_length);
+}
+
+// how does he create loggers?
+// logger is is own class he made.
+
+bool initialize_serial() {
+
+  serial_routine = null_controller;
+  
+  UM7_vector_logger = create_logger("./logs/UM7-vector-log.txt");
+  // Where does he modify the prototype? 
+  UM7_vector_logger -> open(UM7_vector_logger);
+  fprintf(UM7_vector_logger -> file,
+
+	  GREEN
+	  "\nRecording vectorized UM7 attitude Data\n"
+	  "Gyro Time\tGyro x\tGyro y\tGyro z\t"
+	  "Acel Time\tAcel x\tAcel y\tAcel z\t"
+	  "Magn Time\tMagn x\tMagn y\tMagn z\n"
+	  RESET);
+
+  UM7_euler_logger = create_logger("./logs/UM7-euler-log.txt");
+  UM7_euler_logger -> open(UM7_euler_logger);
+  fprintf(UM7_euler_logger -> file,
+
+	  GREEN
+	  "\nRecording UM7 euler attitude data\n"
+	  "Euler Time\tAngle x\tAngle y\tAngle z\t"
+	  "Angular Velocity x\tAngular Velocity y\tAngular Velocity z\n"
+	  RESET);
+  
+  UM7_quaternion_logger = create_logger("./logs/UM7-quaternion-log.txt");
+  UM7_quaternion_logger -> open(UM7_quaternion_logger);
+  fprintf(UM7_quaternion_logger -> file,
+
+	  GREEN
+	  "\nRecording UM7 quaternion attitude data\n"
+	  "Quat Time\tQuat A\tQuat B\tQuat C\tQuat D\n"
+	  RESET);
+  
+  serial_logger = create_logger("./logs/serial-log.txt");
+  serial_logger -> open(serial_logger);
+  fprintf(serial_logger -> file, YELLOW "Serial Transmission Log\n" RESET);
+  
+  if (UM7 -> enabled) {
+    
+    UM7 -> serial = malloc(sizeof(Serial));
+    
+    UM7 -> serial -> handle = serOpen("/dev/ttyAMA0", 115200, 0);
+    
+    if (UM7 -> serial -> handle < 0) {
+      log_error("Unable to open serial connection for the UM7\n");
+      return false;
+    }
+    
+    
+    send_serial_command(RESET_TO_FACTORY);
+    nano_sleep(1000000000);   // Wait 1s
+    
+    //send_serial_command(GET_FW_REVISION);
+    
+    // Send processed data at 10 Hz
+
+    serial_write_register(CREG_COM_RATES1, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No raw
+    serial_write_register(CREG_COM_RATES2, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No temperature
+    serial_write_register(CREG_COM_RATES3, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // 10 Hz processed
+    serial_write_register(CREG_COM_RATES4, 0b00000000, 0b00000000, 0b00000000, 0b00001010);   // ---------------
+    serial_write_register(CREG_COM_RATES5, 0b00000000, 0b00001010, 0b00000000, 0b00000000);   // 10 Hz Euler
+    serial_write_register(CREG_COM_RATES6, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No misc telemetry
+    serial_write_register(CREG_COM_RATES7, 0b00000000, 0b00000000, 0b00000000, 0b00000000);   // No NMEA packets
+    
+    
+    UM7 -> initialized = true;
+    
+    serial_termination_signal = false;
+    pthread_create(&serial_thread, NULL, serial_main, NULL);
+
+    return true;
+  }
+  
+  return false;
+}
+
+void terminate_serial() {
+  serial_termination_signal = true;
+}
 
 int main( int argc, const char* argv[] )
 {
 	bool serial_sucess = intitialize_serial();
+
 }
 
 
