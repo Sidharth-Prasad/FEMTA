@@ -279,6 +279,8 @@ void set_pwm(pin * p, unsigned char duty_cycle) {
   gpioPWM(p -> logical, p -> duty_cycle);
 }
 
+//MAIN IS HERE
+
 int main() {
 
   start_time = time(NULL);

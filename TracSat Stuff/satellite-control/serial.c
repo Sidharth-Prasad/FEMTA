@@ -528,5 +528,5 @@ void null_controller(float angle, float velocity, float time) {
 
 int main( int argc, const char* argv[] )
 {
-	printf( "\nHello World\n\n" );
+	
 }
